@@ -1,7 +1,9 @@
 package org.apache.fineract.api;
 
 
+import org.apache.fineract.file.FileTransferService;
 import org.apache.fineract.operations.Batch;
+import org.apache.fineract.operations.BatchDTO;
 import org.apache.fineract.operations.BatchRepository;
 import org.apache.fineract.operations.BusinessKey;
 import org.apache.fineract.operations.BusinessKeyRepository;
@@ -21,6 +23,7 @@ import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
@@ -37,6 +40,10 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.client.RestTemplate;
 
 import javax.servlet.http.HttpServletResponse;
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.Date;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -72,6 +79,13 @@ public class OperationsApi {
 
     @Value("${channel-connector.transfer-path}")
     private String channelConnectorTransferPath;
+
+    @Autowired
+    @Qualifier("awsStorage")
+    private FileTransferService fileTransferService;
+
+    @Value("${application.bucket-name}")
+    private String bucketName;
 
     @PostMapping("/transfer/{transactionId}/refund")
     public String refundTransfer(@RequestHeader("Platform-TenantId") String tenantId,
@@ -181,7 +195,7 @@ public class OperationsApi {
     }
 
     @GetMapping("/batch")
-    public Batch batchDetails(@RequestParam String batchId, @RequestParam String requestId) {
+    public BatchDTO batchDetails(@RequestParam(value = "batchId", required = false) String batchId, @RequestParam(value = "requestId", required = false) String requestId) {
 
         Batch batch = batchRepository.findByBatchId(batchId);
 
@@ -189,12 +203,12 @@ public class OperationsApi {
             if (batch.getResultGeneratedAt() != null) {
 //                Checks if last status was checked before 10 mins
                 if (new Date().getTime() - batch.getResultGeneratedAt().getTime() < 600000) {
-                    return batch;
+                    return transformBatchResponse(batch);
                 } else {
-                    return generateDetails(batch);
+                    return transformBatchResponse(generateDetails(batch));
                 }
             } else {
-                return generateDetails(batch);
+                return transformBatchResponse(generateDetails(batch));
             }
         } else {
             return null;
@@ -204,24 +218,77 @@ public class OperationsApi {
 
     private Batch generateDetails (Batch batch) {
 
-//        TODO: Save this to CSV and upload to S3
         List<Transfer> transfers = transferRepository.findAllByBatchId(batch.getBatchId());
 
         Long completed = 0L;
         Long failed = 0L;
+        Long total = 0L;
+        Long ongoing = 0L;
         for(int i=0; i<transfers.size(); i++) {
+            total++;
             if (transfers.get(i).getStatus().equals(TransferStatus.COMPLETED)) {
                 completed++;
             } else if (transfers.get(i).getStatus().equals(TransferStatus.FAILED)) {
                 failed++;
+            } else if (transfers.get(i).getStatus().equals(TransferStatus.IN_PROGRESS)) {
+                ongoing++;
             }
         }
 
+        batch.setResult_file(createDetailsFile(transfers));
         batch.setCompleted(completed);
         batch.setFailed(failed);
         batch.setResultGeneratedAt(new Date());
+        batch.setOngoing(ongoing);
+        batch.setTotalTransactions(total);
         batchRepository.save(batch);
 
         return batch;
+    }
+
+    private BatchDTO transformBatchResponse(Batch batch) {
+        return new BatchDTO(batch.getBatchId(), batch.getRequestId(), batch.getTotalTransactions(), batch.getOngoing(), batch.getFailed(), batch.getCompleted(), batch.getResult_file(), batch.getResultGeneratedAt(), batch.getNote());
+    }
+
+    private String createDetailsFile(List<Transfer> transfers) {
+        String CSV_SEPARATOR = ",";
+        File tempFile = new File(System.currentTimeMillis() + "_response.csv");
+        try (
+            FileWriter writer = new FileWriter(tempFile.getName());
+            BufferedWriter bw = new BufferedWriter(writer)) {
+            for (Transfer transfer : transfers)
+            {
+                StringBuffer oneLine = new StringBuffer();
+                oneLine.append(transfer.getTransactionId());
+                oneLine.append(CSV_SEPARATOR);
+                oneLine.append(transfer.getStatus().toString());
+                oneLine.append(CSV_SEPARATOR);
+                oneLine.append(transfer.getPayeeDfspId());
+                oneLine.append(CSV_SEPARATOR);
+                oneLine.append(transfer.getPayeePartyId());
+                oneLine.append(CSV_SEPARATOR);
+                oneLine.append(transfer.getPayerDfspId());
+                oneLine.append(CSV_SEPARATOR);
+                oneLine.append(transfer.getPayerPartyId());
+                oneLine.append(CSV_SEPARATOR);
+                oneLine.append(transfer.getAmount().toString());
+                oneLine.append(CSV_SEPARATOR);
+                oneLine.append(transfer.getCurrency());
+                oneLine.append(CSV_SEPARATOR);
+                oneLine.append(transfer.getErrorInformation());
+                oneLine.append(CSV_SEPARATOR);
+                oneLine.append(transfer.getStartedAt().toString());
+                oneLine.append(CSV_SEPARATOR);
+                oneLine.append(transfer.getCompletedAt().toString());
+                oneLine.append(CSV_SEPARATOR);
+                bw.write(oneLine.toString());
+                bw.newLine();
+            }
+            bw.flush();
+            return fileTransferService.uploadFile(tempFile, bucketName);
+        } catch (Exception e) {
+            System.err.format("Exception: %s%n", e);
+        }
+        return null;
     }
 }

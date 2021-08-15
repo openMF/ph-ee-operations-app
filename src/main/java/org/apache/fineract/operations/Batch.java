@@ -1,19 +1,16 @@
 package org.apache.fineract.operations;
 
+import org.apache.fineract.organisation.parent.AbstractPersistableCustom;
 import org.eclipse.persistence.annotations.Index;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
-import javax.persistence.Id;
 import javax.persistence.Table;
 import java.util.Date;
 
 @Entity
 @Table(name = "batches")
-public class Batch {
-
-    @Id
-    private Long id;
+public class Batch extends AbstractPersistableCustom<Long> {
 
     @Column(name = "BATCH_ID")
     private String batchId;
@@ -49,7 +46,7 @@ public class Batch {
     private Long workflowKey;
 
     @Column(name = "WORKFLOW_INSTANCE_KEY")
-    @Index(name = "idx_workflowInstanceKey")
+    @Index(name = "idx_batches_key")
     private Long workflowInstanceKey;
 
     @Column(name = "STARTED_AT")

@@ -17,6 +17,8 @@ token:
     refresh-validity-seconds: 43200
   client:
     access-validity-seconds: 3600
+    channel:
+      secret: "p1234"
 
 config:
   imu:
@@ -48,3 +50,21 @@ rest:
         authority: "hasAuthority('REFUND')"
       - endpoint: "/api/v1/**"
         authority: "hasAuthority('ALL_FUNCTIONS')"
+
+cloud:
+  aws:
+    enabled: true
+    credentials:
+      access-key: ${AWS_ACCESS_KEY:AKIAX32JM37TYOG3QUJU}
+      secret-key: ${AWS_SECRET_KEY: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}
+    region:
+      static: us-east-2
+    stack:
+      auto: false
+  azure:
+    enabled: false
+    blob:
+      connection-string:
+
+application:
+  bucket-name: paymenthub-ee-dev
