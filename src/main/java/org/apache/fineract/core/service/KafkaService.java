@@ -16,11 +16,7 @@ public class KafkaService {
     private final Logger logger = LoggerFactory.getLogger(KafkaService.class);
 
     public void publishErrorMessage(String message) {
-        try {
-            kafkaTemplate.send(topic, message);
-        } catch (Exception e) {
-            logger.info(String.format("#### -> Error encountered in kafka -> %s", e.getMessage()));
-        }
+        publish(topic, message);
     }
 
     public void publish(String topic, String message) {
