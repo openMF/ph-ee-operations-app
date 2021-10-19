@@ -11,7 +11,7 @@ public class KafkaService {
 
     @Autowired
     private KafkaTemplate<String, String> kafkaTemplate;
-    private static String topic = "false-negative-error-codes";
+    private static String topic = "error-codes";
 
     private final Logger logger = LoggerFactory.getLogger(KafkaService.class);
 

@@ -12,7 +12,7 @@ public class KafkaTestConsumer {
 
     private final Logger logger = LoggerFactory.getLogger(KafkaService.class);
 
-    @KafkaListener(topics = "false-negative-error-codes")
+    @KafkaListener(topics = "error-codes")
     public void consume(String message) throws IOException {
         logger.info(String.format("#### -> Consumed message -> %s", message));
     }
