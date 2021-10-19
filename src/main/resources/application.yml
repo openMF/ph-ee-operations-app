@@ -1,11 +1,11 @@
 fineract:
   datasource:
     core:
-      host: operations-mysql
-      port: 3306
+      host: localhost
+      port: 3307
       schema: tenants
-      username: root
-      password: mysql
+      username: mifos
+      password: password
     common:
       protocol: jdbc
       subprotocol: mysql
@@ -17,6 +17,8 @@ token:
     refresh-validity-seconds: 43200
   client:
     access-validity-seconds: 3600
+    channel:
+      secret: "p1234"
 
 config:
   imu:
@@ -36,15 +38,32 @@ spring:
       enabled: false
   jmx:
     enabled: false
+  kafka:
+    consumer:
+      bootstrap-servers: localhost:9092
+      auto-offset-reset: earliest
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      group-id: group_id
+    producer:
+      bootstrap-servers: localhost:9092
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.apache.kafka.common.serialization.StringSerializer
 
 server:
   port: 5000
 
 rest:
   authorization:
-    enabled: true
+    enabled: false
     settings:
       - endpoint: "/api/v1/transfer/*/refund"
         authority: "hasAuthority('REFUND')"
       - endpoint: "/api/v1/**"
         authority: "hasAuthority('ALL_FUNCTIONS')"
+
+channel-connector:
+  url: http://channel.ibank.financial
+  transfer-path: /channel/transfer
+
+tenants: "ibank-india,ibank-usa"

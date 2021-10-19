@@ -1,5 +1,6 @@
 package org.apache.fineract.api;
 
+import org.apache.fineract.api.interceptor.InternalErrorInterceptor;
 import org.apache.fineract.data.IMUConversionData;
 import org.apache.fineract.operations.CurrencyRate;
 import org.apache.fineract.operations.CurrencyRateLock;
@@ -22,6 +23,9 @@ public class IMUConversionApi {
 
     @Autowired
     private CurrencyRateLockRepository currencyRateLockRepository;
+
+    @Autowired
+    private InternalErrorInterceptor errorInterceptor;
 
     @Value("${config.imu.rate-validity-seconds}")
     private Integer imuRateValidSeconds;
