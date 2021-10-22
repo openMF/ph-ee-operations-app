@@ -25,9 +25,12 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -44,6 +47,8 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -203,20 +208,36 @@ public class OperationsApi {
             if (batch.getResultGeneratedAt() != null) {
 //                Checks if last status was checked before 10 mins
                 if (new Date().getTime() - batch.getResultGeneratedAt().getTime() < 600000) {
-                    return transformBatchResponse(batch);
+                    return generateDetails(batch);
                 } else {
-                    return transformBatchResponse(generateDetails(batch));
+                    return generateDetails(batch);
                 }
             } else {
-                return transformBatchResponse(generateDetails(batch));
+                return generateDetails(batch);
             }
         } else {
             return null;
         }
-
     }
 
-    private Batch generateDetails (Batch batch) {
+    @GetMapping("/batch/detail")
+    public ResponseEntity<List<Transfer>> batchDetails(@RequestParam(value = "batchId") String batchId,
+                                 @RequestParam(value = "status", defaultValue = "ALL") String status,
+                                 @RequestParam(value = "pageNo", defaultValue = "0") Integer pageNo,
+                                 @RequestParam(value = "pageSize", defaultValue = "10") Integer pageSize) {
+
+        List<Transfer> transfers;
+
+        if (status.equalsIgnoreCase(TransferStatus.COMPLETED.toString()) || status.equalsIgnoreCase(TransferStatus.IN_PROGRESS.toString()) || status.equalsIgnoreCase(TransferStatus.FAILED.toString())) {
+            transfers = transferRepository.findAllByBatchIdAndStatus(batchId, status.toUpperCase(), new PageRequest(pageNo, pageSize));
+        } else {
+            transfers = transferRepository.findAllByBatchId(batchId, new PageRequest(pageNo, pageSize));
+        }
+
+        return new ResponseEntity<List<Transfer>>(transfers, new HttpHeaders(), HttpStatus.OK);
+    }
+
+    private BatchDTO generateDetails (Batch batch) {
 
         List<Transfer> transfers = transferRepository.findAllByBatchId(batch.getBatchId());
 
@@ -224,14 +245,24 @@ public class OperationsApi {
         Long failed = 0L;
         Long total = 0L;
         Long ongoing = 0L;
+        BigDecimal totalAmount = BigDecimal.ZERO;
+        BigDecimal completedAmount = BigDecimal.ZERO;
+        BigDecimal ongoingAmount = BigDecimal.ZERO;
+        BigDecimal failedAmount = BigDecimal.ZERO;
+
         for(int i=0; i<transfers.size(); i++) {
             total++;
+            BigDecimal amount = transfers.get(i).getAmount();
+            totalAmount = totalAmount.add(amount);
             if (transfers.get(i).getStatus().equals(TransferStatus.COMPLETED)) {
                 completed++;
+                completedAmount = completedAmount.add(amount);
             } else if (transfers.get(i).getStatus().equals(TransferStatus.FAILED)) {
                 failed++;
+                failedAmount = failedAmount.add(amount);
             } else if (transfers.get(i).getStatus().equals(TransferStatus.IN_PROGRESS)) {
                 ongoing++;
+                ongoingAmount = ongoingAmount.add(amount);
             }
         }
 
@@ -243,12 +274,12 @@ public class OperationsApi {
         batch.setTotalTransactions(total);
         batchRepository.save(batch);
 
-        return batch;
+        return new BatchDTO(batch.getBatchId(), batch.getRequestId(), batch.getTotalTransactions(), batch.getOngoing(), batch.getFailed(), batch.getCompleted(), totalAmount, completedAmount, ongoingAmount, failedAmount, batch.getResult_file(), batch.getResultGeneratedAt(), batch.getNote());
     }
 
-    private BatchDTO transformBatchResponse(Batch batch) {
-        return new BatchDTO(batch.getBatchId(), batch.getRequestId(), batch.getTotalTransactions(), batch.getOngoing(), batch.getFailed(), batch.getCompleted(), batch.getResult_file(), batch.getResultGeneratedAt(), batch.getNote());
-    }
+//    private BatchDTO transformBatchResponse(Batch batch) {
+//        return new BatchDTO(batch.getBatchId(), batch.getRequestId(), batch.getTotalTransactions(), batch.getOngoing(), batch.getFailed(), batch.getCompleted(), batch.getResult_file(), batch.getResultGeneratedAt(), batch.getNote());
+//    }
 
     private String createDetailsFile(List<Transfer> transfers) {
         String CSV_SEPARATOR = ",";
