@@ -1,0 +1,11 @@
+
+name: Test
+on: [push]
+jobs:
+  Test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository code
+        uses: actions/checkout@v2
+      - name: Package project
+        run: mvn clean test package
