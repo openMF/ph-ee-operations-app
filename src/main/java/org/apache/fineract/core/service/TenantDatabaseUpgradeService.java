@@ -21,7 +21,6 @@ package org.apache.fineract.core.service;
 import com.googlecode.flyway.core.Flyway;
 import org.apache.fineract.organisation.tenant.TenantServerConnection;
 import org.apache.fineract.organisation.tenant.TenantServerConnectionRepository;
-//import org.flywaydb.core.Flyway;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
