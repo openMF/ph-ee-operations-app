@@ -21,6 +21,7 @@ package org.apache.fineract.core.service;
 import com.googlecode.flyway.core.Flyway;
 import org.apache.fineract.organisation.tenant.TenantServerConnection;
 import org.apache.fineract.organisation.tenant.TenantServerConnectionRepository;
+//import org.flywaydb.core.Flyway;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -96,6 +97,7 @@ public class TenantDatabaseUpgradeService {
                     final Flyway fw = new Flyway();
                     fw.setDataSource(dataSourcePerTenantService.retrieveDataSource());
                     fw.setLocations("sql/migrations/tenant");
+                    fw.setInitOnMigrate(true);
                     fw.setOutOfOrder(true);
                     Map<String, String> placeholders = new HashMap<>();
                     placeholders.put("tenantDatabase", tenant.getSchemaName()); // add tenant as aud claim
@@ -135,6 +137,7 @@ public class TenantDatabaseUpgradeService {
         final Flyway fw = new Flyway();
         fw.setDataSource(dataSourcePerTenantService.retrieveDataSource());
         fw.setLocations("sql/migrations/core");
+        fw.setInitOnMigrate(true);
         fw.setOutOfOrder(true);
         fw.migrate();
     }
