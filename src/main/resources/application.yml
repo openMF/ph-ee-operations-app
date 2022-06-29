@@ -9,7 +9,7 @@ fineract:
     common:
       protocol: jdbc
       subprotocol: mysql
-      driverclass_name: com.mysql.cj.jdbc.Driver
+      driverclass-name: com.mysql.cj.jdbc.Driver
 
 token:
   user:
@@ -50,7 +50,7 @@ rest:
         authority: "hasAuthority('ALL_FUNCTIONS')"
 logging:
   level:
-    ROOT: ERROR
+    root: ERROR
 
 cloud:
   aws:
