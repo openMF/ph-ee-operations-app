@@ -34,7 +34,7 @@ public class ErrorCodesCRUDApi {
 
     @GetMapping("/{id}")
     public ErrorCode getSpecificErrorCode(@PathVariable Long id) {
-        return errorCodesRepository.findOne(id);
+        return errorCodesRepository.findById(id).get();
     }
 
     @GetMapping("/filter")
@@ -62,7 +62,7 @@ public class ErrorCodesCRUDApi {
     @DeleteMapping("/{id}")
     public ErrorCode deleteErrorCode(@PathVariable Long id) {
         ErrorCode errorCode = getSpecificErrorCode(id);
-        errorCodesRepository.delete(id);
+        errorCodesRepository.deleteById(id);
         return errorCode;
     }
 }

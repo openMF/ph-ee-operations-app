@@ -10,10 +10,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
-import org.springframework.data.jpa.domain.Specifications;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.web.bind.annotation.*;
 
-import javax.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpServletResponse;
 import java.io.UnsupportedEncodingException;
 import java.math.BigDecimal;
 import java.net.URLDecoder;
@@ -55,7 +55,7 @@ public class OperationsDetailedApi {
             @RequestParam(value = "partyId", required = false) String partyId,
             @RequestParam(value = "partyIdType", required = false) String partyIdType,
             @RequestParam(value = "sortedOrder", required = false, defaultValue = "DESC") String sortedOrder) {
-        List<Specifications<Transfer>> specs = new ArrayList<>();
+        List<Specification<Transfer>> specs = new ArrayList<>();
 
         if (payerPartyId != null) {
             if (payerPartyId.contains("%2B")) {
@@ -128,13 +128,13 @@ public class OperationsDetailedApi {
 
         PageRequest pager;
         if (sortedBy == null || "startedAt".equals(sortedBy)) {
-            pager = new PageRequest(page, size, new Sort(Sort.Direction.fromString(sortedOrder), "startedAt"));
+            pager = PageRequest.of(page, size, Sort.by(Sort.Direction.fromString(sortedOrder), "startedAt"));
         } else {
-            pager = new PageRequest(page, size, new Sort(Sort.Direction.fromString(sortedOrder), sortedBy));
+            pager = PageRequest.of(page, size, Sort.by(Sort.Direction.fromString(sortedOrder), sortedBy));
         }
 
         if (specs.size() > 0) {
-            Specifications<Transfer> compiledSpecs = specs.get(0);
+            Specification<Transfer> compiledSpecs = specs.get(0);
             for (int i = 1; i < specs.size(); i++) {
                 compiledSpecs = compiledSpecs.and(specs.get(i));
             }
@@ -162,7 +162,7 @@ public class OperationsDetailedApi {
             @RequestParam(value = "direction", required = false) String direction,
             @RequestParam(value = "sortedBy", required = false) String sortedBy,
             @RequestParam(value = "sortedOrder", required = false, defaultValue = "DESC") String sortedOrder) {
-        List<Specifications<TransactionRequest>> specs = new ArrayList<>();
+        List<Specification<TransactionRequest>> specs = new ArrayList<>();
         if (payerPartyId != null) {
             specs.add(TransactionRequestSpecs.match(TransactionRequest_.payerPartyId, payerPartyId));
         }
@@ -204,13 +204,13 @@ public class OperationsDetailedApi {
 
         PageRequest pager;
         if (sortedBy == null || "startedAt".equals(sortedBy)) {
-            pager = new PageRequest(page, size, new Sort(Sort.Direction.valueOf(sortedOrder), "startedAt"));
+            pager = PageRequest.of(page, size, Sort.by(Sort.Direction.valueOf(sortedOrder), "startedAt"));
         } else {
-            pager = new PageRequest(page, size, new Sort(Sort.Direction.valueOf(sortedOrder), sortedBy));
+            pager = PageRequest.of(page, size, Sort.by(Sort.Direction.valueOf(sortedOrder), sortedBy));
         }
 
         if (specs.size() > 0) {
-            Specifications<TransactionRequest> compiledSpecs = specs.get(0);
+            Specification<TransactionRequest> compiledSpecs = specs.get(0);
             for (int i = 1; i < specs.size(); i++) {
                 compiledSpecs = compiledSpecs.and(specs.get(i));
             }
@@ -253,7 +253,7 @@ public class OperationsDetailedApi {
 
         List<String> filterByList = new ArrayList<>(body.keySet());
 
-        List<Specifications<TransactionRequest>> specs = new ArrayList<>();
+        List<Specification<TransactionRequest>> specs = new ArrayList<>();
         if (state != null && parseState(state) != null) {
             specs.add(TransactionRequestSpecs.match(TransactionRequest_.state, parseState(state)));
             logger.info("State filter added");
@@ -265,7 +265,7 @@ public class OperationsDetailedApi {
             logger.warn("failed to parse dates {} / {}", startFrom, startTo);
         }
 
-        Specifications<TransactionRequest> spec = null;
+        Specification<TransactionRequest> spec = null;
         List<TransactionRequest> data = new ArrayList<>();
         for (String filterBy : filterByList) {
             List<String> ids = body.get(filterBy);
@@ -304,12 +304,12 @@ public class OperationsDetailedApi {
     }
 
     /*
-     * Returns respective [TransactionRequest] specifications based on filter
+     * Returns respective [TransactionRequest] Specification based on filter
      * @param filter the filter we want to apply
      * @param listOfValues the values to which we want to apply filter
      */
-    private Specifications<TransactionRequest> getFilterSpecs(Filter filter, List<String> listOfValues) {
-        Specifications<TransactionRequest> spec = null;
+    private Specification<TransactionRequest> getFilterSpecs(Filter filter, List<String> listOfValues) {
+        Specification<TransactionRequest> spec = null;
         switch (filter) {
             case TRANSACTIONID:
                 spec = TransactionRequestSpecs.in(TransactionRequest_.transactionId, listOfValues);
@@ -341,7 +341,7 @@ public class OperationsDetailedApi {
      * @param startTo date before which we want all the records, in format "yyyy-MM-dd HH:mm:ss"
      * @param startFrom date after which we want all the records, in format "yyyy-MM-dd HH:mm:ss"
      */
-    private Specifications<TransactionRequest> getDateSpecification(String startTo, String startFrom) throws Exception {
+    private Specification<TransactionRequest> getDateSpecification(String startTo, String startFrom) throws Exception {
         if (startFrom != null && startTo != null) {
             return TransactionRequestSpecs.between(TransactionRequest_.startedAt, dateFormat().parse(startFrom), dateFormat().parse(startTo));
         } else if (startFrom != null) {
@@ -354,7 +354,7 @@ public class OperationsDetailedApi {
     }
 
     /*
-     * Executes the transactionRequest api request with specifications and returns the paged result
+     * Executes the transactionRequest api request with Specification and returns the paged result
      * @param baseSpec the base specification in which all the other spec needed to be merged
      * @param extraSpecs the list of specification which is required to be merged in [baseSpec]
      * @param page the page number we want to fetch
@@ -362,30 +362,30 @@ public class OperationsDetailedApi {
      * @param sortedOrder the order of sorting to be applied ASC OR DESC
      */
     private Page<TransactionRequest> executeRequest(
-            Specifications<TransactionRequest> baseSpec, List<Specifications<TransactionRequest>> extraSpecs,
+            Specification<TransactionRequest> baseSpec, List<Specification<TransactionRequest>> extraSpecs,
             int page, int size, String sortedOrder) {
-        PageRequest pager = new PageRequest(page, size, new Sort(Sort.Direction.valueOf(sortedOrder), "startedAt"));
+        PageRequest pager = PageRequest.of(page, size, Sort.by(Sort.Direction.valueOf(sortedOrder), "startedAt"));
         Page<TransactionRequest> result;
         if (baseSpec == null) {
             result = transactionRequestRepository.findAll(pager);
             logger.info("Getting data without spec");
         } else {
-            Specifications<TransactionRequest> combineSpecs = combineSpecs(baseSpec, extraSpecs);
+            Specification<TransactionRequest> combineSpecs = combineSpecs(baseSpec, extraSpecs);
             result = transactionRequestRepository.findAll(combineSpecs, pager);
         }
         return result;
     }
 
     /*
-     * Combines the multiple specifications into one using and clause
+     * Combines the multiple Specification into one using and clause
      * @param baseSpec the base specification in which all the other spec needed to be merged
      * @param specs the list of specification which is required to be merged in [baseSpec]
      */
-    private <T> Specifications<T> combineSpecs(Specifications<T> baseSpec,
-                                                            List<Specifications<T>> specs) {
+    private <T> Specification<T> combineSpecs(Specification<T> baseSpec,
+                                                            List<Specification<T>> specs) {
         logger.info("Combining specs " + specs.size());
-        for (Specifications<T> specifications : specs) {
-            baseSpec = baseSpec.and(specifications);
+        for (Specification<T> Specification : specs) {
+            baseSpec = baseSpec.and(Specification);
         }
         return baseSpec;
     }

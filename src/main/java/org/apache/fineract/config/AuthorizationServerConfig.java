@@ -4,20 +4,19 @@ import org.apache.fineract.core.service.RoutingDataSource;
 import org.apache.fineract.core.service.TenantAwareUserDetailsService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Import;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.oauth2.config.annotation.configurers.ClientDetailsServiceConfigurer;
-import org.springframework.security.oauth2.config.annotation.web.configuration.AuthorizationServerConfigurerAdapter;
-import org.springframework.security.oauth2.config.annotation.web.configuration.EnableAuthorizationServer;
 import org.springframework.security.oauth2.config.annotation.web.configurers.AuthorizationServerEndpointsConfigurer;
 import org.springframework.security.oauth2.config.annotation.web.configurers.AuthorizationServerSecurityConfigurer;
 import org.springframework.security.oauth2.provider.client.JdbcClientDetailsService;
 import org.springframework.security.oauth2.provider.token.TokenStore;
 import org.springframework.security.oauth2.provider.token.store.JwtAccessTokenConverter;
-import org.springframework.stereotype.Component;
+import org.springframework.security.oauth2.server.authorization.config.annotation.web.configuration.OAuth2AuthorizationServerConfiguration;
 
 @Configuration
-@EnableAuthorizationServer
-public class AuthorizationServerConfig extends AuthorizationServerConfigurerAdapter {
+@Import(OAuth2AuthorizationServerConfiguration.class)
+public class AuthorizationServerConfig {
 
     @Autowired
     private AuthenticationManager authenticationManager;
@@ -42,6 +41,9 @@ public class AuthorizationServerConfig extends AuthorizationServerConfigurerAdap
 
     public void configure(ClientDetailsServiceConfigurer clients) throws Exception {
         clients.withClientDetails(new JdbcClientDetailsService(routingDataSource));
+    }
+
+    public void configure(OAuth2ClientAuthenticationConfigurer configurer) throws Exception {
     }
 
     public void configure(AuthorizationServerEndpointsConfigurer endpoints) {

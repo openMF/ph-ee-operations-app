@@ -10,7 +10,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
 
-import javax.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpServletResponse;
 import java.math.BigDecimal;
 import java.util.*;
 
@@ -93,7 +93,7 @@ public class IMUConversionApi {
             }
             currencyRates.add(exchange);
         }
-        currencyRateRepository.save(currencyRates);
+        currencyRateRepository.saveAll(currencyRates);
     }
 
     @DeleteMapping(path = "/imuexchange/master", consumes = MediaType.APPLICATION_JSON_VALUE)

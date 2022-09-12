@@ -2,7 +2,7 @@ package org.apache.fineract.operations;
 
 import org.apache.fineract.organisation.parent.AbstractPersistableCustom;
 
-import javax.persistence.*;
+import jakarta.persistence.*;
 import java.math.BigDecimal;
 import java.util.Date;
 

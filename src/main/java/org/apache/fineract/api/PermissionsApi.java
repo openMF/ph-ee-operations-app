@@ -31,7 +31,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import javax.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpServletResponse;
 import java.util.List;
 
 
@@ -49,13 +49,10 @@ public class PermissionsApi {
 
     @GetMapping(path = "/permission/{permissionId}", produces = MediaType.APPLICATION_JSON_VALUE)
     public Permission retrieveOne(@PathVariable("permissionId") Long permissionId, HttpServletResponse response) {
-        Permission permission = permissionRepository.findOne(permissionId);
-        if(permission != null) {
-            return permission;
-        } else {
+        return permissionRepository.findById(permissionId).orElseGet(() -> {
             response.setStatus(HttpServletResponse.SC_NOT_FOUND);
             return null;
-        }
+        });
     }
 
     @PostMapping(path = "/permission", consumes = MediaType.APPLICATION_JSON_VALUE)
@@ -71,20 +68,19 @@ public class PermissionsApi {
 
     @PutMapping(path = "/permission/{permissionId}", consumes = MediaType.APPLICATION_JSON_VALUE)
     public void update(@PathVariable("permissionId") Long permissionId, @RequestBody Permission permission, HttpServletResponse response) {
-        Permission existing = permissionRepository.findOne(permissionId);
-        if (existing != null) {
+        permissionRepository.findById(permissionId).ifPresentOrElse(existing -> {
             permission.setId(permissionId);
             permission.setRoles(existing.getRoles());
             permissionRepository.saveAndFlush(permission);
-        } else {
+        }, () -> {
             response.setStatus(HttpServletResponse.SC_NOT_FOUND);
-        }
+        });
     }
 
     @DeleteMapping(path = "/permission/{permissionId}")
     public void delete(@PathVariable("permissionId") Long permissionId, HttpServletResponse response) {
-        if(permissionRepository.exists(permissionId)) {
-            permissionRepository.delete(permissionId);
+        if(permissionRepository.existsById(permissionId)) {
+            permissionRepository.deleteById(permissionId);
         } else {
             response.setStatus(HttpServletResponse.SC_NOT_FOUND);
         }

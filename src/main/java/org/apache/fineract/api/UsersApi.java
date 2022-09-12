@@ -35,7 +35,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import javax.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpServletResponse;
 import java.util.Collection;
 import java.util.List;
 
@@ -62,24 +62,18 @@ public class UsersApi {
 
     @GetMapping(path = "/user/{userId}", produces = MediaType.APPLICATION_JSON_VALUE)
     public AppUser retrieveOne(@PathVariable("userId") Long userId, HttpServletResponse response) {
-        AppUser user = appuserRepository.findOne(userId);
-        if(user != null) {
-            return user;
-        } else {
+        return appuserRepository.findById(userId).orElseGet(() -> {
             response.setStatus(HttpServletResponse.SC_NOT_FOUND);
             return null;
-        }
+        });
     }
 
     @GetMapping(path = "/user/{userId}/roles", produces = MediaType.APPLICATION_JSON_VALUE)
     public Collection<Role> retrieveRoles(@PathVariable("userId") Long userId, HttpServletResponse response) {
-        AppUser user = appuserRepository.findOne(userId);
-        if(user != null) {
-            return user.getRoles();
-        } else {
+        return appuserRepository.findById(userId).map(AppUser::getRoles).orElseGet(() -> {
             response.setStatus(HttpServletResponse.SC_NOT_FOUND);
             return null;
-        }
+        });
     }
 
     @PostMapping(path = "/user", consumes = MediaType.APPLICATION_JSON_VALUE)
@@ -97,21 +91,20 @@ public class UsersApi {
 
     @PutMapping(path = "/user/{userId}", consumes = MediaType.APPLICATION_JSON_VALUE)
     public void update(@PathVariable("userId") Long userId, @RequestBody AppUser appUser, HttpServletResponse response) {
-        AppUser existing = appuserRepository.findOne(userId);
-        if (existing != null) {
+        appuserRepository.findById(userId).ifPresentOrElse(existing -> {
             appUser.setId(userId);
             appUser.setPassword(passwordEncoder.encode(appUser.getPassword()));
             appUser.setRoles(existing.getRoles());
             appuserRepository.saveAndFlush(appUser);
-        } else {
+        }, () -> {
             response.setStatus(HttpServletResponse.SC_NOT_FOUND);
-        }
+        });
     }
 
     @DeleteMapping(path = "/user/{userId}", produces = MediaType.TEXT_HTML_VALUE)
     public void delete(@PathVariable("userId") Long userId, HttpServletResponse response) {
-        if(appuserRepository.exists(userId)) {
-            appuserRepository.delete(userId);
+        if(appuserRepository.existsById(userId)) {
+            appuserRepository.deleteById(userId);
         } else {
             response.setStatus(HttpServletResponse.SC_NOT_FOUND);
         }
@@ -120,8 +113,7 @@ public class UsersApi {
     @PutMapping(path = "/user/{userId}/roles", consumes = MediaType.APPLICATION_JSON_VALUE)
     public void userAssignment(@PathVariable("userId") Long userId, @RequestParam("action") AssignmentAction action,
                                @RequestBody EntityAssignments assignments, HttpServletResponse response) {
-        AppUser existingUser = appuserRepository.findOne(userId);
-        if (existingUser != null) {
+        appuserRepository.findById(userId).ifPresentOrElse(existingUser -> {
             Collection<Role> rolesToAssign = existingUser.getRoles();
             List<Long> existingRoleIds = rolesToAssign.stream()
                     .map(Role::getId)
@@ -135,12 +127,7 @@ public class UsersApi {
                         }
                     })
                     .map(id -> {
-                        Role r = roleRepository.findOne(id);
-                        if (r == null) {
-                            throw new RuntimeException("Invalid role id: " + id + " can not continue assignment!");
-                        } else {
-                            return r;
-                        }
+                        return roleRepository.findById(id).orElseThrow(() -> new RuntimeException("Invalid role id: " + id + " can not continue assignment!"));
                     }).collect(toList());
 
             if (!deltaRoles.isEmpty()) {
@@ -152,8 +139,8 @@ public class UsersApi {
                 existingUser.setRoles(rolesToAssign);
                 appuserRepository.saveAndFlush(existingUser);
             }
-        } else {
+        }, () -> {
             response.setStatus(HttpServletResponse.SC_NOT_FOUND);
-        }
+        });
     }
 }
