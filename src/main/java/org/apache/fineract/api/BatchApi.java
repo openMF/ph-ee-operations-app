@@ -22,6 +22,7 @@ import javax.servlet.http.HttpServletResponse;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Optional;
 
 import static org.apache.fineract.core.service.OperatorUtils.strip;
 
@@ -151,11 +152,11 @@ public class BatchApi {
         BigDecimal failedAmount = BigDecimal.ZERO;
 
         for (Transfer transfer : transfers) {
-            Variable variable = variableRepository.findByWorkflowInstanceKeyAndVariableName("paymentMode",
+            Optional<Variable> variable = variableRepository.findByWorkflowInstanceKeyAndVariableName("paymentMode",
                     transfer.getWorkflowInstanceKey());
-            if (variable != null) {
+            if (variable.isPresent()) {
                 // this will prevent 2x count of variables by eliminating data from transfers table
-                if (paymentModeConfig.getByMode(strip(variable.getValue()))
+                if (paymentModeConfig.getByMode(strip(variable.get().getValue()))
                         .getType().equalsIgnoreCase("BATCH")) {
                     continue;
                 }
