@@ -1,5 +1,7 @@
 package org.apache.fineract.api;
 
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.apache.fineract.operations.Beneficiary;
 import org.apache.fineract.operations.BeneficiaryRepository;
 import org.apache.fineract.organisation.user.AppUser;
