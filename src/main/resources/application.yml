@@ -29,7 +29,7 @@ caching:
 
 
 security:
-  filter-order: 5
+  filter-order: 4
 
 spring:
   resources:
