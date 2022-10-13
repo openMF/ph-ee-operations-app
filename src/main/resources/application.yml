@@ -41,6 +41,7 @@ spring:
     enabled: false
 
 server:
+#  contextPath: /api/v1
   port: 5000
 #
 #servers:
@@ -48,7 +49,7 @@ server:
 
 rest:
   authorization:
-    enabled: false
+    enabled: true
     settings:
       - endpoint: "/api/v1/transfer/*/refund"
         authority: "hasAuthority('REFUND')"

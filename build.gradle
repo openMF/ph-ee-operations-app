@@ -41,9 +41,7 @@ dependencies {
     compileOnly 'org.projectlombok:lombok:1.18.24'
     annotationProcessor 'org.projectlombok:lombok:1.18.24'
     implementation("org.springdoc:springdoc-openapi-ui:1.6.11")
-//            {
-//        exclude group: 'org.springframework.boot', module: 'spring-boot-autoconfigure'
-//    }
+
 }
 
 

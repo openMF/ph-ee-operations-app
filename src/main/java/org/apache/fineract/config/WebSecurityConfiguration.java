@@ -17,6 +17,7 @@ import io.swagger.v3.oas.models.parameters.Parameter;
 import org.springdoc.core.customizers.OperationCustomizer;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.WebSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
@@ -47,14 +48,15 @@ import org.springframework.web.method.HandlerMethod;
 //)
 
 @SecurityScheme(
-        name = "platform-tenantID",
-        scheme = "basic",
-        type = SecuritySchemeType.HTTP,
+        name = "Bearer Token",
+        scheme = "apikey",
+        type = SecuritySchemeType.APIKEY,
         in = SecuritySchemeIn.HEADER,
-        paramName = "Platform-TenantId"
+        paramName = "Bearer"
 )
 
 //@EnableWebSecurity
+@EnableGlobalMethodSecurity(prePostEnabled = true, securedEnabled = true)
 @Configuration
 public class WebSecurityConfiguration extends WebSecurityConfigurerAdapter {
 
