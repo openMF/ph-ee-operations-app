@@ -106,7 +106,6 @@ public class ServerApplication {
         registration.setFilter(new TenantAwareHeaderFilter(repository));
         registration.addUrlPatterns("/*");
         registration.setName("tenantFilter");
-        //registration.setOrder(securityFilterOrder - 4);
         registration.setOrder(Integer.MIN_VALUE+1);
         return registration;
     }

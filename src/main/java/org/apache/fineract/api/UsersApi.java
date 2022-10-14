@@ -48,7 +48,6 @@ import static org.apache.fineract.api.AssignmentAction.ASSIGN;
 @SecurityRequirement(name = "auth")
 @RequestMapping("/api/v1")
 @Tag(name = "Users API")
-
 public class UsersApi {
 
     @Autowired
