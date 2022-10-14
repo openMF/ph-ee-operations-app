@@ -17,6 +17,7 @@ import java.math.BigDecimal;
 import java.util.*;
 
 @RestController
+@SecurityRequirement(name = "auth")
 @RequestMapping("/api/v1")
 public class IMUConversionApi {
     @Autowired

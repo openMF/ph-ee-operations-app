@@ -28,6 +28,7 @@ import static org.apache.fineract.core.service.OperatorUtils.dateFormat;
 
 @RestController
 @RequestMapping("/api/v1")
+@SecurityRequirement(name = "auth")
 @Tag(name = "Operations Detailed API")
 @SecurityRequirement(name = "api")
 public class OperationsDetailedApi {

@@ -41,11 +41,8 @@ spring:
     enabled: false
 
 server:
-#  contextPath: /api/v1
   port: 5000
-#
-#servers:
-#  url: "http://localhost:5000/api/v1"
+
 
 rest:
   authorization:

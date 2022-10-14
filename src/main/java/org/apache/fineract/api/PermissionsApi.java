@@ -38,6 +38,7 @@ import java.util.List;
 
 
 @RestController
+@SecurityRequirement(name = "auth")
 @RequestMapping("/api/v1")
 public class PermissionsApi {
 

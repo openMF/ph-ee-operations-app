@@ -44,6 +44,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @RestController
+@SecurityRequirement(name = "auth")
 @RequestMapping("/api/v1")
 public class OperationsApi {
     private Logger logger = LoggerFactory.getLogger(this.getClass());

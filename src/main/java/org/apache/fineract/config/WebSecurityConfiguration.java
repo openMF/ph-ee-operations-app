@@ -25,38 +25,26 @@ import org.springframework.security.web.context.AbstractSecurityWebApplicationIn
 import org.springframework.web.method.HandlerMethod;
 
 
-@OpenAPIDefinition(
-        info = @Info(
+@OpenAPIDefinition (
+        info = @Info (
                 title = "Operations App",
                 description = "" +
                         "Operations app is a secure, multi-tenanted microservice platform",
-//                contact = @Contact(
-//                        name = "Operations",
-//                        url =
-////                        email =
-//                )
-                license = @License(
+                license = @License (
                         name = "MIT Licence",
-                        url = "https://github.com/openMF/ph-ee-operations-app/blob/master/LICENSE"))
+                        url = "https://github.com/openMF/ph-ee-operations-app/blob/master/LICENSE"
+                )
+        )
 )
-//@SecurityScheme(
-//        name = "api",
-//        scheme = "bearer",
-//        type = SecuritySchemeType.HTTP,
-//        in = SecuritySchemeIn.HEADER,
-//        paramName = "Platform-TenantId"
-//)
-
-@SecurityScheme(
-        name = "Bearer Token",
-        scheme = "apikey",
-        type = SecuritySchemeType.APIKEY,
+@SecurityScheme (
+        name = "auth",
+        scheme = "bearer",
+        type = SecuritySchemeType.HTTP,
         in = SecuritySchemeIn.HEADER,
-        paramName = "Bearer"
+        paramName = "Authorization: Bearer",
+        description = "Use this curl request to generate authToken\n\n\n" +
+                "curl -L -X POST 'http://localhost:5002/oauth/token?username=mifos&password=password&grant_type=password' -H 'Platform-TenantId: ibank-usa' -H 'Authorization: Basic Y2xpZW50Og==' -H 'Content-Type: text/plain' --data-raw '{}'\n\n"
 )
-
-//@EnableWebSecurity
-@EnableGlobalMethodSecurity(prePostEnabled = true, securedEnabled = true)
 @Configuration
 public class WebSecurityConfiguration extends WebSecurityConfigurerAdapter {
 
@@ -66,7 +54,8 @@ public class WebSecurityConfiguration extends WebSecurityConfigurerAdapter {
                 "/v3/api-docs/**",
                 "/swagger-resources/**",
                 "/swagger-ui/**",
-                "/swagger-config/**");
+                "/swagger-config/**",
+                "/api/v1/errorcode/**");
 
     }
 

@@ -32,6 +32,7 @@ import java.util.Optional;
 import static org.apache.fineract.core.service.OperatorUtils.strip;
 
 @RestController
+@SecurityRequirement(name = "auth")
 @RequestMapping("/api/v1")
 public class BatchApi {
     @Autowired
