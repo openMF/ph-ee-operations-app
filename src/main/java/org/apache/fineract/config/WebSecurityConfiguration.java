@@ -61,7 +61,6 @@ public class WebSecurityConfiguration extends WebSecurityConfigurerAdapter {
                     .name("Platform-TenantId")
                     .schema(new StringSchema())
                     .description("Tenant Id")
-                    .example("gorilla")
                     .required(true);
             operation.addParametersItem(missingParam1);
             return operation;
