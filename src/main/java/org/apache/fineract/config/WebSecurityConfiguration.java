@@ -36,7 +36,7 @@ import org.springframework.web.method.HandlerMethod;
         in = SecuritySchemeIn.HEADER,
         paramName = "Authorization: Bearer",
         description = "Use this curl request to generate authToken\n\n\n" +
-                "curl -L -X POST 'http://localhost:5002/oauth/token?username=mifos&password=password&grant_type=password' -H 'Platform-TenantId: ibank-usa' -H 'Authorization: Basic Y2xpZW50Og==' -H 'Content-Type: text/plain' --data-raw '{}'\n\n"
+                "curl -L -X POST 'http://localhost:5002/oauth/token?username=mifos&password=password&grant_type=password' -H 'Platform-TenantId: gorilla' -H 'Authorization: Basic Y2xpZW50Og==' -H 'Content-Type: text/plain' --data-raw '{}'\n\n"
 )
 @Configuration
 public class WebSecurityConfiguration extends WebSecurityConfigurerAdapter {
