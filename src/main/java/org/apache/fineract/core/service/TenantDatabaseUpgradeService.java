@@ -19,6 +19,13 @@
 package org.apache.fineract.core.service;
 
 import com.googlecode.flyway.core.Flyway;
+import liquibase.LabelExpression;
+import liquibase.Liquibase;
+import liquibase.database.Database;
+import liquibase.database.DatabaseFactory;
+import liquibase.database.jvm.JdbcConnection;
+import liquibase.exception.LiquibaseException;
+import liquibase.resource.ClassLoaderResourceAccessor;
 import org.apache.fineract.organisation.tenant.TenantServerConnection;
 import org.apache.fineract.organisation.tenant.TenantServerConnectionRepository;
 import org.slf4j.Logger;
@@ -28,6 +35,10 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.PostConstruct;
+import java.io.StringWriter;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -36,7 +47,6 @@ import static org.apache.fineract.config.ResourceServerConfig.IDENTITY_PROVIDER_
 
 @Service
 public class TenantDatabaseUpgradeService {
-
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
     @Autowired
@@ -66,6 +76,9 @@ public class TenantDatabaseUpgradeService {
     @Value("${fineract.datasource.common.driverclass_name}")
     private String driverClass;
 
+    @Value("${fineract.datasource.core.schema}")
+    private String tenantsSchema;
+
     @Value("${token.user.access-validity-seconds}")
     private String userTokenAccessValiditySeconds;
 
@@ -81,11 +94,52 @@ public class TenantDatabaseUpgradeService {
     @Value("#{'${tenants}'.split(',')}")
     private List<String> tenants;
 
-//    @PostConstruct
-    public void setupEnvironment() {
-        flywayDefaultSchema();
+    @Value("${spring.liquibase.contexts}")
+    private String liquibaseContexts;
+
+
+    @PostConstruct
+    public void setupEnvironment() throws Exception {
+        migrateTenantsSchema();
         insertTenants();
-        flywayTenants();
+//        flywayTenants();
+    }
+
+    private void migrateTenantsSchema() throws LiquibaseException, ClassNotFoundException, SQLException {
+        Class.forName(driverClass);
+        String jdbcUrl = String.format("%s:%s://%s:%s/%s", jdbcProtocol, jdbcSubprotocol, hostname, port, tenantsSchema);
+        logger.info("connecting to JDBC URL {}", jdbcUrl);
+        Connection connection = DriverManager.getConnection(jdbcUrl, username, password);
+
+        Database database = DatabaseFactory.getInstance().findCorrectDatabaseImplementation(new JdbcConnection(connection));
+        String changeLogFile = "/db/changelog/db.changelog-master.xml";
+//        String changeLogFile = "/db/changelog/tenant-store/initial-switch-changelog-tenant-store.xml";
+        logger.info("starting Liquibase migrations using {} on database {}", changeLogFile, database);
+        Liquibase liquibase = new Liquibase(changeLogFile, new ClassLoaderResourceAccessor(), database);
+//        liquibase.setChangeLogParameter("fineract.tenant.host", hostname);
+//        liquibase.setChangeLogParameter("fineract.tenant.port", port);
+//        liquibase.setChangeLogParameter("fineract.tenant.username", username);
+//        liquibase.setChangeLogParameter("fineract.tenant.password", password);
+//        liquibase.setChangeLogParameter("fineract.tenant.parameters", "");
+//        liquibase.setChangeLogParameter("fineract.tenant.schema-name", tenant);
+        liquibase.update(liquibaseContexts);
+    }
+
+    private void insertTenants() {
+        for (String tenant : tenants) {
+            logger.info("validating tenant '{}'", tenant);
+            TenantServerConnection existingTenant = repository.findOneBySchemaName(tenant);
+            if (existingTenant == null) {
+                TenantServerConnection tenantServerConnection = new TenantServerConnection();
+                tenantServerConnection.setSchemaName(tenant);
+                tenantServerConnection.setSchemaServer(hostname);
+                tenantServerConnection.setSchemaServerPort(String.valueOf(port));
+                tenantServerConnection.setSchemaUsername(username);
+                tenantServerConnection.setSchemaPassword(password);
+                tenantServerConnection.setAutoUpdateEnabled(true);
+                repository.saveAndFlush(tenantServerConnection);
+            }
+        }
     }
 
     private void flywayTenants() {
@@ -114,30 +168,5 @@ public class TenantDatabaseUpgradeService {
                 }
             }
         }
-    }
-
-    private void insertTenants() {
-        for(String tenant : tenants) {
-            TenantServerConnection existingTenant = repository.findOneBySchemaName(tenant);
-            if(existingTenant == null) {
-                TenantServerConnection tenantServerConnection = new TenantServerConnection();
-                tenantServerConnection.setSchemaName(tenant);
-                tenantServerConnection.setSchemaServer(hostname);
-                tenantServerConnection.setSchemaServerPort(String.valueOf(port));
-                tenantServerConnection.setSchemaUsername(username);
-                tenantServerConnection.setSchemaPassword(password);
-                tenantServerConnection.setAutoUpdateEnabled(true);
-                repository.saveAndFlush(tenantServerConnection);
-            }
-        }
-    }
-
-    private void flywayDefaultSchema() {
-        final Flyway fw = new Flyway();
-        fw.setDataSource(dataSourcePerTenantService.retrieveDataSource());
-        fw.setLocations("sql/migrations/core");
-        fw.setInitOnMigrate(true);
-        fw.setOutOfOrder(true);
-        fw.migrate();
     }
 }

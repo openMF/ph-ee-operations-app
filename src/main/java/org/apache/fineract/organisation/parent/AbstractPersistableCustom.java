@@ -41,7 +41,6 @@ public abstract class AbstractPersistableCustom<PK extends Serializable> impleme
     }
 
     public void setId(final Long id) {
-
         this.id = id;
     }
 

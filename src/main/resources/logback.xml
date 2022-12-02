@@ -26,8 +26,8 @@
     <logger name="org" level="INFO"/>
     <logger name="com" level="INFO"/>
 
-    <logger name="org.fineract" level="DEBUG"/>
-    <logger name="org.liquibase" level="DEBUG"/>
+    <logger name="org.apache.fineract" level="DEBUG"/>
+    <logger name="liquibase" level="INFO"/>
     <logger name="org.springframework" level="INFO"/>
 
     <root level="DEBUG">

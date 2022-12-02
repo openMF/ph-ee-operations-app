@@ -42,7 +42,7 @@
             <column defaultValue="mysql" name="schema_password" type="VARCHAR(100)">
                 <constraints nullable="false"/>
             </column>
-            <column defaultValueNumeric="1" name="auto_update" type="TINYINT">
+            <column defaultValueNumeric="1" name="auto_update" type="BOOLEAN">
                 <constraints nullable="false"/>
             </column>
             <column defaultValueNumeric="5" name="pool_initial_size" type="INT"/>

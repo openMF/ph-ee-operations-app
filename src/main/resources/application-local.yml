@@ -24,4 +24,4 @@ fineract:
 
 spring:
   liquibase:
-    contexts: postgresql
+    contexts: postgresql,initial_switch,tenant_store_db
