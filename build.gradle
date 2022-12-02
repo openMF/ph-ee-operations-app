@@ -31,6 +31,8 @@ dependencies {
     implementation 'org.apache.commons:commons-lang3:3.3.2'
     implementation 'com.zaxxer:HikariCP:3.4.5'
     implementation 'mysql:mysql-connector-java:8.0.20'
+    implementation group: 'org.postgresql', name: 'postgresql', version: '42.5.1'
+    implementation group: 'org.liquibase', name: 'liquibase-core', version: '4.17.2'
     implementation 'com.googlecode.flyway:flyway-core:2.1.1'
     implementation 'net.sf.ehcache:ehcache:2.10.6'
     testImplementation 'junit:junit:4.11'

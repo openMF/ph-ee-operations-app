@@ -81,7 +81,7 @@ public class TenantDatabaseUpgradeService {
     @Value("#{'${tenants}'.split(',')}")
     private List<String> tenants;
 
-    @PostConstruct
+//    @PostConstruct
     public void setupEnvironment() {
         flywayDefaultSchema();
         insertTenants();

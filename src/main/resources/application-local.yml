@@ -1,0 +1,27 @@
+tenants: "binx"
+
+token:
+  client:
+    channel:
+      secret: "p2345"
+
+channel-connector:
+  url: http://med-connector-channel.mifos.io
+  transfer-path: /channel/transfer
+
+fineract:
+  datasource:
+    core:
+      host: localhost
+      port: 5432
+      schema: tenants
+      username: postgres
+      password: password
+    common:
+      protocol: jdbc
+      subprotocol: postgresql
+      driverclass_name: org.postgresql.Driver
+
+spring:
+  liquibase:
+    contexts: postgresql

@@ -10,6 +10,16 @@ fineract:
       protocol: jdbc
       subprotocol: mysql
       driverclass_name: com.mysql.cj.jdbc.Driver
+  tenant:
+    host: ${FINERACT_DEFAULT_TENANTDB_HOSTNAME:localhost}
+    port: ${FINERACT_DEFAULT_TENANTDB_PORT:3306}
+    username: ${FINERACT_DEFAULT_TENANTDB_UID:root}
+    password: ${FINERACT_DEFAULT_TENANTDB_PWD:mysql}
+    parameters: ${FINERACT_DEFAULT_TENANTDB_CONN_PARAMS:}
+    timezone: ${FINERACT_DEFAULT_TENANTDB_TIMEZONE:Asia/Kolkata}
+    identifier: ${FINERACT_DEFAULT_TENANTDB_IDENTIFIER:default}
+    name: ${FINERACT_DEFAULT_TENANTDB_NAME:fineract_default}
+    description: ${FINERACT_DEFAULT_TENANTDB_DESCRIPTION:Default Demo Tenant}
 
 token:
   user:
@@ -36,6 +46,20 @@ spring:
       enabled: false
   jmx:
     enabled: false
+  liquibase:
+    change-log: classpath:/db/changelog/db.changelog-master.xml
+    parameters:
+      fineract:
+        tenant:
+          identifier: ${fineract.tenant.identifier}
+          description: ${fineract.tenant.description}
+          timezone: ${fineract.tenant.timezone}
+          schema-name: ${fineract.tenant.name}
+          host: ${fineract.tenant.host}
+          port: ${fineract.tenant.port}
+          username: ${fineract.tenant.username}
+          password: ${fineract.tenant.password}
+          parameters: ${fineract.tenant.parameters}
 
 server:
   port: 5000
