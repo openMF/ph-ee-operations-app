@@ -1,4 +1,4 @@
-FROM openjdk:8
+FROM openjdk:17-bullseye
 EXPOSE 5000
 
 COPY build/libs/*.jar .
