@@ -18,8 +18,6 @@
  */
 package org.apache.fineract.core.service;
 
-import com.googlecode.flyway.core.Flyway;
-import liquibase.LabelExpression;
 import liquibase.Liquibase;
 import liquibase.database.Database;
 import liquibase.database.DatabaseFactory;
@@ -35,15 +33,10 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.PostConstruct;
-import java.io.StringWriter;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
-
-import static org.apache.fineract.config.ResourceServerConfig.IDENTITY_PROVIDER_RESOURCE_ID;
 
 @Service
 public class TenantDatabaseUpgradeService {
@@ -77,7 +70,7 @@ public class TenantDatabaseUpgradeService {
     private String driverClass;
 
     @Value("${fineract.datasource.core.schema}")
-    private String tenantsSchema;
+    private String connectionsSchema;
 
     @Value("${token.user.access-validity-seconds}")
     private String userTokenAccessValiditySeconds;
@@ -100,36 +93,32 @@ public class TenantDatabaseUpgradeService {
 
     @PostConstruct
     public void setupEnvironment() throws Exception {
-        migrateTenantsSchema();
-        insertTenants();
-//        flywayTenants();
+        Connection connection = createConnection(hostname, port, username, password, connectionsSchema);
+        migrate("/db/changelog/db.changelog-master.xml", connection);
+        generateTenantsConnections();
+        migrateTenants();
     }
 
-    private void migrateTenantsSchema() throws LiquibaseException, ClassNotFoundException, SQLException {
-        Class.forName(driverClass);
-        String jdbcUrl = String.format("%s:%s://%s:%s/%s", jdbcProtocol, jdbcSubprotocol, hostname, port, tenantsSchema);
+    private Connection createConnection(String hostname, int port, String username, String password, String schema) throws SQLException {
+        String jdbcUrl = String.format("%s:%s://%s:%s/%s", jdbcProtocol, jdbcSubprotocol, hostname, port, schema);
         logger.info("connecting to JDBC URL {}", jdbcUrl);
-        Connection connection = DriverManager.getConnection(jdbcUrl, username, password);
+        return DriverManager.getConnection(jdbcUrl, username, password);
+    }
 
+    private void migrate(String changeLogFile, Connection connection) throws LiquibaseException, ClassNotFoundException, SQLException {
+        Class.forName(driverClass);
         Database database = DatabaseFactory.getInstance().findCorrectDatabaseImplementation(new JdbcConnection(connection));
-        String changeLogFile = "/db/changelog/db.changelog-master.xml";
-//        String changeLogFile = "/db/changelog/tenant-store/initial-switch-changelog-tenant-store.xml";
         logger.info("starting Liquibase migrations using {} on database {}", changeLogFile, database);
         Liquibase liquibase = new Liquibase(changeLogFile, new ClassLoaderResourceAccessor(), database);
-//        liquibase.setChangeLogParameter("fineract.tenant.host", hostname);
-//        liquibase.setChangeLogParameter("fineract.tenant.port", port);
-//        liquibase.setChangeLogParameter("fineract.tenant.username", username);
-//        liquibase.setChangeLogParameter("fineract.tenant.password", password);
-//        liquibase.setChangeLogParameter("fineract.tenant.parameters", "");
-//        liquibase.setChangeLogParameter("fineract.tenant.schema-name", tenant);
         liquibase.update(liquibaseContexts);
     }
 
-    private void insertTenants() {
+    private void generateTenantsConnections() {
         for (String tenant : tenants) {
             logger.info("validating tenant '{}'", tenant);
             TenantServerConnection existingTenant = repository.findOneBySchemaName(tenant);
             if (existingTenant == null) {
+                logger.info("generating tenant '{}'", tenant);
                 TenantServerConnection tenantServerConnection = new TenantServerConnection();
                 tenantServerConnection.setSchemaName(tenant);
                 tenantServerConnection.setSchemaServer(hostname);
@@ -138,31 +127,23 @@ public class TenantDatabaseUpgradeService {
                 tenantServerConnection.setSchemaPassword(password);
                 tenantServerConnection.setAutoUpdateEnabled(true);
                 repository.saveAndFlush(tenantServerConnection);
+            } else {
+                logger.debug("found existing tenant {}", existingTenant);
             }
         }
     }
 
-    private void flywayTenants() {
+    private void migrateTenants() {
         for (TenantServerConnection tenant : repository.findAll()) {
             if (tenant.isAutoUpdateEnabled()) {
                 try {
+                    logger.debug("migrating tenant {}", tenant);
                     ThreadLocalContextUtil.setTenant(tenant);
-                    final Flyway fw = new Flyway();
-                    fw.setDataSource(dataSourcePerTenantService.retrieveDataSource());
-                    fw.setLocations("sql/migrations/tenant");
-                    fw.setInitOnMigrate(true);
-                    fw.setOutOfOrder(true);
-                    Map<String, String> placeholders = new HashMap<>();
-                    placeholders.put("tenantDatabase", tenant.getSchemaName()); // add tenant as aud claim
-                    placeholders.put("userAccessTokenValidity", userTokenAccessValiditySeconds);
-                    placeholders.put("userRefreshTokenValidity", userTokenRefreshValiditySeconds);
-                    placeholders.put("clientAccessTokenValidity", clientAccessTokenValidity);
-                    placeholders.put("channelClientSecret", channelClientSecret);
-                    placeholders.put("identityProviderResourceId", IDENTITY_PROVIDER_RESOURCE_ID); // add identity provider as aud claim
-                    fw.setPlaceholders(placeholders);
-                    fw.migrate();
+                    Connection connection = createConnection(tenant.getSchemaServer(), Integer.parseInt(tenant.getSchemaServerPort()), tenant.getSchemaUsername(), tenant.getSchemaPassword(), tenant.getSchemaName());
+                    migrate("/db/changelog/tenant/initial-switch-changelog-tenant.xml", connection);
+
                 } catch (Exception e) {
-                    logger.error("Error when running flyway on tenant: {}", tenant.getSchemaName(), e);
+                    logger.error("Error migrating tenant {}: {}", tenant, e);
                 } finally {
                     ThreadLocalContextUtil.clear();
                 }
