@@ -36,6 +36,7 @@ import javax.annotation.PostConstruct;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -134,6 +135,7 @@ public class TenantDatabaseUpgradeService {
     }
 
     private void migrateTenants() {
+        List<String> errors = new ArrayList<>();
         for (TenantServerConnection tenant : repository.findAll()) {
             if (tenant.isAutoUpdateEnabled()) {
                 try {
@@ -144,10 +146,13 @@ public class TenantDatabaseUpgradeService {
 
                 } catch (Exception e) {
                     logger.error("Error migrating tenant {}: {}", tenant, e);
+                    errors.add(e.getMessage());
                 } finally {
                     ThreadLocalContextUtil.clear();
                 }
             }
         }
+        if (errors.size() > 0) {
+            throw new RuntimeException("Failed to migrate " + errors.size() + "tenants, errors were: " + errors);
+        }
     }
-}
