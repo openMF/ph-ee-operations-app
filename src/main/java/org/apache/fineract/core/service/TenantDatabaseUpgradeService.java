@@ -156,3 +156,4 @@ public class TenantDatabaseUpgradeService {
             throw new RuntimeException("Failed to migrate " + errors.size() + "tenants, errors were: " + errors);
         }
     }
+}
