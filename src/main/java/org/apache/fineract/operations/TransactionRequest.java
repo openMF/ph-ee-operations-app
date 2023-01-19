@@ -80,7 +80,7 @@ public class TransactionRequest extends AbstractPersistableCustom<Long> {
     @Column(name = "CLIENTCORRELATIONID")
     private String clientCorrelationId;
 
-    @Column(name = "error_information")
+    @Column(name = "ERROR_INFORMATION")
     private String errorInformation;
 
     @OneToMany(cascade = CascadeType.ALL, mappedBy = "transactionRequest", fetch = FetchType.LAZY)
