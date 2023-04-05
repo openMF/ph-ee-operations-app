@@ -153,7 +153,7 @@ public class TenantDatabaseUpgradeService {
             }
         }
         if (errors.size() > 0) {
-            throw new RuntimeException("Failed to migrate " + errors.size() + "tenants, errors were: " + errors);
+            throw new RuntimeException("Failed to migrate " + errors.size() + " tenants, errors were: " + errors);
         }
     }
 }

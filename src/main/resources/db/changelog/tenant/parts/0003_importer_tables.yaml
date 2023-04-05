@@ -1,0 +1,381 @@
+databaseChangeLog:
+  - changeSet:
+      id: 1670941730813-1
+      author: kjozsa (generated)
+      changes:
+        - createTable:
+            columns:
+              - column:
+                  autoIncrement: true
+                  constraints:
+                    nullable: false
+                    primaryKey: true
+                    primaryKeyName: batches_pkey
+                  name: id
+                  type: INTEGER
+              - column:
+                  name: batch_id
+                  type: VARCHAR(255)
+              - column:
+                  name: completed
+                  type: BIGINT
+              - column:
+                  name: completed_amount
+                  type: BIGINT
+              - column:
+                  name: completed_at
+                  type: TIMESTAMP WITHOUT TIME ZONE
+              - column:
+                  name: failed
+                  type: BIGINT
+              - column:
+                  name: failed_amount
+                  type: BIGINT
+              - column:
+                  name: note
+                  type: VARCHAR(255)
+              - column:
+                  name: ongoing
+                  type: BIGINT
+              - column:
+                  name: ongoing_amount
+                  type: BIGINT
+              - column:
+                  name: payment_mode
+                  type: VARCHAR(255)
+              - column:
+                  name: request_file
+                  type: VARCHAR(255)
+              - column:
+                  name: request_id
+                  type: VARCHAR(255)
+              - column:
+                  name: result_generated_at
+                  type: TIMESTAMP WITHOUT TIME ZONE
+              - column:
+                  name: result_file
+                  type: VARCHAR(255)
+              - column:
+                  name: started_at
+                  type: TIMESTAMP WITHOUT TIME ZONE
+              - column:
+                  name: sub_batch_id
+                  type: VARCHAR(255)
+              - column:
+                  name: total_amount
+                  type: BIGINT
+              - column:
+                  name: total_transactions
+                  type: BIGINT
+              - column:
+                  name: workflow_instance_key
+                  type: BIGINT
+              - column:
+                  name: workflow_key
+                  type: BIGINT
+            tableName: batches
+  - changeSet:
+      id: 1670941730813-2
+      author: kjozsa (generated)
+      changes:
+        - createTable:
+            columns:
+              - column:
+                  autoIncrement: true
+                  constraints:
+                    nullable: false
+                    primaryKey: true
+                    primaryKeyName: businesskeys_pkey
+                  name: id
+                  type: INTEGER
+              - column:
+                  name: business_key
+                  type: VARCHAR(255)
+              - column:
+                  name: business_key_type
+                  type: VARCHAR(255)
+              - column:
+                  name: timestamp
+                  type: BIGINT
+              - column:
+                  name: workflow_instance_key
+                  type: BIGINT
+            tableName: businesskeys
+  - changeSet:
+      id: 1670941730813-3
+      author: kjozsa (generated)
+      changes:
+        - createTable:
+            columns:
+              - column:
+                  autoIncrement: true
+                  constraints:
+                    nullable: false
+                    primaryKey: true
+                    primaryKeyName: tasks_pkey
+                  name: id
+                  type: INTEGER
+              - column:
+                  name: element_id
+                  type: VARCHAR(255)
+              - column:
+                  name: intent
+                  type: VARCHAR(255)
+              - column:
+                  name: record_type
+                  type: VARCHAR(255)
+              - column:
+                  name: timestamp
+                  type: BIGINT
+              - column:
+                  name: type
+                  type: VARCHAR(255)
+              - column:
+                  name: workflow_instance_key
+                  type: BIGINT
+              - column:
+                  name: workflow_key
+                  type: BIGINT
+            tableName: tasks
+  - changeSet:
+      id: 1670941730813-5
+      author: kjozsa (generated)
+      changes:
+        - createTable:
+            columns:
+              - column:
+                  autoIncrement: true
+                  constraints:
+                    nullable: false
+                    primaryKey: true
+                    primaryKeyName: transaction_requests_pkey
+                  name: id
+                  type: INTEGER
+              - column:
+                  name: amount
+                  type: numeric(38)
+              - column:
+                  name: auth_type
+                  type: VARCHAR(255)
+              - column:
+                  name: clientcorrelationid
+                  type: VARCHAR(255)
+              - column:
+                  name: completed_at
+                  type: TIMESTAMP WITHOUT TIME ZONE
+              - column:
+                  name: currency
+                  type: VARCHAR(255)
+              - column:
+                  name: direction
+                  type: VARCHAR(255)
+              - column:
+                  name: external_id
+                  type: VARCHAR(255)
+              - column:
+                  name: initiator_type
+                  type: VARCHAR(255)
+              - column:
+                  name: payee_dfsp_id
+                  type: VARCHAR(255)
+              - column:
+                  name: payee_fee
+                  type: numeric(38)
+              - column:
+                  name: payee_party_id
+                  type: VARCHAR(255)
+              - column:
+                  name: payee_party_id_type
+                  type: VARCHAR(255)
+              - column:
+                  name: payee_quote_code
+                  type: VARCHAR(255)
+              - column:
+                  name: payer_dfsp_id
+                  type: VARCHAR(255)
+              - column:
+                  name: payer_fee
+                  type: numeric(38)
+              - column:
+                  name: payer_party_id
+                  type: VARCHAR(255)
+              - column:
+                  name: payer_party_id_type
+                  type: VARCHAR(255)
+              - column:
+                  name: payer_quote_code
+                  type: VARCHAR(255)
+              - column:
+                  name: scenario
+                  type: VARCHAR(255)
+              - column:
+                  name: started_at
+                  type: TIMESTAMP WITHOUT TIME ZONE
+              - column:
+                  name: state
+                  type: VARCHAR(255)
+              - column:
+                  name: transaction_id
+                  type: VARCHAR(255)
+              - column:
+                  name: workflow_instance_key
+                  type: BIGINT
+            tableName: transaction_requests
+  - changeSet:
+      id: 1670941730813-6
+      author: kjozsa (generated)
+      changes:
+        - createTable:
+            columns:
+              - column:
+                  autoIncrement: true
+                  constraints:
+                    nullable: false
+                    primaryKey: true
+                    primaryKeyName: transfers_pkey
+                  name: id
+                  type: INTEGER
+              - column:
+                  name: amount
+                  type: numeric(38)
+              - column:
+                  name: batch_id
+                  type: VARCHAR(255)
+              - column:
+                  name: clientcorrelationid
+                  type: VARCHAR(255)
+              - column:
+                  name: completed_at
+                  type: TIMESTAMP WITHOUT TIME ZONE
+              - column:
+                  name: currency
+                  type: VARCHAR(255)
+              - column:
+                  name: direction
+                  type: VARCHAR(255)
+              - column:
+                  name: error_information
+                  type: VARCHAR(255)
+              - column:
+                  name: payee_dfsp_id
+                  type: VARCHAR(255)
+              - column:
+                  name: payee_fee
+                  type: numeric(38)
+              - column:
+                  name: payee_fee_currency
+                  type: VARCHAR(255)
+              - column:
+                  name: payee_party_id
+                  type: VARCHAR(255)
+              - column:
+                  name: payee_party_id_type
+                  type: VARCHAR(255)
+              - column:
+                  name: payee_quote_code
+                  type: VARCHAR(255)
+              - column:
+                  name: payer_dfsp_id
+                  type: VARCHAR(255)
+              - column:
+                  name: payer_fee
+                  type: numeric(38)
+              - column:
+                  name: payer_fee_currency
+                  type: VARCHAR(255)
+              - column:
+                  name: payer_party_id
+                  type: VARCHAR(255)
+              - column:
+                  name: payer_party_id_type
+                  type: VARCHAR(255)
+              - column:
+                  name: payer_quote_code
+                  type: VARCHAR(255)
+              - column:
+                  name: started_at
+                  type: TIMESTAMP WITHOUT TIME ZONE
+              - column:
+                  name: status
+                  type: VARCHAR(255)
+              - column:
+                  name: status_detail
+                  type: VARCHAR(255)
+              - column:
+                  name: transaction_id
+                  type: VARCHAR(255)
+              - column:
+                  name: workflow_instance_key
+                  type: BIGINT
+            tableName: transfers
+  - changeSet:
+      id: 1670941730813-7
+      author: kjozsa (generated)
+      changes:
+        - createTable:
+            columns:
+              - column:
+                  autoIncrement: true
+                  constraints:
+                    nullable: false
+                    primaryKey: true
+                    primaryKeyName: variables_pkey
+                  name: id
+                  type: INTEGER
+              - column:
+                  name: name
+                  type: VARCHAR(255)
+              - column:
+                  name: timestamp
+                  type: BIGINT
+              - column:
+                  name: value
+                  type: TEXT
+              - column:
+                  name: workflow_instance_key
+                  type: BIGINT
+              - column:
+                  name: workflow_key
+                  type: BIGINT
+            tableName: variables
+  - changeSet:
+      id: 1670941730813-8
+      author: kjozsa (generated)
+      changes:
+        - createIndex:
+            columns:
+              - column:
+                  name: workflow_instance_key
+            indexName: idx_batches_key
+            tableName: batches
+  - changeSet:
+      id: 1670941730813-9
+      author: kjozsa (generated)
+      changes:
+        - createIndex:
+            columns:
+              - column:
+                  name: business_key
+            indexName: idx_businesskey
+            tableName: businesskeys
+  - changeSet:
+      id: 1670941730813-10
+      author: kjozsa (generated)
+      changes:
+        - createIndex:
+            columns:
+              - column:
+                  name: business_key_type
+            indexName: idx_businesskeytype
+            tableName: businesskeys
+  - changeSet:
+      id: 1670941730813-11
+      author: kjozsa (generated)
+      changes:
+        - createIndex:
+            columns:
+              - column:
+                  name: workflow_instance_key
+            indexName: idx_workflowinstancekey
+            tableName: businesskeys
+
