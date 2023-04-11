@@ -33,6 +33,8 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.ComponentScan;
+import org.springframework.context.annotation.FilterType;
 import org.springframework.context.annotation.Primary;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -157,9 +159,5 @@ public class ServerApplication {
         List<AuthenticationProvider> providers = new ArrayList<>();
         providers.add(customAuthenticationProvider);
         return new ProviderManager(providers);
-    }
-
-    public static void main(String[] args) throws Exception {
-        SpringApplication.run(ServerApplication.class, args);
     }
 }

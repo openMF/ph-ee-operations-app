@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.fineract.core.service;
+package org.apache.fineract.core.service.migrate;
 
 import liquibase.Liquibase;
 import liquibase.database.Database;
@@ -24,6 +24,8 @@ import liquibase.database.DatabaseFactory;
 import liquibase.database.jvm.JdbcConnection;
 import liquibase.exception.LiquibaseException;
 import liquibase.resource.ClassLoaderResourceAccessor;
+import org.apache.fineract.core.service.DataSourcePerTenantService;
+import org.apache.fineract.core.service.ThreadLocalContextUtil;
 import org.apache.fineract.organisation.tenant.TenantServerConnection;
 import org.apache.fineract.organisation.tenant.TenantServerConnectionRepository;
 import org.slf4j.Logger;
@@ -94,6 +96,12 @@ public class TenantDatabaseUpgradeService {
 
     @PostConstruct
     public void setupEnvironment() throws Exception {
+        String profile = System.getenv("SPRING_PROFILES_ACTIVE");
+        if (profile == null || !profile.contains("migrate")) {
+            logger.info("not running in migrate mode, skipping liquibase migrations");
+            return;
+        }
+
         Connection connection = createConnection(hostname, port, username, password, connectionsSchema);
         migrate("/db/changelog/db.changelog-master.xml", connection);
         generateTenantsConnections();
