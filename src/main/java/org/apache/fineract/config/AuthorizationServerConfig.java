@@ -13,6 +13,9 @@ import org.springframework.security.oauth2.config.annotation.web.configurers.Aut
 import org.springframework.security.oauth2.provider.client.JdbcClientDetailsService;
 import org.springframework.security.oauth2.provider.token.TokenStore;
 import org.springframework.security.oauth2.provider.token.store.JwtAccessTokenConverter;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+import org.springframework.web.filter.CorsFilter;
 
 @Configuration
 @EnableAuthorizationServer
@@ -52,8 +55,16 @@ public class AuthorizationServerConfig extends AuthorizationServerConfigurerAdap
     }
 
     public void configure(AuthorizationServerSecurityConfigurer security) {
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        CorsConfiguration config = new CorsConfiguration();
+        config.applyPermitDefaultValues();
+
+        source.registerCorsConfiguration("/oauth/token", config);
+        CorsFilter filter = new CorsFilter(source);
+        security.addTokenEndpointAuthenticationFilter(filter);
         security.tokenKeyAccess("permitAll()")
                 .checkTokenAccess("isAuthenticated()")
-                .authenticationEntryPoint(invalidAuthEntryPoint);
+                .authenticationEntryPoint(invalidAuthEntryPoint)
+                .addTokenEndpointAuthenticationFilter(filter);
     }
 }

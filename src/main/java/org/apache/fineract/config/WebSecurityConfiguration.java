@@ -14,6 +14,7 @@ import io.swagger.v3.oas.models.parameters.Parameter;
 import org.springdoc.core.customizers.OperationCustomizer;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.web.builders.WebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
 import org.springframework.web.method.HandlerMethod;
@@ -48,7 +49,8 @@ public class WebSecurityConfiguration extends WebSecurityConfigurerAdapter {
                 "/swagger-resources/**",
                 "/swagger-ui/**",
                 "/swagger-config/**",
-                "/api/v1/errorcode/**");
+                "/api/v1/errorcode/**")
+                .and().ignoring().antMatchers(HttpMethod.OPTIONS);
     }
 
     @Bean
