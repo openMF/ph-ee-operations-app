@@ -61,7 +61,6 @@ public class AuthorizationServerConfig extends AuthorizationServerConfigurerAdap
 
         source.registerCorsConfiguration("/oauth/token", config);
         CorsFilter filter = new CorsFilter(source);
-        security.addTokenEndpointAuthenticationFilter(filter);
         security.tokenKeyAccess("permitAll()")
                 .checkTokenAccess("isAuthenticated()")
                 .authenticationEntryPoint(invalidAuthEntryPoint)

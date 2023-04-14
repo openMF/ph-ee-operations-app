@@ -40,8 +40,12 @@ public class TenantAwareUserDetailsService implements UserDetailsService {
     @Cacheable(cacheNames = CACHE_USER_BY_NAME)
     public UserDetails loadUserByUsername(final String username) {
         AppUser appUserByName = appUserRepository.findAppUserByName(username);
-        AppUser unknowUser = new AppUser();
-        unknowUser.setRoles(Collections.emptyList());
-        return appUserByName == null ? unknowUser : appUserByName;
+        if (appUserByName != null) {
+            return appUserByName;
+        } else {
+            AppUser unknownUser = new AppUser();
+            unknownUser.setRoles(Collections.emptyList());
+            return unknownUser;
+        }
     }
 }
