@@ -38,6 +38,7 @@ public class TenantAwareHeaderFilter extends GenericFilterBean {
     private static final String TENANT_IDENTIFIER_REQUEST_HEADER = "Platform-TenantId";
     private static final String TENANT_IDENTIFIER_REQUEST_PARAM = "tenantIdentifier";
     private static final String EXCLUDED_URL = "/oauth/token";
+    private static final String EXCLUDED_ACTUATOR_PREFIX = "/actuator";
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
     private final TenantServerConnectionRepository repository;
 
@@ -53,7 +54,7 @@ public class TenantAwareHeaderFilter extends GenericFilterBean {
         task.start();
 
         try {
-            if(!EXCLUDED_URL.equals(request.getServletPath()) &&
+            if(!EXCLUDED_URL.equals(request.getServletPath()) && !request.getServletPath().startsWith(EXCLUDED_ACTUATOR_PREFIX) &&
                     !request.getServletPath().contains("swagger") && !request.getServletPath().contains("api-docs") && !"OPTIONS".equalsIgnoreCase(request.getMethod()) ) {
                 String tenantIdentifier = request.getHeader(TENANT_IDENTIFIER_REQUEST_HEADER);
                 if (tenantIdentifier == null || tenantIdentifier.length() < 1) {
