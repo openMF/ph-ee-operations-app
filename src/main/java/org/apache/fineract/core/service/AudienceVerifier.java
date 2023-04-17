@@ -19,6 +19,9 @@ public class AudienceVerifier implements JwtClaimsSetVerifier {
     public void verify(Map<String, Object> claims) throws InvalidTokenException {
         TenantServerConnection tenant = ThreadLocalContextUtil.getTenant();
         List<String> audiences = (List) claims.get("aud");
+        if (audiences == null) {
+            return;
+        }
         audiences.stream()
                 .filter(a -> tenant.getSchemaName().equals(a))
                 .findFirst()
