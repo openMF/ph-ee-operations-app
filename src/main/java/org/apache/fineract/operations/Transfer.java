@@ -2,23 +2,17 @@ package org.apache.fineract.operations;
 
 
 import com.fasterxml.jackson.annotation.JsonFormat;
-import org.apache.fineract.organisation.parent.AbstractPersistableCustom;
-import org.eclipse.persistence.annotations.Index;
 
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.EnumType;
-import javax.persistence.Enumerated;
-import javax.persistence.Table;
+import javax.persistence.*;
 import java.math.BigDecimal;
 import java.util.Date;
 
 @Entity
 @Table(name = "transfers")
-public class Transfer extends AbstractPersistableCustom<Long> {
+public class Transfer {
 
+    @Id
     @Column(name = "WORKFLOW_INSTANCE_KEY")
-    @Index(name = "idx_paymentProcessId")
     @JsonFormat(shape = JsonFormat.Shape.STRING)
     private Long workflowInstanceKey;
 
