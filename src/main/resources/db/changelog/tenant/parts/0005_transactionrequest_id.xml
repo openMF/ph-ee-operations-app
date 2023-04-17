@@ -22,8 +22,9 @@
 <databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
                    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
                    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.1.xsd">
-    <include file="parts/0003_postgresql_specific_initial_data.xml" relativeToChangelogFile="true"/>
-    <include file="parts/0004_camelcase_column_renaming.xml" relativeToChangelogFile="true"/>
-    <include file="parts/0004_camelcase_column_renaming.xml" relativeToChangelogFile="true"/>
-    <include file="parts/0005_transactionrequest_id.xml" relativeToChangelogFile="true"/>
+    <changeSet author="fineract" id="1" objectQuotingStrategy="QUOTE_ALL_OBJECTS">
+        <insert tableName="variables">
+            <column name="transactionrequest_id" valueNumeric="192"/>
+        </insert>
+    </changeSet>
 </databaseChangeLog>
