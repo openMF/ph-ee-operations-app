@@ -9,6 +9,7 @@ import org.apache.fineract.data.ErrorResponse;
 import org.apache.fineract.exception.WriteToCsvException;
 import org.apache.fineract.operations.*;
 import org.apache.fineract.utils.CsvUtility;
+import org.apache.fineract.utils.DateUtil;
 import org.mifos.connector.common.channel.dto.PhErrorDTO;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -31,7 +32,6 @@ import java.util.List;
 
 import static org.apache.fineract.core.service.OperatorUtils.dateFormat;
 
-
 @RestController
 @RequestMapping("/api/v1")
 @SecurityRequirement(name = "auth")
@@ -49,6 +49,9 @@ public class OperationsDetailedApi {
 
     @Autowired
     private ObjectMapper objectMapper;
+
+    @Autowired
+    private DateUtil dateUtil;
 
     @GetMapping("/transfers")
     public Page<TransferResponse> transfers(
@@ -201,6 +204,7 @@ public class OperationsDetailedApi {
             @RequestParam(value = "currency", required = false) String currency,
             @RequestParam(value = "startFrom", required = false) String startFrom,
             @RequestParam(value = "startTo", required = false) String startTo,
+            @RequestParam(value = "interfaceTimezone", required = false) String interfaceTimezone,
             @RequestParam(value = "direction", required = false) String direction,
             @RequestParam(value = "clientCorrelationId", required = false) String clientCorrelationId,
             @RequestParam(value = "sortedBy", required = false) String sortedBy,
@@ -237,6 +241,14 @@ public class OperationsDetailedApi {
             specs.add(TransactionRequestSpecs.match(TransactionRequest_.direction, direction));
         }
         try {
+            if (interfaceTimezone != null) {
+                if (startFrom != null) {
+                    startFrom = dateUtil.getUTCFormat(startFrom, interfaceTimezone);
+                }
+                if (startTo != null) {
+                    startTo = dateUtil.getUTCFormat(startTo, interfaceTimezone);
+                }
+            }
             if (startFrom != null && startTo != null) {
                 specs.add(TransactionRequestSpecs.between(TransactionRequest_.startedAt, dateFormat().parse(startFrom), dateFormat().parse(startTo)));
             } else if (startFrom != null) {
@@ -287,6 +299,7 @@ public class OperationsDetailedApi {
             @RequestParam(value = "startFrom", required = false) String startFrom,
             @RequestParam(value = "startTo", required = false) String startTo,
             @RequestParam(value = "state", required = false) String state,
+            @RequestParam(value = "interfaceTimezone", required = false) String interfaceTimezone,
             @RequestBody Map<String, List<String>> body) {
 
         if(!command.equalsIgnoreCase("export")) {
@@ -302,6 +315,16 @@ public class OperationsDetailedApi {
         if (state != null && parseState(state) != null) {
             specs.add(TransactionRequestSpecs.match(TransactionRequest_.state, parseState(state)));
             logger.info("State filter added");
+        }
+        if (startFrom != null || startTo != null) {
+            if (interfaceTimezone != null) {
+                if (startFrom != null) {
+                    startFrom = dateUtil.getUTCFormat(startFrom, interfaceTimezone);
+                }
+                if (startTo != null) {
+                    startTo = dateUtil.getUTCFormat(startTo, interfaceTimezone);
+                }
+            }
         }
         try {
             specs.add(getDateSpecification(startTo, startFrom));
