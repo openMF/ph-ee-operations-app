@@ -25,7 +25,6 @@ create table tenant_server_connections(
 	`schema_username` VARCHAR(100) NOT NULL,
 	`schema_password` VARCHAR(100) NOT NULL,
 	`auto_update` TINYINT(1) NOT NULL,
-	`tenant_timezone` TINYINT(1) NOT NULL,
 	PRIMARY KEY (`id`)
 	)
 COLLATE='utf8_general_ci'
