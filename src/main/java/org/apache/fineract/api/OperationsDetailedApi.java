@@ -203,7 +203,6 @@ public class OperationsDetailedApi {
             @RequestParam(value = "currency", required = false) String currency,
             @RequestParam(value = "startFrom", required = false) String startFrom,
             @RequestParam(value = "startTo", required = false) String startTo,
-            @RequestParam(value = "interfaceTimezone", required = false) String interfaceTimezone,
             @RequestParam(value = "direction", required = false) String direction,
             @RequestParam(value = "clientCorrelationId", required = false) String clientCorrelationId,
             @RequestParam(value = "sortedBy", required = false) String sortedBy,
@@ -240,17 +239,11 @@ public class OperationsDetailedApi {
             specs.add(TransactionRequestSpecs.match(TransactionRequest_.direction, direction));
         }
         try {
-            logger.info("startFrom Before: {}",startFrom);
-            logger.info("startTo Before: {}",startTo);
-            if (interfaceTimezone != null) {
-                if (startFrom != null) {
-                    startFrom = dateUtil.getUTCFormat(startFrom, interfaceTimezone);
-                }
-                if (startTo != null) {
-                    startTo = dateUtil.getUTCFormat(startTo, interfaceTimezone);
-                }
-                logger.info("startFrom After: {}",startFrom);
-                logger.info("startTo After: {}",startTo);
+            if (startFrom != null) {
+                startFrom = dateUtil.getUTCFormat(startFrom);
+            }
+            if (startTo != null) {
+                startTo = dateUtil.getUTCFormat(startTo);
             }
             if (startFrom != null && startTo != null) {
                 specs.add(TransactionRequestSpecs.between(TransactionRequest_.startedAt, dateFormat().parse(startFrom), dateFormat().parse(startTo)));
@@ -302,7 +295,6 @@ public class OperationsDetailedApi {
             @RequestParam(value = "startFrom", required = false) String startFrom,
             @RequestParam(value = "startTo", required = false) String startTo,
             @RequestParam(value = "state", required = false) String state,
-            @RequestParam(value = "interfaceTimezone", required = false) String interfaceTimezone,
             @RequestBody Map<String, List<String>> body) {
 
         if(!command.equalsIgnoreCase("export")) {
@@ -319,17 +311,11 @@ public class OperationsDetailedApi {
             specs.add(TransactionRequestSpecs.match(TransactionRequest_.state, parseState(state)));
             logger.info("State filter added");
         }
-        if (startFrom != null || startTo != null) {
-            if (interfaceTimezone != null) {
-                if (startFrom != null) {
-                    startFrom = dateUtil.getUTCFormat(startFrom, interfaceTimezone);
-                }
-                if (startTo != null) {
-                    startTo = dateUtil.getUTCFormat(startTo, interfaceTimezone);
-                }
-            }
-            logger.info("startFrom : {}",startFrom);
-            logger.info("startTo : {}",startTo);
+        if (startFrom != null) {
+            startFrom = dateUtil.getUTCFormat(startFrom);
+        }
+        if (startTo != null) {
+            startTo = dateUtil.getUTCFormat(startTo);
         }
         try {
             specs.add(getDateSpecification(startTo, startFrom));
