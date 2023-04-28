@@ -17,7 +17,7 @@ public class DateUtil {
         LocalDateTime localDateTime = LocalDateTime.parse(dateTime, dateTimeFormatter);
         ZoneId zoneId = ZoneId.of(interfaceTimezone);
         ZonedDateTime zonedDateTime = localDateTime.atZone(zoneId);
-        logger.info("Date time format : {}", zonedDateTime);
+        logger.info("Date Inside: {}",zonedDateTime);
         return String.valueOf(zonedDateTime);
     }
 }

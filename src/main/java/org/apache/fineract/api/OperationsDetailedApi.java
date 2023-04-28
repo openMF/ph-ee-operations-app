@@ -240,6 +240,8 @@ public class OperationsDetailedApi {
             specs.add(TransactionRequestSpecs.match(TransactionRequest_.direction, direction));
         }
         try {
+            logger.info("startFrom Before: {}",startFrom);
+            logger.info("startTo Before: {}",startTo);
             if (interfaceTimezone != null) {
                 if (startFrom != null) {
                     startFrom = dateUtil.getUTCFormat(startFrom, interfaceTimezone);
@@ -247,8 +249,8 @@ public class OperationsDetailedApi {
                 if (startTo != null) {
                     startTo = dateUtil.getUTCFormat(startTo, interfaceTimezone);
                 }
-                logger.info("startFrom : {}",startFrom);
-                logger.info("startTo : {}",startTo);
+                logger.info("startFrom After: {}",startFrom);
+                logger.info("startTo After: {}",startTo);
             }
             if (startFrom != null && startTo != null) {
                 specs.add(TransactionRequestSpecs.between(TransactionRequest_.startedAt, dateFormat().parse(startFrom), dateFormat().parse(startTo)));
