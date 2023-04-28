@@ -135,6 +135,12 @@ public class OperationsDetailedApi {
             }
             specs.add(TransferSpecs.multiMatch(Transfer_.payerPartyId, Transfer_.payeePartyId, partyId));
         }
+        if (startFrom != null) {
+            startFrom = dateUtil.getUTCFormat(startFrom);
+        }
+        if (startTo != null) {
+            startTo = dateUtil.getUTCFormat(startTo);
+        }
         try {
             if (startFrom != null && startTo != null) {
                 specs.add(TransferSpecs.between(Transfer_.startedAt, dateFormat().parse(startFrom), dateFormat().parse(startTo)));
@@ -241,9 +247,7 @@ public class OperationsDetailedApi {
         }
         try {
             if (startFrom != null) {
-                logger.info("Start From Before:{}",startFrom);
                 startFrom = dateUtil.getUTCFormat(startFrom);
-                logger.info("Start From After:{}",startFrom);
             }
             if (startTo != null) {
                 startTo = dateUtil.getUTCFormat(startTo);
