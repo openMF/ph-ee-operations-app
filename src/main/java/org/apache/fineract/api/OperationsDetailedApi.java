@@ -50,7 +50,6 @@ public class OperationsDetailedApi {
     @Autowired
     private ObjectMapper objectMapper;
 
-    @Autowired
     private DateUtil dateUtil;
 
     @GetMapping("/transfers")
