@@ -240,7 +240,9 @@ public class OperationsDetailedApi {
         }
         try {
             if (startFrom != null) {
+                logger.info("Start From Before:{}",startFrom);
                 startFrom = dateUtil.getUTCFormat(startFrom);
+                logger.info("Start From After:{}",startFrom);
             }
             if (startTo != null) {
                 startTo = dateUtil.getUTCFormat(startTo);
