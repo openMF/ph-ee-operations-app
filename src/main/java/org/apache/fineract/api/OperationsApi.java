@@ -2,22 +2,7 @@ package org.apache.fineract.api;
 
 
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
-import io.swagger.v3.oas.annotations.tags.Tag;
-import org.apache.fineract.operations.Batch;
-import org.apache.fineract.operations.BatchRepository;
-import org.apache.fineract.operations.BusinessKey;
-import org.apache.fineract.operations.BusinessKeyRepository;
-import org.apache.fineract.operations.Task;
-import org.apache.fineract.operations.TaskRepository;
-import org.apache.fineract.operations.TransactionRequest;
-import org.apache.fineract.operations.TransactionRequestDetail;
-import org.apache.fineract.operations.TransactionRequestRepository;
-import org.apache.fineract.operations.Transfer;
-import org.apache.fineract.operations.TransferDetail;
-import org.apache.fineract.operations.TransferRepository;
-import org.apache.fineract.operations.TransferStatus;
-import org.apache.fineract.operations.Variable;
-import org.apache.fineract.operations.VariableRepository;
+import org.apache.fineract.operations.*;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.slf4j.Logger;
@@ -28,18 +13,10 @@ import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestHeader;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.client.RestTemplate;
 
 import javax.servlet.http.HttpServletResponse;
-import java.util.Date;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -94,6 +71,26 @@ public class OperationsApi {
         httpHeaders.add("Content-Type", "application/json");
         // httpHeaders.add("Authorization", "Bearer token"); TODO auth needed?
 
+        JSONObject channelRequest = prepareRefundRequest(requestBody, existingIncomingTransfer);
+
+        ResponseEntity<String> channelResponse = restTemplate.exchange(channelConnectorUrl + channelConnectorTransferPath,
+                HttpMethod.POST,
+                new HttpEntity<String>(channelRequest.toString(), httpHeaders),
+                String.class);
+        response.setStatus(channelResponse.getStatusCodeValue());
+        return channelResponse.getBody();
+    }
+
+    @PostMapping("/transfer/{transactionId}/recall")
+    public String recallTransfer(@RequestHeader("Platform-TenantId") String tenantId,
+                                 @PathVariable("transactionId") String transactionId,
+                                 @RequestBody String requestBody,
+                                 HttpServletResponse response) {
+        logger.info("Recall transfer request received for transactionId {}", transactionId);
+        return "OK";
+    }
+
+    private JSONObject prepareRefundRequest(String requestBody, Transfer existingIncomingTransfer) {
         JSONObject channelRequest = new JSONObject();
         JSONObject payer = new JSONObject();
         JSONObject payerPartyIdInfo = new JSONObject();
@@ -124,13 +121,7 @@ public class OperationsApi {
         } catch (Exception e) {
             logger.error("Could not parse refund request body {}, can not set comment on refund!", requestBody);
         }
-
-        ResponseEntity<String> channelResponse = restTemplate.exchange(channelConnectorUrl + channelConnectorTransferPath,
-                HttpMethod.POST,
-                new HttpEntity<String>(channelRequest.toString(), httpHeaders),
-                String.class);
-        response.setStatus(channelResponse.getStatusCodeValue());
-        return channelResponse.getBody();
+        return channelRequest;
     }
 
     private void addExtension(JSONArray extensionList, String key, String value) {
