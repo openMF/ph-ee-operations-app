@@ -3,7 +3,7 @@ tenants: "binx"
 token:
   client:
     channel:
-      secret: "p2345"
+      secret: "p3456"
 
 channel-connector:
   url: http://med-connector-channel.mifos.io

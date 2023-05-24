@@ -2,6 +2,7 @@ package org.apache.fineract.api;
 
 
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import org.apache.commons.text.StringEscapeUtils;
 import org.apache.fineract.operations.*;
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -136,6 +137,14 @@ public class OperationsApi {
         Transfer transfer = transferRepository.findFirstByWorkflowInstanceKey(workflowInstanceKey);
         List<Task> tasks = taskRepository.findByWorkflowInstanceKeyOrderByTimestamp(workflowInstanceKey);
         List<Variable> variables = variableRepository.findByWorkflowInstanceKeyOrderByTimestamp(workflowInstanceKey);
+        variables.forEach(it -> {
+            String value = StringEscapeUtils.unescapeJava(it.getValue());
+            value = StringEscapeUtils.unescapeJson(value);
+            value = value
+                    .replaceAll("^\"", "")
+                    .replaceAll("\"$", "");
+            it.setValue(value);
+        });
         return new TransferDetail(transfer, tasks, variables);
     }
 
