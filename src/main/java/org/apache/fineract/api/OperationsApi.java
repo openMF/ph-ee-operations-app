@@ -100,7 +100,7 @@ public class OperationsApi {
 
         camundaService.startRecallFlow(paymentScheme, transfer);
         response.setStatus(200);
-        return "OK";
+        return "{}";
     }
 
     private JSONObject prepareRefundRequest(String requestBody, Transfer existingIncomingTransfer) {
