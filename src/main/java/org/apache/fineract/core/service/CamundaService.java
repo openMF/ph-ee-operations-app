@@ -38,23 +38,24 @@ public class CamundaService {
         String tenantIdentifier = getTransferVariable(transfer, "tenantIdentifier");
         String transactionGroupId = getTransferVariable(transfer, "transactionGroupId");
         String debtorIban = getTransferVariable(transfer, "debtorIban");
+        String transactionId = getTransferVariable(transfer, "transactionId");
 
         Map<String, String> variables = new HashMap<>();
         String bpmn;
 
         if ("HCT_INST".equalsIgnoreCase(paymentScheme)) {
-            String pacs008TransactionIdentification = transfer.getTransactionId();
+            String pacs008TransactionIdentification = transactionId;
 
             bpmn = recallBpmnInstant;
             variables.put("originalPacs008", pacs008);
             variables.put("paymentScheme", "HCT_INST:RECALL");
             variables.put("iban", iban);
             variables.put("recallReason", "AB05");  // TODO validate / externalize
-            variables.put("originalPacs008TransactionIdentification", transfer.getTransactionId());
+            variables.put("originalPacs008TransactionIdentification", transactionId);
             variables.put("creditorIban", debtorIban);
             variables.put("tenantIdentifier", tenantIdentifier);
             variables.put("transactionGroupId", transactionGroupId);
-            variables.put("internalCorrelationId", transactionGroupId);
+            variables.put("internalCorrelationId", transactionId);
 
         } else {
             bpmn = recallBpmnBatch;
