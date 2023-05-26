@@ -33,7 +33,6 @@ public class CamundaService {
 
 
     public void startRecallFlow(String paymentScheme, Transfer transfer) {
-        String pacs008 = getTransferVariable(transfer, "generatedPacs008");
         String iban = getTransferVariable(transfer, "iban");
         String tenantIdentifier = getTransferVariable(transfer, "tenantIdentifier");
         String transactionGroupId = getTransferVariable(transfer, "transactionGroupId");
@@ -45,7 +44,7 @@ public class CamundaService {
 
         if ("HCT_INST".equalsIgnoreCase(paymentScheme)) {
             bpmn = recallBpmnInstant;
-            variables.put("originalPacs008", pacs008);
+            variables.put("originalPacs008", getTransferVariable(transfer, "generatedPacs008"));
             variables.put("paymentScheme", "HCT_INST:RECALL");
             variables.put("iban", iban);
             variables.put("recallReason", "CUST");  // TODO validate / externalize
@@ -57,9 +56,8 @@ public class CamundaService {
 
         } else {
             bpmn = recallBpmnBatch;
-            variables.put("originalPacs008", pacs008);
-            variables.put("paymentScheme", "IG2:RECALL");
-            variables.put("iban", iban);
+            variables.put("originalPacs008", getTransferVariable(transfer, "generatedPacs008Fragment"));
+            variables.put("originalPacs008TransactionIdentification", transactionId);
             variables.put("recallReason", "CUST"); // TODO validate / externalize
             variables.put("tenantIdentifier", tenantIdentifier);
         }
