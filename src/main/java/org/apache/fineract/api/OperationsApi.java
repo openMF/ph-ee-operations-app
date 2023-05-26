@@ -100,8 +100,6 @@ public class OperationsApi {
 
         camundaService.startRecallFlow(paymentScheme, transfer);
 
-
-
         return "OK";
     }
 

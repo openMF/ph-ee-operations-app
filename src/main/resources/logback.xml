@@ -30,7 +30,8 @@
     <logger name="liquibase" level="INFO"/>
     <logger name="liquibase.changelog" level="WARN"/>
     <logger name="org.springframework" level="INFO"/>
-    <logger name="org.springframework.security" level="DEBUG"/>
+    <logger name="org.springframework.security" level="INFO"/>
+    <logger name="org.springframework.security.oauth2.provider" level="DEBUG"/>
 
     <root level="DEBUG">
         <appender-ref ref="CONSOLE"/>

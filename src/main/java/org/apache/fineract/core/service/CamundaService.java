@@ -74,7 +74,10 @@ public class CamundaService {
 
     private String getTransferVariable(Transfer transfer, String variableName) {
         Optional<Variable> optional = variableRepository.findByWorkflowInstanceKeyAndVariableName(variableName, transfer.getWorkflowInstanceKey());
-        return optional.map(Variable::getValue).orElse("");
+        return optional.map(Variable::getValue).orElseGet(() -> {
+            logger.warn("variable {} not found for transfer {}", variableName, transfer.getWorkflowInstanceKey());
+            return "";
+        });
     }
 
     private String retrieveTransactionIdentification(String pacs008) {
