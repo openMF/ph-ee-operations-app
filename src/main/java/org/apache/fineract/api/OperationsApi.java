@@ -154,7 +154,9 @@ public class OperationsApi {
             value = StringEscapeUtils.unescapeJson(value);
             value = value
                     .replaceAll("^\"", "")
-                    .replaceAll("\"$", "");
+                    .replaceAll("\"$", "")
+                    .replaceAll("\n$", "")
+            ;
             it.setValue(value);
         });
         return new TransferDetail(transfer, tasks, variables);
