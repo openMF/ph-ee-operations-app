@@ -44,13 +44,11 @@ public class CamundaService {
         String bpmn;
 
         if ("HCT_INST".equalsIgnoreCase(paymentScheme)) {
-            String pacs008TransactionIdentification = transactionId;
-
             bpmn = recallBpmnInstant;
             variables.put("originalPacs008", pacs008);
             variables.put("paymentScheme", "HCT_INST:RECALL");
             variables.put("iban", iban);
-            variables.put("recallReason", "AB05");  // TODO validate / externalize
+            variables.put("recallReason", "CUST");  // TODO validate / externalize
             variables.put("originalPacs008TransactionIdentification", transactionId);
             variables.put("creditorIban", debtorIban);
             variables.put("tenantIdentifier", tenantIdentifier);
@@ -62,7 +60,7 @@ public class CamundaService {
             variables.put("originalPacs008", pacs008);
             variables.put("paymentScheme", "IG2:RECALL");
             variables.put("iban", iban);
-            variables.put("recallReason", "DUP"); // TODO validate / externalize
+            variables.put("recallReason", "CUST"); // TODO validate / externalize
             variables.put("tenantIdentifier", tenantIdentifier);
         }
 
