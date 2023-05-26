@@ -98,6 +98,17 @@ payment:
   modes:
     - id: "slcb"
       type: "BATCH"
+zeebe:
+  client:
+    connection-mode: ADDRESS
+    broker:
+      gatewayAddress: localhost:26500
+    security:
+      plaintext: true
 
 application:
   bucket-name: paymenthub-ee-dev
+
+recall:
+  bpmn-instant: "binx_hct_inst_outgoing_recall-binx"
+  bpmn-batch: "binx_ig2_outgoing_recall-binx"

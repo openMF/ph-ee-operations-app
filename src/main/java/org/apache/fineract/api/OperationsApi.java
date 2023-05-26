@@ -3,6 +3,7 @@ package org.apache.fineract.api;
 
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import org.apache.commons.text.StringEscapeUtils;
+import org.apache.fineract.core.service.CamundaService;
 import org.apache.fineract.operations.*;
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -19,6 +20,7 @@ import org.springframework.web.client.RestTemplate;
 
 import javax.servlet.http.HttpServletResponse;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @RestController
@@ -46,6 +48,9 @@ public class OperationsApi {
     private BatchRepository batchRepository;
 
     @Autowired
+    private CamundaService camundaService;
+
+    @Autowired
     private RestTemplate restTemplate;
 
     @Value("${channel-connector.url}")
@@ -53,6 +58,7 @@ public class OperationsApi {
 
     @Value("${channel-connector.transfer-path}")
     private String channelConnectorTransferPath;
+
 
     @PostMapping("/transfer/{transactionId}/refund")
     public String refundTransfer(@RequestHeader("Platform-TenantId") String tenantId,
@@ -88,6 +94,14 @@ public class OperationsApi {
                                  @RequestBody String requestBody,
                                  HttpServletResponse response) {
         logger.info("Recall transfer request received for transactionId {}", transactionId);
+        Transfer transfer = transferRepository.findFirstByTransactionIdAndDirection(transactionId, "OUTGOING");
+        Optional<Variable> paymentSchemeOpt = variableRepository.findByWorkflowInstanceKeyAndVariableName("paymentScheme", transfer.getWorkflowInstanceKey());
+        String paymentScheme = paymentSchemeOpt.orElseThrow(() -> new RuntimeException("Payment scheme not found for transactionId " + transactionId)).getValue();
+
+        camundaService.startRecallFlow(paymentScheme, transfer);
+
+
+
         return "OK";
     }
 

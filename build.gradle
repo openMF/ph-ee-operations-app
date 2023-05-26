@@ -10,6 +10,12 @@ plugins {
 }
 apply plugin: "io.spring.dependency-management"
 
+dependencyManagement {
+    imports {
+        mavenBom 'io.netty:netty-bom:4.1.65.Final'
+    }
+}
+
 repositories {
     maven {
         url = uri('https://repo.maven.apache.org/maven2')
@@ -36,6 +42,8 @@ dependencies {
     implementation group: 'org.liquibase', name: 'liquibase-core', version: '4.17.2'
     implementation 'com.googlecode.flyway:flyway-core:2.1.1'
     implementation 'net.sf.ehcache:ehcache:2.10.6'
+    implementation 'io.camunda:zeebe-client-java:8.0.6'
+//    implementation 'io.camunda.spring:spring-boot-starter-camunda:8.2.1'
     testImplementation 'junit:junit:4.11'
     implementation 'net.sf.supercsv:super-csv:2.4.0'
     implementation 'com.amazonaws:aws-java-sdk:1.11.486'
