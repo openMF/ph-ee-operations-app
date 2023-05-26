@@ -41,7 +41,7 @@ public class CamundaService {
         String bpmn;
 
         if ("HCT_INST".equalsIgnoreCase(paymentScheme)) {
-            String pacs008TransactionIdentification = retrieveTransactionIdentification(pacs008);
+            String pacs008TransactionIdentification = transfer.getTransactionId();
 
             bpmn = recallBpmnInstant;
             variables.put("originalPacs008", pacs008);
@@ -78,9 +78,5 @@ public class CamundaService {
             logger.warn("variable {} not found for transfer {}", variableName, transfer.getWorkflowInstanceKey());
             return "";
         });
-    }
-
-    private String retrieveTransactionIdentification(String pacs008) {
-        return "TODO";
     }
 }
