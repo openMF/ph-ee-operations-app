@@ -33,7 +33,7 @@ public class CamundaService {
 
 
     public void startRecallFlow(String paymentScheme, Transfer transfer) {
-        String pacs008 = getTransferVariable(transfer, "iso20022_pacs008_request");
+        String pacs008 = getTransferVariable(transfer, "generatedPacs008");
         String iban = getTransferVariable(transfer, "iban");
         String tenantIdentifier = getTransferVariable(transfer, "tenantIdentifier");
 
