@@ -38,30 +38,26 @@ public class CamundaService {
         String transactionGroupId = getTransferVariable(transfer, "transactionGroupId");
         String debtorIban = getTransferVariable(transfer, "debtorIban");
         String transactionId = getTransferVariable(transfer, "transactionId");
-
         Map<String, String> variables = new HashMap<>();
         String bpmn;
-
         if ("HCT_INST".equalsIgnoreCase(paymentScheme)) {
             bpmn = recallBpmnInstant;
             variables.put("originalPacs008", getTransferVariable(transfer, "generatedPacs008"));
             variables.put("paymentScheme", "HCT_INST:RECALL");
-            variables.put("iban", iban);
-            variables.put("creditorIban", debtorIban);
-            variables.put("transactionGroupId", transactionGroupId);
-            variables.put("internalCorrelationId", transactionId);
+            variables.put("recallAdditionalInformation", "");  // TODO take value from UI field
         } else {
             bpmn = recallBpmnBatch;
             variables.put("originalPacs008", getTransferVariable(transfer, "generatedPacs008Fragment"));
+            variables.put("paymentScheme", "IG2:RECALL");
         }
-
+        variables.put("iban", iban);
+        variables.put("creditorIban", debtorIban);
+        variables.put("transactionGroupId", transactionGroupId);
+        variables.put("internalCorrelationId", transactionId);
         variables.put("tenantIdentifier", tenantIdentifier);
         variables.put("originalPacs008TransactionIdentification", transactionId);
-        variables.put("recallReason", "CUST");  // TODO take value from UI field
-        variables.put("recallAdditionalInformation", "");  // TODO take value from UI field
-
+        variables.put("recallReason", "TECH");  // TODO take value from UI field
         logger.debug("starting BPMN {} for paymentScheme {} using variables: {}", bpmn, paymentScheme, variables);
-
         zeebeClient.newCreateInstanceCommand()
                 .bpmnProcessId(bpmn)
                 .latestVersion()
