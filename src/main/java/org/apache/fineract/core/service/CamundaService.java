@@ -47,20 +47,18 @@ public class CamundaService {
             variables.put("originalPacs008", getTransferVariable(transfer, "generatedPacs008"));
             variables.put("paymentScheme", "HCT_INST:RECALL");
             variables.put("iban", iban);
-            variables.put("recallReason", "CUST");  // TODO validate / externalize
-            variables.put("originalPacs008TransactionIdentification", transactionId);
             variables.put("creditorIban", debtorIban);
-            variables.put("tenantIdentifier", tenantIdentifier);
             variables.put("transactionGroupId", transactionGroupId);
             variables.put("internalCorrelationId", transactionId);
-
         } else {
             bpmn = recallBpmnBatch;
             variables.put("originalPacs008", getTransferVariable(transfer, "generatedPacs008Fragment"));
-            variables.put("originalPacs008TransactionIdentification", transactionId);
-            variables.put("recallReason", "CUST"); // TODO validate / externalize
-            variables.put("tenantIdentifier", tenantIdentifier);
         }
+
+        variables.put("tenantIdentifier", tenantIdentifier);
+        variables.put("originalPacs008TransactionIdentification", transactionId);
+        variables.put("recallReason", "CUST");  // TODO take value from UI field
+        variables.put("recallAdditionalInformation", "");  // TODO take value from UI field
 
         logger.debug("starting BPMN {} for paymentScheme {} using variables: {}", bpmn, paymentScheme, variables);
 
