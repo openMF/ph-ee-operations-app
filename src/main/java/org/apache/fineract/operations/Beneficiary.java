@@ -3,9 +3,9 @@ package org.apache.fineract.operations;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import org.apache.fineract.organisation.parent.AbstractPersistableCustom;
 
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.Table;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Table;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @Entity

@@ -18,9 +18,9 @@
  */
 package org.apache.fineract.core.service;
 
+import jakarta.servlet.http.HttpServletRequest;
 import org.apache.commons.lang3.time.StopWatch;
 
-import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;

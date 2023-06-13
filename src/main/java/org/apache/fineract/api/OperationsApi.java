@@ -2,6 +2,21 @@ package org.apache.fineract.api;
 
 
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import jakarta.servlet.http.HttpServletResponse;
+import org.apache.fineract.operations.BatchRepository;
+import org.apache.fineract.operations.BusinessKey;
+import org.apache.fineract.operations.BusinessKeyRepository;
+import org.apache.fineract.operations.Task;
+import org.apache.fineract.operations.TaskRepository;
+import org.apache.fineract.operations.TransactionRequest;
+import org.apache.fineract.operations.TransactionRequestDetail;
+import org.apache.fineract.operations.TransactionRequestRepository;
+import org.apache.fineract.operations.Transfer;
+import org.apache.fineract.operations.TransferDetail;
+import org.apache.fineract.operations.TransferRepository;
+import org.apache.fineract.operations.TransferStatus;
+import org.apache.fineract.operations.Variable;
+import org.apache.fineract.operations.VariableRepository;
 import org.apache.commons.text.StringEscapeUtils;
 import org.apache.fineract.core.service.CamundaService;
 import org.apache.fineract.operations.*;
@@ -18,7 +33,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.client.RestTemplate;
 
-import javax.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpServletResponse;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;

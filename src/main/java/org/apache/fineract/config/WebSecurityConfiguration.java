@@ -15,42 +15,53 @@ import org.springdoc.core.customizers.OperationCustomizer;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
-import org.springframework.security.config.annotation.web.builders.WebSecurity;
-import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
+import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import org.springframework.web.method.HandlerMethod;
 
-@OpenAPIDefinition (
-        info = @Info (
-                title = "Operations App",
-                description = "" +
-                        "Operations app is a secure, multi-tenanted microservice platform",
-                license = @License (
-                        name = "MIT Licence",
-                        url = "https://github.com/openMF/ph-ee-operations-app/blob/master/LICENSE"
-                )
-        )
-)
-@SecurityScheme (
-        name = "auth",
-        scheme = "bearer",
-        type = SecuritySchemeType.HTTP,
-        in = SecuritySchemeIn.HEADER,
-        paramName = "Authorization: Bearer",
-        description = "Use this curl request to generate authToken\n\n\n" +
-                "curl --location --request POST 'ops-bk.sandbox.fynarfin.io/oauth/token?username=mifos&password=password&grant_type=password' --header 'Platform-TenantId: gorilla' --header 'Authorization: Basic Y2xpZW50Og==' --header 'Content-Type: text/plain' --data-raw '{}'\n\n"
-)
+//@OpenAPIDefinition (
+//        info = @Info (
+//                title = "Operations App",
+//                description = "" +
+//                        "Operations app is a secure, multi-tenanted microservice platform",
+//                license = @License (
+//                        name = "MIT Licence",
+//                        url = "https://github.com/openMF/ph-ee-operations-app/blob/master/LICENSE"
+//                )
+//        )
+//)
+//@SecurityScheme (
+//        name = "auth",
+//        scheme = "bearer",
+//        type = SecuritySchemeType.HTTP,
+//        in = SecuritySchemeIn.HEADER,
+//        paramName = "Authorization: Bearer",
+//        description = "Use this curl request to generate authToken\n\n\n" +
+//                "curl --location --request POST 'ops-bk.sandbox.fynarfin.io/oauth/token?username=mifos&password=password&grant_type=password' --header 'Platform-TenantId: gorilla' --header 'Authorization: Basic Y2xpZW50Og==' --header 'Content-Type: text/plain' --data-raw '{}'\n\n"
+//)
 @Configuration
-public class WebSecurityConfiguration extends WebSecurityConfigurerAdapter {
+//@EnableWebSecurity
+public class WebSecurityConfiguration {
 
-    @Override
-    public void configure(WebSecurity web) throws Exception {
-        web.ignoring().antMatchers(
-                "/v3/api-docs/**",
-                "/swagger-resources/**",
-                "/swagger-ui/**",
-                "/swagger-config/**",
-                "/api/v1/errorcode/**")
-                .and().ignoring().antMatchers(HttpMethod.OPTIONS);
+    @Bean
+    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+        return http
+                .csrf().disable()
+                .authorizeHttpRequests(authorizeRequests ->
+                        authorizeRequests
+                                .requestMatchers("/v3/api-docs/**",
+                                        "/swagger-resources/**",
+                                        "/swagger-ui/**",
+                                        "/swagger-config/**",
+                                        "/api/v1/errorcode/**",
+                                        "/oauth/token").permitAll()
+                                .requestMatchers(HttpMethod.OPTIONS).permitAll()
+                                .anyRequest().permitAll()
+                ).build();
     }
 
     @Bean

@@ -14,9 +14,9 @@ fineract:
     core:
       host: localhost
       port: 5432
-      schema: tenants
-      username: postgres
-      password: password
+      schema: ph_ee_operations
+      username: karoly_torok
+      password: vR36GcaG
     common:
       protocol: jdbc
       subprotocol: postgresql

@@ -1,8 +1,8 @@
 package org.apache.fineract.utils;
 
+import jakarta.servlet.http.HttpServletResponse;
 import org.apache.fineract.data.ErrorCode;
 import org.apache.fineract.exception.WriteToCsvException;
-import javax.servlet.http.HttpServletResponse;
 import java.io.PrintWriter;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;

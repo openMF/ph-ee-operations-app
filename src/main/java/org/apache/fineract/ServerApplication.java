@@ -41,10 +41,10 @@ import org.springframework.security.authentication.dao.DaoAuthenticationProvider
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.security.oauth2.provider.token.DefaultTokenServices;
-import org.springframework.security.oauth2.provider.token.TokenStore;
-import org.springframework.security.oauth2.provider.token.store.JwtAccessTokenConverter;
-import org.springframework.security.oauth2.provider.token.store.JwtTokenStore;
+//import org.springframework.security.oauth2.provider.token.DefaultTokenServices;
+//import org.springframework.security.oauth2.provider.token.TokenStore;
+//import org.springframework.security.oauth2.provider.token.store.JwtAccessTokenConverter;
+//import org.springframework.security.oauth2.provider.token.store.JwtTokenStore;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
@@ -58,12 +58,15 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
-@SpringBootApplication
-@EnableConfigurationProperties
-@EnableAutoConfiguration(exclude = {DataSourceAutoConfiguration.class,
+@SpringBootApplication(exclude = {DataSourceAutoConfiguration.class,
         DataSourceTransactionManagerAutoConfiguration.class,
 //        FlywayAutoConfiguration.class,
         ErrorMvcAutoConfiguration.class})
+@EnableConfigurationProperties
+//@EnableAutoConfiguration(exclude = {DataSourceAutoConfiguration.class,
+//        DataSourceTransactionManagerAutoConfiguration.class,
+////        FlywayAutoConfiguration.class,
+//        ErrorMvcAutoConfiguration.class})
 public class ServerApplication {
 
     /**
@@ -111,7 +114,7 @@ public class ServerApplication {
     public FilterRegistrationBean corsFilter() {
         CorsConfiguration config = new CorsConfiguration();
         config.setAllowCredentials(true);
-        config.addAllowedOrigin("*");
+        config.addAllowedOriginPattern("*");
         config.addAllowedHeader("*");
         config.addAllowedMethod("*");
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
@@ -119,36 +122,6 @@ public class ServerApplication {
         FilterRegistrationBean bean = new FilterRegistrationBean(new CorsFilter(source));
         bean.setOrder(securityFilterOrder - 5);
         return bean;
-    }
-
-    @Bean
-    @Primary
-    public TokenStore tokenStore(JwtAccessTokenConverter accessTokenConverter) {
-        return new JwtTokenStore(accessTokenConverter);
-    }
-
-    @Bean
-    @Primary
-    public DefaultTokenServices tokenServices(TokenStore tokenStore) {
-        DefaultTokenServices service = new DefaultTokenServices();
-        service.setTokenStore(tokenStore);
-        return service;
-    }
-
-    @Bean
-    @Primary
-    public JwtAccessTokenConverter accessTokenConverter(AudienceVerifier verifier) throws IOException, URISyntaxException {
-        JwtAccessTokenConverter converter = new JwtAccessTokenConverter();
-        converter.setSigningKey(getPemContent("jwt.pem"));
-        converter.setVerifierKey(getPemContent("jwt_pub.pem"));
-        converter.setJwtClaimsSetVerifier(verifier);
-        return converter;
-    }
-
-    private String getPemContent(String file) throws IOException, URISyntaxException {
-        try (BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(new ClassPathResource(file).getInputStream()))) {
-            return bufferedReader.lines().collect(Collectors.joining(""));
-        }
     }
 
     @Bean

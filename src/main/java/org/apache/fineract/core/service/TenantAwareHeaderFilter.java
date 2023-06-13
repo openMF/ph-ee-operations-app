@@ -18,6 +18,11 @@
  */
 package org.apache.fineract.core.service;
 
+import jakarta.servlet.FilterChain;
+import jakarta.servlet.ServletRequest;
+import jakarta.servlet.ServletResponse;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import org.apache.commons.lang3.time.StopWatch;
 import org.apache.fineract.organisation.tenant.TenantServerConnectionRepository;
 import org.slf4j.Logger;
@@ -25,11 +30,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.filter.GenericFilterBean;
 
-import javax.servlet.FilterChain;
-import javax.servlet.ServletRequest;
-import javax.servlet.ServletResponse;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
+
 import java.io.IOException;
 
 
@@ -65,7 +66,7 @@ public class TenantAwareHeaderFilter extends GenericFilterBean {
                     throw new RuntimeException(
                             String.format("No tenant identifier found! Add request header: %s or request param: %s", TENANT_IDENTIFIER_REQUEST_HEADER, TENANT_IDENTIFIER_REQUEST_PARAM));
                 }
-
+                tenantIdentifier = "binx";  //TODO: REMOVE ONCE THE OAUTH BASED AUTH WORKS!!!!!!!!!!!
                 ThreadLocalContextUtil.setTenant(this.repository.findOneBySchemaName(tenantIdentifier));
             }
             chain.doFilter(request, res);
