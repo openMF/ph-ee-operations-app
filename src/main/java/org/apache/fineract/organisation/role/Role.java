@@ -19,10 +19,8 @@
 package org.apache.fineract.organisation.role;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import org.apache.fineract.organisation.parent.AbstractPersistableCustom;
-import org.apache.fineract.organisation.permission.Permission;
-import org.apache.fineract.organisation.user.AppUser;
-
+import java.util.Collection;
+import java.util.Objects;
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -31,8 +29,9 @@ import javax.persistence.JoinColumn;
 import javax.persistence.JoinTable;
 import javax.persistence.ManyToMany;
 import javax.persistence.Table;
-import java.util.Collection;
-import java.util.Objects;
+import org.apache.fineract.organisation.parent.AbstractPersistableCustom;
+import org.apache.fineract.organisation.permission.Permission;
+import org.apache.fineract.organisation.user.AppUser;
 
 @Entity
 @Table(name = "m_role")
@@ -47,10 +46,10 @@ public class Role extends AbstractPersistableCustom<Long> {
     @Column(name = "is_disabled", nullable = false)
     private Boolean disabled;
 
-    @ManyToMany(fetch = FetchType.LAZY, cascade = {CascadeType.REFRESH, CascadeType.DETACH, CascadeType.PERSIST, CascadeType.MERGE})
+    @ManyToMany(fetch = FetchType.LAZY, cascade = { CascadeType.REFRESH, CascadeType.DETACH, CascadeType.PERSIST, CascadeType.MERGE })
     private Collection<AppUser> appUsers;
 
-    @ManyToMany(fetch = FetchType.LAZY, cascade = {CascadeType.REFRESH, CascadeType.DETACH, CascadeType.PERSIST, CascadeType.MERGE})
+    @ManyToMany(fetch = FetchType.LAZY, cascade = { CascadeType.REFRESH, CascadeType.DETACH, CascadeType.PERSIST, CascadeType.MERGE })
     @JoinTable(name = "m_role_permission", joinColumns = @JoinColumn(name = "role_id"), inverseJoinColumns = @JoinColumn(name = "permission_id"))
     private Collection<Permission> permissions;
 

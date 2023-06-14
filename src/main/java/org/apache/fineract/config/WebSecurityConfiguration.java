@@ -18,36 +18,16 @@ import org.springframework.security.config.annotation.web.builders.WebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
 import org.springframework.web.method.HandlerMethod;
 
-@OpenAPIDefinition (
-        info = @Info (
-                title = "Operations App",
-                description = "" +
-                        "Operations app is a secure, multi-tenanted microservice platform",
-                license = @License (
-                        name = "MIT Licence",
-                        url = "https://github.com/openMF/ph-ee-operations-app/blob/master/LICENSE"
-                )
-        )
-)
-@SecurityScheme (
-        name = "auth",
-        scheme = "bearer",
-        type = SecuritySchemeType.HTTP,
-        in = SecuritySchemeIn.HEADER,
-        paramName = "Authorization: Bearer",
-        description = "Use this curl request to generate authToken\n\n\n" +
-                "curl --location --request POST 'ops-bk.sandbox.fynarfin.io/oauth/token?username=mifos&password=password&grant_type=password' --header 'Platform-TenantId: gorilla' --header 'Authorization: Basic Y2xpZW50Og==' --header 'Content-Type: text/plain' --data-raw '{}'\n\n"
-)
+@OpenAPIDefinition(info = @Info(title = "Operations App", description = ""
+        + "Operations app is a secure, multi-tenanted microservice platform", license = @License(name = "MIT Licence", url = "https://github.com/openMF/ph-ee-operations-app/blob/master/LICENSE")))
+@SecurityScheme(name = "auth", scheme = "bearer", type = SecuritySchemeType.HTTP, in = SecuritySchemeIn.HEADER, paramName = "Authorization: Bearer", description = "Use this curl request to generate authToken\n\n\n"
+        + "curl --location --request POST 'ops-bk.sandbox.fynarfin.io/oauth/token?username=mifos&password=password&grant_type=password' --header 'Platform-TenantId: gorilla' --header 'Authorization: Basic Y2xpZW50Og==' --header 'Content-Type: text/plain' --data-raw '{}'\n\n")
 @Configuration
 public class WebSecurityConfiguration extends WebSecurityConfigurerAdapter {
 
     @Override
     public void configure(WebSecurity web) throws Exception {
-        web.ignoring().antMatchers(
-                "/v3/api-docs/**",
-                "/swagger-resources/**",
-                "/swagger-ui/**",
-                "/swagger-config/**",
+        web.ignoring().antMatchers("/v3/api-docs/**", "/swagger-resources/**", "/swagger-ui/**", "/swagger-config/**",
                 "/api/v1/errorcode/**");
     }
 
@@ -56,12 +36,8 @@ public class WebSecurityConfiguration extends WebSecurityConfigurerAdapter {
 
         return (Operation operation, HandlerMethod handlerMethod) -> {
 
-            Parameter missingParam1 = new HeaderParameter()
-                    .in(ParameterIn.HEADER.toString())
-                    .name("Platform-TenantId")
-                    .schema(new StringSchema())
-                    .description("Tenant Id")
-                    .required(true);
+            Parameter missingParam1 = new HeaderParameter().in(ParameterIn.HEADER.toString()).name("Platform-TenantId")
+                    .schema(new StringSchema()).description("Tenant Id").required(true);
             operation.addParametersItem(missingParam1);
             return operation;
         };

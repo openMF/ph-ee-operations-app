@@ -13,9 +13,7 @@ public class AzureStorageConfig {
     String connectionString;
 
     @Bean
-    @ConditionalOnProperty(
-            value="cloud.azure.enabled",
-            havingValue = "true")
+    @ConditionalOnProperty(value = "cloud.azure.enabled", havingValue = "true")
     public BlobClientBuilder getClient() {
         BlobClientBuilder client = new BlobClientBuilder();
         client.connectionString(connectionString);

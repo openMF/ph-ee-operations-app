@@ -1,17 +1,17 @@
 package org.apache.fineract.utils;
 
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
-import java.time.LocalDateTime;
-import java.time.ZoneId;
-import java.time.ZonedDateTime;
-import java.time.format.DateTimeFormatter;
-
 @Component
 public class DateUtil {
+
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
     @Value("${interface.timezone}")
     public String interfaceTimezone;

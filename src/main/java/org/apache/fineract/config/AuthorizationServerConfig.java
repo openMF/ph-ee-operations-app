@@ -44,16 +44,11 @@ public class AuthorizationServerConfig extends AuthorizationServerConfigurerAdap
     }
 
     public void configure(AuthorizationServerEndpointsConfigurer endpoints) {
-        endpoints.authenticationManager(authenticationManager)
-                .tokenStore(tokenStore)
-                .accessTokenConverter(accessTokenConverter)
-                .userDetailsService(userDetailsService)
-                .exceptionTranslator(translator);
+        endpoints.authenticationManager(authenticationManager).tokenStore(tokenStore).accessTokenConverter(accessTokenConverter)
+                .userDetailsService(userDetailsService).exceptionTranslator(translator);
     }
 
     public void configure(AuthorizationServerSecurityConfigurer security) {
-        security.tokenKeyAccess("permitAll()")
-                .checkTokenAccess("isAuthenticated()")
-                .authenticationEntryPoint(invalidAuthEntryPoint);
+        security.tokenKeyAccess("permitAll()").checkTokenAccess("isAuthenticated()").authenticationEntryPoint(invalidAuthEntryPoint);
     }
 }

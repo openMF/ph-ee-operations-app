@@ -19,15 +19,12 @@
 package org.apache.fineract.organisation.user;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import org.apache.fineract.organisation.office.Office;
-import org.apache.fineract.organisation.parent.AbstractPersistableCustom;
-import org.apache.fineract.organisation.permission.Permission;
-import org.apache.fineract.organisation.role.Role;
-import org.apache.fineract.organisation.staff.Staff;
-import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
-import org.springframework.security.core.userdetails.UserDetails;
-
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Date;
+import java.util.List;
+import java.util.Objects;
+import java.util.stream.Collectors;
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -39,12 +36,14 @@ import javax.persistence.ManyToOne;
 import javax.persistence.Table;
 import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Date;
-import java.util.List;
-import java.util.Objects;
-import java.util.stream.Collectors;
+import org.apache.fineract.organisation.office.Office;
+import org.apache.fineract.organisation.parent.AbstractPersistableCustom;
+import org.apache.fineract.organisation.permission.Permission;
+import org.apache.fineract.organisation.role.Role;
+import org.apache.fineract.organisation.staff.Staff;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.userdetails.UserDetails;
 
 @Entity
 @Table(name = "m_appuser")
@@ -91,7 +90,7 @@ public class AppUser extends AbstractPersistableCustom<Long> implements UserDeta
     @JoinColumn(name = "staff_id", nullable = true)
     private Staff staff;
 
-    @ManyToMany(fetch = FetchType.LAZY, cascade = {CascadeType.REFRESH, CascadeType.DETACH, CascadeType.PERSIST, CascadeType.MERGE})
+    @ManyToMany(fetch = FetchType.LAZY, cascade = { CascadeType.REFRESH, CascadeType.DETACH, CascadeType.PERSIST, CascadeType.MERGE })
     @JoinTable(name = "m_appuser_role", joinColumns = @JoinColumn(name = "appuser_id"), inverseJoinColumns = @JoinColumn(name = "role_id"))
     private Collection<Role> roles;
 
@@ -110,16 +109,14 @@ public class AppUser extends AbstractPersistableCustom<Long> implements UserDeta
             if (!role.getDisabled()) {
                 final Collection<Permission> permissions = role.getPermissions();
                 for (final Permission permission : permissions) {
-                    if(!finalPermissions.contains(permission)) {
+                    if (!finalPermissions.contains(permission)) {
                         finalPermissions.add(permission);
                     }
                 }
             }
         }
 
-        return finalPermissions.stream()
-                .map(p -> new SimpleGrantedAuthority(p.getCode()))
-                .collect(Collectors.toList());
+        return finalPermissions.stream().map(p -> new SimpleGrantedAuthority(p.getCode())).collect(Collectors.toList());
     }
 
     @Override

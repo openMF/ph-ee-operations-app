@@ -18,10 +18,9 @@
  */
 package org.apache.fineract.organisation.role;
 
-import org.apache.fineract.organisation.permission.PermissionData;
-
 import java.io.Serializable;
 import java.util.Collection;
+import org.apache.fineract.organisation.permission.PermissionData;
 
 /**
  * Immutable data object for role data.

@@ -18,12 +18,10 @@
  */
 package org.apache.fineract.organisation.group;
 
-import org.apache.fineract.organisation.code.CodeValue;
-import org.apache.fineract.organisation.parent.AbstractPersistableCustom;
-import org.apache.fineract.organisation.office.Office;
-import org.apache.fineract.organisation.staff.Staff;
-import org.apache.fineract.organisation.user.AppUser;
-
+import java.util.Date;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Set;
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -35,10 +33,11 @@ import javax.persistence.Table;
 import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
 import javax.persistence.Transient;
-import java.util.Date;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Set;
+import org.apache.fineract.organisation.code.CodeValue;
+import org.apache.fineract.organisation.office.Office;
+import org.apache.fineract.organisation.parent.AbstractPersistableCustom;
+import org.apache.fineract.organisation.staff.Staff;
+import org.apache.fineract.organisation.user.AppUser;
 
 @Entity
 @Table(name = "m_group")
@@ -92,7 +91,7 @@ public final class Group extends AbstractPersistableCustom<Long> {
     @Temporal(TemporalType.DATE)
     private Date closureDate;
 
-    @ManyToOne(optional = true, fetch=FetchType.LAZY)
+    @ManyToOne(optional = true, fetch = FetchType.LAZY)
     @JoinColumn(name = "closedon_userid", nullable = true)
     private AppUser closedBy;
 
@@ -100,21 +99,20 @@ public final class Group extends AbstractPersistableCustom<Long> {
     @Temporal(TemporalType.DATE)
     private Date submittedOnDate;
 
-    @ManyToOne(optional = true, fetch=FetchType.LAZY)
+    @ManyToOne(optional = true, fetch = FetchType.LAZY)
     @JoinColumn(name = "submittedon_userid", nullable = true)
     private AppUser submittedBy;
-    
+
     @Column(name = "account_no", length = 20, unique = true, nullable = false)
     private String accountNumber;
-    
+
     @Transient
     private boolean accountNumberRequiresAutoGeneration = false;
 
-    @OneToMany(mappedBy="group",cascade = CascadeType.REMOVE)
+    @OneToMany(mappedBy = "group", cascade = CascadeType.REMOVE)
     private Set<GroupRole> groupRole;
 
-    public Group() {
-    }
+    public Group() {}
 
     public String getExternalId() {
         return externalId;

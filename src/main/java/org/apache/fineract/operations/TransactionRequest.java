@@ -1,18 +1,21 @@
 package org.apache.fineract.operations;
 
-
+import static org.apache.fineract.operations.TransactionRequestState.IN_PROGRESS;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
-import org.apache.fineract.organisation.parent.AbstractPersistableCustom;
-import javax.persistence.*;
 import java.math.BigDecimal;
-import java.util.Collection;
 import java.util.Date;
 import java.util.List;
-
-import static org.apache.fineract.operations.TransactionRequestState.IN_PROGRESS;
-
+import javax.persistence.CascadeType;
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.EnumType;
+import javax.persistence.Enumerated;
+import javax.persistence.FetchType;
+import javax.persistence.OneToMany;
+import javax.persistence.Table;
+import org.apache.fineract.organisation.parent.AbstractPersistableCustom;
 
 @Entity
 @Table(name = "transaction_requests")
@@ -96,8 +99,7 @@ public class TransactionRequest extends AbstractPersistableCustom<Long> {
         this.variables = variables;
     }
 
-    public TransactionRequest() {
-    }
+    public TransactionRequest() {}
 
     public String getExternalId() {
         return externalId;
@@ -298,32 +300,14 @@ public class TransactionRequest extends AbstractPersistableCustom<Long> {
 
     @Override
     public String toString() {
-        return "TransactionRequest{" +
-                "workflowInstanceKey='" + workflowInstanceKey + '\'' +
-                ", transactionId='" + transactionId + '\'' +
-                ", startedAt=" + startedAt +
-                ", completedAt=" + completedAt +
-                ", state=" + state +
-                ", payeeDfspId='" + payeeDfspId + '\'' +
-                ", payeePartyId='" + payeePartyId + '\'' +
-                ", payeePartyIdType='" + payeePartyIdType + '\'' +
-                ", payeeFee=" + payeeFee +
-                ", payeeQuoteCode='" + payeeQuoteCode + '\'' +
-                ", payerDfspId='" + payerDfspId + '\'' +
-                ", payerPartyId='" + payerPartyId + '\'' +
-                ", payerPartyIdType='" + payerPartyIdType + '\'' +
-                ", payerFee=" + payerFee +
-                ", payerQuoteCode='" + payerQuoteCode + '\'' +
-                ", amount=" + amount +
-                ", currency='" + currency + '\'' +
-                ", direction='" + direction + '\'' +
-                ", authType='" + authType + '\'' +
-                ", initiatorType='" + initiatorType + '\'' +
-                ", scenario='" + scenario + '\'' +
-                ", externalId='" + externalId + '\'' +
-                ", clientCorrelationId='" + clientCorrelationId + '\'' +
-                ", errorInformation='" + errorInformation + '\'' +
-                ", variables=" + variables +
-                '}';
+        return "TransactionRequest{" + "workflowInstanceKey='" + workflowInstanceKey + '\'' + ", transactionId='" + transactionId + '\''
+                + ", startedAt=" + startedAt + ", completedAt=" + completedAt + ", state=" + state + ", payeeDfspId='" + payeeDfspId + '\''
+                + ", payeePartyId='" + payeePartyId + '\'' + ", payeePartyIdType='" + payeePartyIdType + '\'' + ", payeeFee=" + payeeFee
+                + ", payeeQuoteCode='" + payeeQuoteCode + '\'' + ", payerDfspId='" + payerDfspId + '\'' + ", payerPartyId='" + payerPartyId
+                + '\'' + ", payerPartyIdType='" + payerPartyIdType + '\'' + ", payerFee=" + payerFee + ", payerQuoteCode='" + payerQuoteCode
+                + '\'' + ", amount=" + amount + ", currency='" + currency + '\'' + ", direction='" + direction + '\'' + ", authType='"
+                + authType + '\'' + ", initiatorType='" + initiatorType + '\'' + ", scenario='" + scenario + '\'' + ", externalId='"
+                + externalId + '\'' + ", clientCorrelationId='" + clientCorrelationId + '\'' + ", errorInformation='" + errorInformation
+                + '\'' + ", variables=" + variables + '}';
     }
 }

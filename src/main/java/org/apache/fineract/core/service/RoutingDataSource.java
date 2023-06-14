@@ -18,13 +18,11 @@
  */
 package org.apache.fineract.core.service;
 
+import java.sql.Connection;
+import java.sql.SQLException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.datasource.AbstractDataSource;
 import org.springframework.stereotype.Service;
-
-import java.sql.Connection;
-import java.sql.SQLException;
-
 
 @Service
 public class RoutingDataSource extends AbstractDataSource {

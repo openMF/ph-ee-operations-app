@@ -1,17 +1,15 @@
 package org.apache.fineract.operations;
 
-
 import com.fasterxml.jackson.annotation.JsonFormat;
-import org.apache.fineract.organisation.parent.AbstractPersistableCustom;
-import org.eclipse.persistence.annotations.Index;
-
+import java.math.BigDecimal;
+import java.util.Date;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.EnumType;
 import javax.persistence.Enumerated;
 import javax.persistence.Table;
-import java.math.BigDecimal;
-import java.util.Date;
+import org.apache.fineract.organisation.parent.AbstractPersistableCustom;
+import org.eclipse.persistence.annotations.Index;
 
 @Entity
 @Table(name = "transfers")
@@ -81,8 +79,7 @@ public class Transfer extends AbstractPersistableCustom<Long> {
     @Column(name = "CLIENTCORRELATIONID")
     private String clientCorrelationId;
 
-    public Transfer() {
-    }
+    public Transfer() {}
 
     public Transfer(Long workflowInstanceKey) {
         this.workflowInstanceKey = workflowInstanceKey;

@@ -1,9 +1,9 @@
 package org.apache.fineract.api;
 
-
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
-import io.swagger.v3.oas.annotations.tags.Tag;
-import org.apache.fineract.operations.Batch;
+import java.util.List;
+import java.util.stream.Collectors;
+import javax.servlet.http.HttpServletResponse;
 import org.apache.fineract.operations.BatchRepository;
 import org.apache.fineract.operations.BusinessKey;
 import org.apache.fineract.operations.BusinessKeyRepository;
@@ -38,15 +38,11 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.client.RestTemplate;
 
-import javax.servlet.http.HttpServletResponse;
-import java.util.Date;
-import java.util.List;
-import java.util.stream.Collectors;
-
 @RestController
 @SecurityRequirement(name = "auth")
 @RequestMapping("/api/v1")
 public class OperationsApi {
+
     private Logger logger = LoggerFactory.getLogger(this.getClass());
 
     @Autowired
@@ -77,10 +73,8 @@ public class OperationsApi {
     private String channelConnectorTransferPath;
 
     @PostMapping("/transfer/{transactionId}/refund")
-    public String refundTransfer(@RequestHeader("Platform-TenantId") String tenantId,
-                                 @PathVariable("transactionId") String transactionId,
-                                 @RequestBody String requestBody,
-                                 HttpServletResponse response) {
+    public String refundTransfer(@RequestHeader("Platform-TenantId") String tenantId, @PathVariable("transactionId") String transactionId,
+            @RequestBody String requestBody, HttpServletResponse response) {
         Transfer existingIncomingTransfer = transferRepository.findFirstByTransactionIdAndDirection(transactionId, "INCOMING");
         if (existingIncomingTransfer == null || !TransferStatus.COMPLETED.equals(existingIncomingTransfer.getStatus())) {
             response.setStatus(HttpServletResponse.SC_NOT_FOUND);
@@ -125,10 +119,8 @@ public class OperationsApi {
             logger.error("Could not parse refund request body {}, can not set comment on refund!", requestBody);
         }
 
-        ResponseEntity<String> channelResponse = restTemplate.exchange(channelConnectorUrl + channelConnectorTransferPath,
-                HttpMethod.POST,
-                new HttpEntity<String>(channelRequest.toString(), httpHeaders),
-                String.class);
+        ResponseEntity<String> channelResponse = restTemplate.exchange(channelConnectorUrl + channelConnectorTransferPath, HttpMethod.POST,
+                new HttpEntity<String>(channelRequest.toString(), httpHeaders), String.class);
         response.setStatus(channelResponse.getStatusCodeValue());
         return channelResponse.getBody();
     }
@@ -157,27 +149,23 @@ public class OperationsApi {
     }
 
     @GetMapping("/variables")
-    public List<List<Variable>> variables(
-            @RequestParam(value = "businessKey") String businessKey,
-            @RequestParam(value = "businessKeyType") String businessKeyType
-    ) {
+    public List<List<Variable>> variables(@RequestParam(value = "businessKey") String businessKey,
+            @RequestParam(value = "businessKeyType") String businessKeyType) {
         return loadTransfers(businessKey, businessKeyType).stream()
                 .map(transfer -> variableRepository.findByWorkflowInstanceKeyOrderByTimestamp(transfer.getWorkflowInstanceKey()))
                 .collect(Collectors.toList());
     }
 
     @GetMapping("/tasks")
-    public List<List<Task>> tasks(
-            @RequestParam(value = "businessKey") String businessKey,
-            @RequestParam(value = "businessKeyType") String businessKeyType
-    ) {
+    public List<List<Task>> tasks(@RequestParam(value = "businessKey") String businessKey,
+            @RequestParam(value = "businessKeyType") String businessKeyType) {
         return loadTransfers(businessKey, businessKeyType).stream()
                 .map(transfer -> taskRepository.findByWorkflowInstanceKeyOrderByTimestamp(transfer.getWorkflowInstanceKey()))
                 .collect(Collectors.toList());
     }
 
-    private List<BusinessKey> loadTransfers(@RequestParam("businessKey") String
-                                                    businessKey, @RequestParam("businessKeyType") String businessKeyType) {
+    private List<BusinessKey> loadTransfers(@RequestParam("businessKey") String businessKey,
+            @RequestParam("businessKeyType") String businessKeyType) {
         List<BusinessKey> businessKeys = businessKeyRepository.findByBusinessKeyAndBusinessKeyType(businessKey, businessKeyType);
         logger.debug("loaded {} transfer(s) for business key {} of type {}", businessKeys.size(), businessKey, businessKeyType);
         return businessKeys;

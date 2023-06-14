@@ -7,7 +7,6 @@ import net.sf.ehcache.event.CacheEventListener;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-
 public class CacheEventLogger implements CacheEventListener {
 
     private final Logger logger = LoggerFactory.getLogger(this.getClass());

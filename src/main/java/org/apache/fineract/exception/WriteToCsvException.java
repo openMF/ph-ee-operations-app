@@ -34,15 +34,14 @@ public class WriteToCsvException extends Exception {
         return errorDescription;
     }
 
-    public String getDeveloperMessage() { return developerMessage; }
+    public String getDeveloperMessage() {
+        return developerMessage;
+    }
 
     @Override
     public String toString() {
-        return "{" +
-                "developerMessage='" + developerMessage + '\'' +
-                ", errorDescription='" + errorDescription + '\'' +
-                ", errorCode=" + errorCode +
-                '}';
+        return "{" + "developerMessage='" + developerMessage + '\'' + ", errorDescription='" + errorDescription + '\'' + ", errorCode="
+                + errorCode + '}';
     }
 
 }

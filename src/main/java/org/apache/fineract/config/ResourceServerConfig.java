@@ -1,5 +1,6 @@
 package org.apache.fineract.config;
 
+import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
@@ -11,8 +12,6 @@ import org.springframework.security.oauth2.config.annotation.web.configuration.E
 import org.springframework.security.oauth2.config.annotation.web.configuration.ResourceServerConfigurerAdapter;
 import org.springframework.security.oauth2.config.annotation.web.configurers.ResourceServerSecurityConfigurer;
 import org.springframework.security.oauth2.provider.token.DefaultTokenServices;
-
-import java.util.List;
 
 @Configuration
 @EnableResourceServer
@@ -31,26 +30,19 @@ public class ResourceServerConfig extends ResourceServerConfigurerAdapter {
 
     @Override
     public void configure(ResourceServerSecurityConfigurer resources) {
-        resources.resourceId(IDENTITY_PROVIDER_RESOURCE_ID)
-                .stateless(true)
-                .tokenServices(tokenServices);
+        resources.resourceId(IDENTITY_PROVIDER_RESOURCE_ID).stateless(true).tokenServices(tokenServices);
     }
 
     @Override
     public void configure(HttpSecurity http) throws Exception {
         if (!isRestAuthEnabled) {
-            http.authorizeRequests().antMatchers("/api/v1/**").permitAll()
-                    .and()
-                    .csrf().disable()
-                    //.anonymous().disable() important to enable, if not, the request will always fail with 401 regardless of permission settings
-                    .cors().disable()
-                    .formLogin().disable()
-                    .httpBasic().disable()
-                    .rememberMe().disable()
-                    .x509().disable()
-                    .jee().disable();
+            http.authorizeRequests().antMatchers("/api/v1/**").permitAll().and().csrf().disable()
+                    // .anonymous().disable() important to enable, if not, the request will always fail with 401
+                    // regardless of permission settings
+                    .cors().disable().formLogin().disable().httpBasic().disable().rememberMe().disable().x509().disable().jee().disable();
         } else {
-            SessionManagementConfigurer<HttpSecurity> httpConfig = http.sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS);
+            SessionManagementConfigurer<HttpSecurity> httpConfig = http.sessionManagement()
+                    .sessionCreationPolicy(SessionCreationPolicy.STATELESS);
 
             ExpressionUrlAuthorizationConfigurer<HttpSecurity>.ExpressionInterceptUrlRegistry authorization = httpConfig.and()
                     .authorizeRequests();
@@ -63,17 +55,8 @@ public class ResourceServerConfig extends ResourceServerConfigurerAdapter {
                 }
             }
 
-            authorization.anyRequest()
-                    .fullyAuthenticated()
-                    .and()
-                    .csrf().disable()
-                    .anonymous().disable()
-                    .cors().disable()
-                    .formLogin().disable()
-                    .httpBasic().disable()
-                    .rememberMe().disable()
-                    .x509().disable()
-                    .jee().disable();
+            authorization.anyRequest().fullyAuthenticated().and().csrf().disable().anonymous().disable().cors().disable().formLogin()
+                    .disable().httpBasic().disable().rememberMe().disable().x509().disable().jee().disable();
         }
     }
 }

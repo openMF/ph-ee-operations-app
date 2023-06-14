@@ -40,7 +40,7 @@ public class CurrencyData {
     public CurrencyData(String code) {
         this.code = code;
         this.name = null;
-        this.decimalPlaces =0;
+        this.decimalPlaces = 0;
         this.inMultiplesOf = null;
         this.displaySymbol = null;
         this.nameCode = null;

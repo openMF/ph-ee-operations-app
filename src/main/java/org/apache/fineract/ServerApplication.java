@@ -19,6 +19,13 @@
 package org.apache.fineract;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.net.URISyntaxException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.stream.Collectors;
 import org.apache.fineract.core.service.AudienceVerifier;
 import org.apache.fineract.core.service.TenantAwareHeaderFilter;
 import org.apache.fineract.organisation.tenant.TenantServerConnectionRepository;
@@ -52,26 +59,17 @@ import org.springframework.web.client.RestTemplate;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import org.springframework.web.filter.CorsFilter;
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.net.URISyntaxException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.stream.Collectors;
 
 @SpringBootApplication
 @EnableConfigurationProperties
-@EnableAutoConfiguration(exclude = {DataSourceAutoConfiguration.class,
-        DataSourceTransactionManagerAutoConfiguration.class,
-        FlywayAutoConfiguration.class,
-        ErrorMvcAutoConfiguration.class})
+@EnableAutoConfiguration(exclude = { DataSourceAutoConfiguration.class, DataSourceTransactionManagerAutoConfiguration.class,
+        FlywayAutoConfiguration.class, ErrorMvcAutoConfiguration.class })
 @EnableJsonWebSignature
 public class ServerApplication {
 
     /**
-     * Spring security filter chain ordering, the tenant header filter
-     * must run before this to set current tenant so it's order has to be lower to gain priority
+     * Spring security filter chain ordering, the tenant header filter must run before this to set current tenant so
+     * it's order has to be lower to gain priority
      */
     @Value("${security.filter-order}")
     private int securityFilterOrder;
@@ -92,8 +90,7 @@ public class ServerApplication {
     }
 
     @Bean
-    public DaoAuthenticationProvider customAuthenticationProvider(PasswordEncoder passwordEncoder,
-                                                                  UserDetailsService userDetailsService) {
+    public DaoAuthenticationProvider customAuthenticationProvider(PasswordEncoder passwordEncoder, UserDetailsService userDetailsService) {
         DaoAuthenticationProvider provider = new DaoAuthenticationProvider();
         provider.setUserDetailsService(userDetailsService);
         provider.setPasswordEncoder(passwordEncoder);
@@ -106,7 +103,7 @@ public class ServerApplication {
         registration.setFilter(new TenantAwareHeaderFilter(repository));
         registration.addUrlPatterns("/*");
         registration.setName("tenantFilter");
-        registration.setOrder(Integer.MIN_VALUE+1);
+        registration.setOrder(Integer.MIN_VALUE + 1);
         return registration;
     }
 

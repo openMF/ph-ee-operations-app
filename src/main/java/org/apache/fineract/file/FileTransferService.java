@@ -1,8 +1,7 @@
 package org.apache.fineract.file;
 
-import org.springframework.stereotype.Service;
-
 import java.io.File;
+import org.springframework.stereotype.Service;
 
 @Service
 public interface FileTransferService {

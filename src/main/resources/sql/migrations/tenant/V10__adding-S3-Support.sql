@@ -19,10 +19,10 @@
 
 /*Image tables stores details of all images*/
 CREATE TABLE IF NOT EXISTS `m_image`(
-	`id` BIGINT(20) NOT NULL AUTO_INCREMENT,
-	`location` varchar(500),
-	`storage_type_enum` SMALLINT(5),
-	PRIMARY KEY (`id`)
+    `id` BIGINT(20) NOT NULL AUTO_INCREMENT,
+    `location` varchar(500),
+    `storage_type_enum` SMALLINT(5),
+    PRIMARY KEY (`id`)
 )
 COLLATE='utf8_general_ci'
 ENGINE=InnoDB;

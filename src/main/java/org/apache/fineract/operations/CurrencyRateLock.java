@@ -1,14 +1,17 @@
 package org.apache.fineract.operations;
 
-import org.apache.fineract.organisation.parent.AbstractPersistableCustom;
-
-import javax.persistence.*;
 import java.math.BigDecimal;
 import java.util.Date;
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.Table;
+import javax.persistence.Temporal;
+import javax.persistence.TemporalType;
+import org.apache.fineract.organisation.parent.AbstractPersistableCustom;
 
 @Entity
 @Table(name = "m_currency_rates_lock")
-public class CurrencyRateLock  extends AbstractPersistableCustom<Long> {
+public class CurrencyRateLock extends AbstractPersistableCustom<Long> {
 
     @Column(name = "unique_key")
     private String uniqueKey;
@@ -26,8 +29,7 @@ public class CurrencyRateLock  extends AbstractPersistableCustom<Long> {
     @Temporal(TemporalType.TIMESTAMP)
     private Date expireBy;
 
-    public CurrencyRateLock() {
-    }
+    public CurrencyRateLock() {}
 
     public CurrencyRateLock(String uniqueKey, String fromCurrency, String toCurrency, BigDecimal rate, Date expireBy) {
         this.uniqueKey = uniqueKey;
@@ -37,7 +39,7 @@ public class CurrencyRateLock  extends AbstractPersistableCustom<Long> {
         this.expireBy = expireBy;
     }
 
-    public boolean isExpiredAtDate(Date date){
+    public boolean isExpiredAtDate(Date date) {
         return expireBy.before(date);
     }
 

@@ -20,16 +20,16 @@
 INSERT INTO `m_code` (`code_name`, `is_system_defined`) VALUES ('GROUPROLE', 1);
 
 CREATE TABLE `m_group_roles` (
-	`id` BIGINT(20) NOT NULL AUTO_INCREMENT,
-	`client_id` BIGINT(20) NULL DEFAULT NULL,
-	`group_id` BIGINT(20) NULL DEFAULT NULL,
-	`role_cv_id` INT(11) NULL DEFAULT NULL,
-	PRIMARY KEY (`id`),
-	INDEX `FKGroupRoleGroupId` (`group_id`),
-	INDEX `FK_grouprole_m_codevalue` (`role_cv_id`),
-	UNIQUE INDEX `UNIQUE_GROUP_ROLES` (`client_id`, `group_id`, `role_cv_id`),
-	CONSTRAINT `FKGroupRoleGroupId` FOREIGN KEY (`group_id`) REFERENCES `m_group` (`id`),
-	CONSTRAINT `FK_grouprole_m_codevalue` FOREIGN KEY (`role_cv_id`) REFERENCES `m_code_value` (`id`)
+    `id` BIGINT(20) NOT NULL AUTO_INCREMENT,
+    `client_id` BIGINT(20) NULL DEFAULT NULL,
+    `group_id` BIGINT(20) NULL DEFAULT NULL,
+    `role_cv_id` INT(11) NULL DEFAULT NULL,
+    PRIMARY KEY (`id`),
+    INDEX `FKGroupRoleGroupId` (`group_id`),
+    INDEX `FK_grouprole_m_codevalue` (`role_cv_id`),
+    UNIQUE INDEX `UNIQUE_GROUP_ROLES` (`client_id`, `group_id`, `role_cv_id`),
+    CONSTRAINT `FKGroupRoleGroupId` FOREIGN KEY (`group_id`) REFERENCES `m_group` (`id`),
+    CONSTRAINT `FK_grouprole_m_codevalue` FOREIGN KEY (`role_cv_id`) REFERENCES `m_code_value` (`id`)
 )
 COLLATE='utf8_general_ci'
 ENGINE=InnoDB;

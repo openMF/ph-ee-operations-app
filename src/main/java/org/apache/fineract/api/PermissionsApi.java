@@ -19,7 +19,8 @@
 package org.apache.fineract.api;
 
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
-import io.swagger.v3.oas.annotations.tags.Tag;
+import java.util.List;
+import javax.servlet.http.HttpServletResponse;
 import org.apache.fineract.organisation.permission.Permission;
 import org.apache.fineract.organisation.permission.PermissionRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -32,10 +33,6 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-
-import javax.servlet.http.HttpServletResponse;
-import java.util.List;
-
 
 @RestController
 @SecurityRequirement(name = "auth")
@@ -53,7 +50,7 @@ public class PermissionsApi {
     @GetMapping(path = "/permission/{permissionId}", produces = MediaType.APPLICATION_JSON_VALUE)
     public Permission retrieveOne(@PathVariable("permissionId") Long permissionId, HttpServletResponse response) {
         Permission permission = permissionRepository.findById(permissionId).get();
-        if(permission != null) {
+        if (permission != null) {
             return permission;
         } else {
             response.setStatus(HttpServletResponse.SC_NOT_FOUND);
@@ -86,7 +83,7 @@ public class PermissionsApi {
 
     @DeleteMapping(path = "/permission/{permissionId}")
     public void delete(@PathVariable("permissionId") Long permissionId, HttpServletResponse response) {
-        if(permissionRepository.existsById(permissionId)) {
+        if (permissionRepository.existsById(permissionId)) {
             permissionRepository.deleteById(permissionId);
         } else {
             response.setStatus(HttpServletResponse.SC_NOT_FOUND);

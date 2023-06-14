@@ -1,10 +1,9 @@
 package org.apache.fineract.operations;
 
-import org.springframework.data.jpa.domain.Specifications;
+import static org.springframework.data.jpa.domain.Specifications.where;
 
 import javax.persistence.metamodel.SingularAttribute;
-
-import static org.springframework.data.jpa.domain.Specifications.where;
+import org.springframework.data.jpa.domain.Specifications;
 
 public class BatchSpecs {
 

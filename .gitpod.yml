@@ -4,5 +4,3 @@
 
 tasks:
   - init: ./gradlew clean build
-
-

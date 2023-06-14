@@ -1,11 +1,11 @@
 package org.apache.fineract.operations;
 
-import org.eclipse.persistence.annotations.Index;
-import org.apache.fineract.organisation.parent.AbstractPersistableCustom;
+import java.util.Date;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Table;
-import java.util.Date;
+import org.apache.fineract.organisation.parent.AbstractPersistableCustom;
+import org.eclipse.persistence.annotations.Index;
 
 @Entity
 @Table(name = "batches")
@@ -72,8 +72,7 @@ public class Batch extends AbstractPersistableCustom<Long> {
     @Column(name = "PAYMENT_MODE")
     private String paymentMode;
 
-    public Batch() {
-    }
+    public Batch() {}
 
     public Batch(Long workflowInstanceKey) {
         this.workflowInstanceKey = workflowInstanceKey;
@@ -239,4 +238,3 @@ public class Batch extends AbstractPersistableCustom<Long> {
         this.paymentMode = mode;
     }
 }
-

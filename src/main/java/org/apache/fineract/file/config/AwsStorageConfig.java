@@ -23,14 +23,10 @@ public class AwsStorageConfig {
     private String region;
 
     @Bean
-    @ConditionalOnProperty(
-            value="cloud.aws.enabled",
-            havingValue = "true")
+    @ConditionalOnProperty(value = "cloud.aws.enabled", havingValue = "true")
     public AmazonS3 s3Client() {
         AWSCredentials credentials = new BasicAWSCredentials(accessKey, accessSecret);
-        return AmazonS3ClientBuilder.standard()
-                .withCredentials(new AWSStaticCredentialsProvider(credentials))
-                .withRegion(region).build();
+        return AmazonS3ClientBuilder.standard().withCredentials(new AWSStaticCredentialsProvider(credentials)).withRegion(region).build();
     }
 
 }

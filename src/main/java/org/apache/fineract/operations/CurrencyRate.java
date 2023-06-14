@@ -1,14 +1,18 @@
 package org.apache.fineract.operations;
 
-import org.apache.fineract.organisation.parent.AbstractPersistableCustom;
-
-import javax.persistence.*;
 import java.math.BigDecimal;
 import java.util.Date;
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.Table;
+import javax.persistence.Temporal;
+import javax.persistence.TemporalType;
+import org.apache.fineract.organisation.parent.AbstractPersistableCustom;
 
 @Entity
 @Table(name = "m_currency_rates")
 public class CurrencyRate extends AbstractPersistableCustom<Long> {
+
     @Column(name = "from_currency")
     private String fromCurrency;
 
@@ -29,8 +33,7 @@ public class CurrencyRate extends AbstractPersistableCustom<Long> {
         this.lastUpdated = lastUpdated;
     }
 
-    public CurrencyRate() {
-    }
+    public CurrencyRate() {}
 
     public BigDecimal getRate() {
         return rate;

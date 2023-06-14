@@ -20,7 +20,6 @@ package org.apache.fineract.organisation.office;
 
 import java.math.BigDecimal;
 import java.util.Collection;
-
 import org.joda.time.LocalDate;
 
 /**

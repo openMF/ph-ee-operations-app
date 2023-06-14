@@ -1,9 +1,29 @@
 package org.apache.fineract.api;
 
+import static org.apache.fineract.core.service.OperatorUtils.strip;
+
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileWriter;
+import java.math.BigDecimal;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Optional;
+import javax.servlet.http.HttpServletResponse;
 import org.apache.fineract.config.PaymentModeConfiguration;
 import org.apache.fineract.file.FileTransferService;
-import org.apache.fineract.operations.*;
+import org.apache.fineract.operations.Batch;
+import org.apache.fineract.operations.BatchDTO;
+import org.apache.fineract.operations.BatchRepository;
+import org.apache.fineract.operations.BatchSpecs;
+import org.apache.fineract.operations.Batch_;
+import org.apache.fineract.operations.Transfer;
+import org.apache.fineract.operations.TransferRepository;
+import org.apache.fineract.operations.TransferStatus;
+import org.apache.fineract.operations.Variable;
+import org.apache.fineract.operations.VariableRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
@@ -11,23 +31,16 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specifications;
-import org.springframework.web.bind.annotation.*;
-import java.io.BufferedWriter;
-import java.io.File;
-import java.io.FileWriter;
-import java.math.BigDecimal;
-import javax.servlet.http.HttpServletResponse;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Optional;
-
-import static org.apache.fineract.core.service.OperatorUtils.strip;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @SecurityRequirement(name = "auth")
 @RequestMapping("/api/v1")
 public class BatchApi {
+
     @Autowired
     private TransferRepository transferRepository;
 
@@ -49,10 +62,9 @@ public class BatchApi {
 
     @GetMapping("/batches")
     public Page<Batch> getBatches(@RequestParam(value = "page", required = false, defaultValue = "1") Integer page,
-                                  @RequestParam(value = "size", required = false, defaultValue = "10") Integer size,
-                                  @RequestParam(value = "sortedBy", required = false) String sortedBy,
-                                  @RequestParam(value = "sortedOrder", required = false, defaultValue = "DESC") String sortedOrder
-    ) {
+            @RequestParam(value = "size", required = false, defaultValue = "10") Integer size,
+            @RequestParam(value = "sortedBy", required = false) String sortedBy,
+            @RequestParam(value = "sortedOrder", required = false, defaultValue = "DESC") String sortedOrder) {
         Specifications<Batch> specifications = BatchSpecs.match(Batch_.subBatchId, null);
 
         PageRequest pager;
@@ -67,11 +79,11 @@ public class BatchApi {
 
     @GetMapping("/batch")
     public BatchDTO batchDetails(@RequestParam(value = "batchId", required = false) String batchId,
-                                 @RequestParam(value = "requestId", required = false) String requestId) {
+            @RequestParam(value = "requestId", required = false) String requestId) {
         Batch batch = batchRepository.findByBatchId(batchId);
         if (batch != null) {
             if (batch.getResultGeneratedAt() != null) {
-//                Checks if last status was checked before 10 mins
+                // Checks if last status was checked before 10 mins
                 if (new Date().getTime() - batch.getResultGeneratedAt().getTime() < 600000) {
                     return generateDetails(batch);
                 } else {
@@ -81,21 +93,20 @@ public class BatchApi {
                 return generateDetails(batch);
             }
         } else {
-           Batch batch1 = new Batch();
-           batch1.setBatchId(batchId);
-           batch1.setRequestId(requestId);
-           return generateDetails(batch1);
+            Batch batch1 = new Batch();
+            batch1.setBatchId(batchId);
+            batch1.setRequestId(requestId);
+            return generateDetails(batch1);
         }
 
     }
 
     @GetMapping("/batch/detail")
-    public Page<Transfer> batchDetails(HttpServletResponse httpServletResponse,
-                                                       @RequestParam(value = "batchId") String batchId,
-                                                       @RequestParam(value = "status", defaultValue = "ALL") String status,
-                                                       @RequestParam(value = "pageNo", defaultValue = "0") Integer pageNo,
-                                                       @RequestParam(value = "pageSize", defaultValue = "10") Integer pageSize,
-                                                       @RequestParam(value = "command", required = false, defaultValue = "json") String command) {
+    public Page<Transfer> batchDetails(HttpServletResponse httpServletResponse, @RequestParam(value = "batchId") String batchId,
+            @RequestParam(value = "status", defaultValue = "ALL") String status,
+            @RequestParam(value = "pageNo", defaultValue = "0") Integer pageNo,
+            @RequestParam(value = "pageSize", defaultValue = "10") Integer pageSize,
+            @RequestParam(value = "command", required = false, defaultValue = "json") String command) {
 
         if (command.equalsIgnoreCase("download")) {
             Batch batch = batchRepository.findByBatchId(batchId);
@@ -110,9 +121,8 @@ public class BatchApi {
 
         Page<Transfer> transfers;
 
-        if (status.equalsIgnoreCase(TransferStatus.COMPLETED.toString()) ||
-                status.equalsIgnoreCase(TransferStatus.IN_PROGRESS.toString()) ||
-                status.equalsIgnoreCase(TransferStatus.FAILED.toString())) {
+        if (status.equalsIgnoreCase(TransferStatus.COMPLETED.toString()) || status.equalsIgnoreCase(TransferStatus.IN_PROGRESS.toString())
+                || status.equalsIgnoreCase(TransferStatus.FAILED.toString())) {
             transfers = transferRepository.findAllByBatchIdAndStatus(batchId, status.toUpperCase(), new PageRequest(pageNo, pageSize));
         } else {
             transfers = transferRepository.findAllByBatchId(batchId, new PageRequest(pageNo, pageSize));
@@ -127,7 +137,7 @@ public class BatchApi {
         if (batch != null) {
             List<Transfer> transfers = transferRepository.findAllByBatchId(batch.getBatchId());
             HashMap<String, String> status = new HashMap<>();
-            for(Transfer transfer: transfers){
+            for (Transfer transfer : transfers) {
                 status.put(transfer.getTransactionId(), transfer.getStatus().name());
             }
             return status;
@@ -136,7 +146,7 @@ public class BatchApi {
         }
     }
 
-    private BatchDTO generateDetails (Batch batch) {
+    private BatchDTO generateDetails(Batch batch) {
 
         StringBuilder modes = new StringBuilder();
 
@@ -160,8 +170,7 @@ public class BatchApi {
                     transfer.getWorkflowInstanceKey());
             if (variable.isPresent()) {
                 // this will prevent 2x count of variables by eliminating data from transfers table
-                if (paymentModeConfig.getByMode(strip(variable.get().getValue()))
-                        .getType().equalsIgnoreCase("BATCH")) {
+                if (paymentModeConfig.getByMode(strip(variable.get().getValue())).getType().equalsIgnoreCase("BATCH")) {
                     continue;
                 }
             }
@@ -186,8 +195,7 @@ public class BatchApi {
         Long subBatchOngoing = 0L;
         Long subBatchTotal = 0L;
 
-
-        for (Batch bt: allBatches) {
+        for (Batch bt : allBatches) {
             if (bt.getPaymentMode() != null && !modes.toString().contains(bt.getPaymentMode())) {
                 if (!modes.toString().equals("")) {
                     modes.append(",");
@@ -220,7 +228,6 @@ public class BatchApi {
         failed += subBatchFailed;
         total += subBatchTotal;
 
-
         ongoing += subBatchOngoing;
 
         if (batch.getResult_file() == null || (batch.getResult_file() != null && batch.getResult_file().isEmpty())) {
@@ -235,16 +242,14 @@ public class BatchApi {
         batchCompletedPercent = (double) batch.getCompleted() / total * 100;
         batchFailedPercent = (double) batch.getFailed() / total * 100;
 
-        BatchDTO response = new BatchDTO(batch.getBatchId(),
-                batch.getRequestId(), batch.getTotalTransactions(), batch.getOngoing(),
-                batch.getFailed(), batch.getCompleted(), totalAmount, completedAmount,
-                ongoingAmount, failedAmount, batch.getResult_file(), batch.getNote(),
-                batchCompletedPercent.toString(), batchFailedPercent.toString());
+        BatchDTO response = new BatchDTO(batch.getBatchId(), batch.getRequestId(), batch.getTotalTransactions(), batch.getOngoing(),
+                batch.getFailed(), batch.getCompleted(), totalAmount, completedAmount, ongoingAmount, failedAmount, batch.getResult_file(),
+                batch.getNote(), batchCompletedPercent.toString(), batchFailedPercent.toString());
 
-        response.setCreated_at(""+batch.getStartedAt());
+        response.setCreated_at("" + batch.getStartedAt());
         response.setModes(modes.toString());
         response.setPurpose("Unknown purpose");
-       System.out.println("Batch details generated for batchId: " + response.getSuccessPercentage());
+        System.out.println("Batch details generated for batchId: " + response.getSuccessPercentage());
 
         if (batch.getCompleted().longValue() == batch.getTotalTransactions().longValue()) {
             response.setStatus("COMPLETED");
@@ -262,11 +267,8 @@ public class BatchApi {
     private String createDetailsFile(List<Transfer> transfers) {
         String CSV_SEPARATOR = ",";
         File tempFile = new File(System.currentTimeMillis() + "_response.csv");
-        try (
-                FileWriter writer = new FileWriter(tempFile.getName());
-                BufferedWriter bw = new BufferedWriter(writer)) {
-            for (Transfer transfer : transfers)
-            {
+        try (FileWriter writer = new FileWriter(tempFile.getName()); BufferedWriter bw = new BufferedWriter(writer)) {
+            for (Transfer transfer : transfers) {
                 StringBuffer oneLine = new StringBuffer();
                 oneLine.append(transfer.getTransactionId());
                 oneLine.append(CSV_SEPARATOR);

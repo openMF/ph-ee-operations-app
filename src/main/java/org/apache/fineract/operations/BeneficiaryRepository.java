@@ -1,8 +1,7 @@
 package org.apache.fineract.operations;
 
-import org.springframework.data.repository.CrudRepository;
-
 import java.util.List;
+import org.springframework.data.repository.CrudRepository;
 
 public interface BeneficiaryRepository extends CrudRepository<Beneficiary, Long> {
 

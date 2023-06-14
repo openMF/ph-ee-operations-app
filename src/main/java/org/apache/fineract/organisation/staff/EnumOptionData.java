@@ -42,10 +42,9 @@ public class EnumOptionData {
     public String getCode() {
         return this.code;
     }
-    
+
     public String getValue() {
         return this.value;
     }
-    
-    
+
 }

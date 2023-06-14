@@ -18,6 +18,9 @@
  */
 package org.apache.fineract.core.service;
 
+import static org.apache.fineract.config.CacheConfig.CACHE_USER_BY_NAME;
+
+import java.util.Collections;
 import org.apache.fineract.organisation.user.AppUser;
 import org.apache.fineract.organisation.user.AppUserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -25,10 +28,6 @@ import org.springframework.cache.annotation.Cacheable;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.stereotype.Component;
-
-import java.util.Collections;
-
-import static org.apache.fineract.config.CacheConfig.CACHE_USER_BY_NAME;
 
 @Component(value = "userDetailsService")
 public class TenantAwareUserDetailsService implements UserDetailsService {

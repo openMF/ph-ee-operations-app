@@ -4,8 +4,7 @@ public class EndpointSetting {
 
     private String endpoint, authority;
 
-    public EndpointSetting() {
-    }
+    public EndpointSetting() {}
 
     public String getEndpoint() {
         return endpoint;
