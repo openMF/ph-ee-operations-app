@@ -16,7 +16,7 @@ import org.supercsv.prefs.CsvPreference;
  * @param <T>
  *            generic type representing the data type of POJO
  */
-public class CsvWriter<T> {
+public final class CsvWriter<T> {
 
     interface Callback<T> {
 

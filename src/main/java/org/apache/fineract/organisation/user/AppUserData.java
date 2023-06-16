@@ -156,8 +156,12 @@ public class AppUserData {
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
         AppUserData that = (AppUserData) o;
         return Objects.equals(id, that.id) && Objects.equals(username, that.username) && Objects.equals(officeId, that.officeId)
                 && Objects.equals(officeName, that.officeName) && Objects.equals(firstname, that.firstname)

@@ -25,11 +25,11 @@ public class CsvUtility {
         PrintWriter printWriter = performErrorProneTask(
                 new WriteToCsvException(ErrorCode.CSV_GET_WRITER, "Unable get writer from HttpServletResponse"), response::getWriter);
 
-        // System.out.println("Print writer fetch success");
+        // Print writer fetch success
 
         CsvWriter<T> writer = new CsvWriter.Builder<T>().setPrintWriter(printWriter).setData(listOfData).build();
 
-        // System.out.println("Writer object created success");
+        // Writer object created success
         writer.write();
     }
 

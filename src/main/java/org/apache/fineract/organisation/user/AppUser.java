@@ -258,8 +258,12 @@ public class AppUser extends AbstractPersistableCustom<Long> implements UserDeta
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
         AppUser appUser = (AppUser) o;
         return Objects.equals(username, appUser.username);
     }

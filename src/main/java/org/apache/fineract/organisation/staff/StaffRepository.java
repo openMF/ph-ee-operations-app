@@ -26,6 +26,6 @@ import org.springframework.data.repository.query.Param;
 public interface StaffRepository extends JpaRepository<Staff, Long>, JpaSpecificationExecutor<Staff> {
 
     @Query("select s from Staff s where s.id = :id AND s.office.id = :officeId")
-    public Staff findByOffice(@Param("id") Long id, @Param("officeId") Long officeId);
+    Staff findByOffice(@Param("id") Long id, @Param("officeId") Long officeId);
 
 }
