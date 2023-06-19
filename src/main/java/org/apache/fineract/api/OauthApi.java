@@ -23,15 +23,16 @@ import com.nimbusds.jose.JOSEObjectType;
 import com.nimbusds.jose.JWSAlgorithm;
 import com.nimbusds.jose.JWSHeader;
 import com.nimbusds.jose.crypto.RSASSASigner;
-import com.nimbusds.jose.jwk.RSAKey;
 import com.nimbusds.jwt.JWTClaimsSet;
 import com.nimbusds.jwt.SignedJWT;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.apache.commons.codec.binary.Base64;
-import org.apache.commons.lang3.StringUtils;
+import org.apache.fineract.organisation.role.Role;
+import org.apache.fineract.organisation.user.AppUser;
 import org.apache.fineract.organisation.user.AppUserRepository;
+import org.apache.fineract.utils.JwtUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -51,10 +52,9 @@ import java.security.NoSuchAlgorithmException;
 import java.security.PrivateKey;
 import java.security.spec.InvalidKeySpecException;
 import java.security.spec.PKCS8EncodedKeySpec;
-import java.security.spec.RSAPrivateKeySpec;
-import java.security.spec.X509EncodedKeySpec;
 import java.text.ParseException;
 import java.time.Instant;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 import java.util.UUID;
@@ -68,33 +68,42 @@ public class OauthApi {
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
     @Autowired
-    private PasswordEncoder passwordEncoder;
+    private AppUserRepository appUserRepository;
 
     @Autowired
-    private AppUserRepository appuserRepository;
+    private PasswordEncoder passwordEncoder;
 
     @PostMapping(path = "/token", consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE)
     public String oauthToken(HttpServletRequest request, HttpServletResponse response) {
 
 
-        String username = request.getParameter("username");
-        String password = request.getParameter("password");
         String grantType = request.getParameter("grant_type");
-        String scope = request.getParameter("scope");
-        String clientId = request.getParameter("client_id");
-        logger.info("username:" + username);
-        logger.info("password:" + password);
-        logger.info("grantType:" + grantType);
-        logger.info("scope:" + scope);
-        logger.info("clientId:" + clientId);
         String jti = UUID.randomUUID().toString();
 
         try {
             if (grantType.equals("password")) {
-
-                return generateResponse(username, scope, jti);
+                String userName = request.getParameter("username");
+                AppUser appUser = appUserRepository.findAppUserByName(userName);
+                checkUserExists(appUser);
+                List<String> userRoles = appUser.getRoles().stream().map(Role::getName).toList();
+                String password = request.getParameter("password");
+                if (!passwordEncoder.matches(password, appUser.getPassword())) {
+                    throw new RuntimeException("Login failed!");
+                }
+                String scopeParameter = request.getParameter("scope");
+                List<String> scope = scopeParameter.contains(",") ? Arrays.asList(scopeParameter.split(",")) : List.of(scopeParameter);
+                String clientId = request.getParameter("client_id");
+                return generateResponse(userName, clientId, scope, jti, userRoles);
             } else if (grantType.equals("refresh_token")) {
-                return generateResponse(username, scope, jti);
+                String refreshToken = request.getParameter("refresh_token");
+                SignedJWT signedJwt = JwtUtil.getSignedJwt(refreshToken);
+                String userName = JwtUtil.getUsername(signedJwt);
+                AppUser appUser = appUserRepository.findAppUserByName(userName);
+                checkUserExists(appUser);
+                List<String> userRoles = appUser.getRoles().stream().map(Role::getName).toList();
+                String clientId = JwtUtil.getClientId(signedJwt);
+                List<String> scope = JwtUtil.getScope(signedJwt);
+                return generateResponse(userName, clientId, scope, jti, userRoles);
             } else {
                 throw new RuntimeException("Unsupported grant!");
             }
@@ -104,18 +113,25 @@ public class OauthApi {
         }
     }
 
-    private String generateResponse(String username, String scope, String jti) throws IOException, URISyntaxException, ParseException, JOSEException, InvalidKeySpecException, NoSuchAlgorithmException {
+    private static void checkUserExists(AppUser appUser) {
+        if (appUser == null) {
+            throw new RuntimeException("Login failed!");
+        }
+    }
+
+    private String generateResponse(String username, String clientId, List<String> scope, String jti, List<String> roles) throws IOException, URISyntaxException, ParseException, JOSEException, InvalidKeySpecException, NoSuchAlgorithmException {
         JWSHeader header = new JWSHeader.Builder(JWSAlgorithm.RS256)
                 .type(JOSEObjectType.JWT)
                 .build();
 
-        List<String> finalScope = StringUtils.isEmpty(scope) ? List.of("all") : (scope.contains(",") ? List.of(scope.split(",")) : List.of(scope));
+        List<String> finalScope = scope == null || scope.isEmpty() ? List.of("all") : scope;
 
         JWTClaimsSet payload = new JWTClaimsSet.Builder()
-                .claim("user_name", username)
+                .claim("userName", username)
                 .claim("authorities", List.of("ALL_FUNCTIONS"))
-                .claim("client_id", "community-app")
+                .claim("clientId", clientId)
                 .claim("scope", finalScope)
+                .claim("roles", roles)
                 .jwtID(jti)
                 .expirationTime(Date.from(Instant.now().plusSeconds(3600)))
                 .build();

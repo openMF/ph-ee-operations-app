@@ -128,12 +128,6 @@
             <version>5.0.1</version>
         </dependency>
         <dependency>
-            <groupId>mysql</groupId>
-            <artifactId>mysql-connector-java</artifactId>
-            <version>8.0.30</version>
-            <scope>compile</scope>
-        </dependency>
-        <dependency>
             <groupId>com.googlecode.flyway</groupId>
             <artifactId>flyway-core</artifactId>
             <version>2.3.1</version>
@@ -191,11 +185,11 @@
             <artifactId>postgresql</artifactId>
             <version>42.6.0</version>
         </dependency>
-        <dependency>
-            <groupId>io.camunda</groupId>
-            <artifactId>zeebe-client-java</artifactId>
-            <version>8.2.6</version>
-        </dependency>
+<!--        <dependency>-->
+<!--            <groupId>io.camunda</groupId>-->
+<!--            <artifactId>zeebe-client-java</artifactId>-->
+<!--            <version>8.2.6</version>-->
+<!--        </dependency>-->
         <dependency>
             <groupId>io.netty</groupId>
             <artifactId>netty-bom</artifactId>
@@ -212,6 +206,22 @@
             <artifactId>nimbus-jose-jwt</artifactId>
             <version>7.8.1</version>
         </dependency>
+        <dependency>
+            <groupId>io.camunda.spring</groupId>
+            <artifactId>spring-boot-starter-camunda</artifactId>
+            <version>8.2.2</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.springframework.boot</groupId>
+                    <artifactId>*</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+        <!--        <dependency>-->
+<!--            <groupId>io.camunda</groupId>-->
+<!--            <artifactId>spring-zeebe-starter</artifactId>-->
+<!--            <version>8.2.1</version>-->
+<!--        </dependency>-->
     </dependencies>
 
     <build>

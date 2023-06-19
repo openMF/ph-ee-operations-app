@@ -12,22 +12,22 @@ import org.springframework.context.annotation.Configuration;
 public class ZeebeConfig {
     private Logger logger = LoggerFactory.getLogger(this.getClass());
 
-    @Value("${zeebe.client.broker.gatewayAddress}")
+    @Value("${zeebe.client.broker.gateway-address}")
     String gatewayAddress;
 
     @Value("${zeebe.client.security.plaintext}")
     boolean plaintext;
 
 
-    @Bean
-    public ZeebeClient zeebeClient() {
-        logger.info("setting up Zeebe client with gateway address: {} with plaintext: {}", gatewayAddress, plaintext);
-
-        ZeebeClientBuilder builder = ZeebeClient.newClientBuilder().gatewayAddress(gatewayAddress);
-        if (plaintext) {
-            builder.usePlaintext();
-        }
-
-        return builder.build();
-    }
+//    @Bean
+//    public ZeebeClient zeebeClient() {
+//        logger.info("setting up Zeebe client with gateway address: {} with plaintext: {}", gatewayAddress, plaintext);
+//
+//        ZeebeClientBuilder builder = ZeebeClient.newClientBuilder().gatewayAddress(gatewayAddress);
+//        if (plaintext) {
+//            builder.usePlaintext();
+//        }
+//
+//        return builder.build();
+//    }
 }

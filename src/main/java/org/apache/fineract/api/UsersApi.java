@@ -46,7 +46,7 @@ import static org.apache.fineract.api.AssignmentAction.ASSIGN;
 
 @RestController
 @SecurityRequirement(name = "auth")
-@RequestMapping("/api/v1")
+@RequestMapping("/api/v1/users")
 @Tag(name = "Users API")
 public class UsersApi {
 
@@ -59,12 +59,12 @@ public class UsersApi {
     @Autowired
     private RoleRepository roleRepository;
 
-    @GetMapping(path = "/users", produces = MediaType.APPLICATION_JSON_VALUE)
+    @GetMapping(produces = MediaType.APPLICATION_JSON_VALUE)
     public List<AppUser> retrieveAll() {
         return this.appuserRepository.findAll();
     }
 
-    @GetMapping(path = "/user/{userId}", produces = MediaType.APPLICATION_JSON_VALUE)
+    @GetMapping(path = "/{userId}", produces = MediaType.APPLICATION_JSON_VALUE)
     public AppUser retrieveOne(@PathVariable("userId") Long userId, HttpServletResponse response) {
         AppUser user = appuserRepository.findById(userId).get();
         if(user != null) {
@@ -75,7 +75,7 @@ public class UsersApi {
         }
     }
 
-    @GetMapping(path = "/user/{userId}/roles", produces = MediaType.APPLICATION_JSON_VALUE)
+    @GetMapping(path = "/{userId}/roles", produces = MediaType.APPLICATION_JSON_VALUE)
     public Collection<Role> retrieveRoles(@PathVariable("userId") Long userId, HttpServletResponse response) {
         AppUser user = appuserRepository.findById(userId).get();
         if(user != null) {
@@ -86,7 +86,7 @@ public class UsersApi {
         }
     }
 
-    @PostMapping(path = "/user", consumes = MediaType.APPLICATION_JSON_VALUE)
+    @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
     public void create(@RequestBody AppUser appUser, HttpServletResponse response) {
         AppUser existing = appuserRepository.findAppUserByName(appUser.getUsername());
         if (existing == null) {
@@ -99,7 +99,7 @@ public class UsersApi {
         }
     }
 
-    @PutMapping(path = "/user/{userId}", consumes = MediaType.APPLICATION_JSON_VALUE)
+    @PutMapping(path = "/{userId}", consumes = MediaType.APPLICATION_JSON_VALUE)
     public void update(@PathVariable("userId") Long userId, @RequestBody AppUser appUser, HttpServletResponse response) {
         AppUser existing = appuserRepository.findById(userId).get();
         if (existing != null) {
@@ -112,7 +112,7 @@ public class UsersApi {
         }
     }
 
-    @DeleteMapping(path = "/user/{userId}", produces = MediaType.TEXT_HTML_VALUE)
+    @DeleteMapping(path = "/{userId}", produces = MediaType.TEXT_HTML_VALUE)
     public void delete(@PathVariable("userId") Long userId, HttpServletResponse response) {
         if(appuserRepository.findById(userId).isPresent()) {
             appuserRepository.deleteById(userId);
@@ -121,7 +121,7 @@ public class UsersApi {
         }
     }
 
-    @PutMapping(path = "/user/{userId}/roles", consumes = MediaType.APPLICATION_JSON_VALUE)
+    @PutMapping(path = "/{userId}/roles", consumes = MediaType.APPLICATION_JSON_VALUE)
     public void userAssignment(@PathVariable("userId") Long userId, @RequestParam("action") AssignmentAction action,
                                @RequestBody EntityAssignments assignments, HttpServletResponse response) {
         AppUser existingUser = appuserRepository.findById(userId).get();

@@ -19,6 +19,7 @@
 package org.apache.fineract;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import io.camunda.zeebe.spring.client.EnableZeebeClient;
 import org.apache.fineract.core.service.AudienceVerifier;
 import org.apache.fineract.core.service.TenantAwareHeaderFilter;
 import org.apache.fineract.organisation.tenant.TenantServerConnectionRepository;
@@ -34,6 +35,9 @@ import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Primary;
 import org.springframework.core.io.ClassPathResource;
+import org.springframework.data.web.config.EnableSpringDataWebSupport;
+import org.springframework.scheduling.annotation.EnableAsync;
+import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.ProviderManager;
@@ -67,6 +71,10 @@ import java.util.stream.Collectors;
 //        DataSourceTransactionManagerAutoConfiguration.class,
 ////        FlywayAutoConfiguration.class,
 //        ErrorMvcAutoConfiguration.class})
+@EnableZeebeClient
+//@EnableScheduling
+//@EnableAsync
+//@EnableSpringDataWebSupport
 public class ServerApplication {
 
     /**

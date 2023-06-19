@@ -15,8 +15,8 @@ fineract:
       host: localhost
       port: 5432
       schema: ph_ee_operations
-      username: karoly_torok
-      password: vR36GcaG
+      username: importer
+      password: NTU5NTk3NzU2
     common:
       protocol: jdbc
       subprotocol: postgresql
@@ -25,3 +25,15 @@ fineract:
 spring:
   liquibase:
     contexts: postgresql,initial_switch,tenant_store_db
+
+zeebe:
+  client:
+    connection-mode: ADDRESS
+    worker:
+      threads: 1
+    job:
+      timeout: 2592000000 # 30 days
+    broker:
+      gateway-address: 127.0.0.1:26500
+    security:
+      plaintext: true

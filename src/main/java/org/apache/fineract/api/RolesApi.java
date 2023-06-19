@@ -45,7 +45,7 @@ import static org.apache.fineract.api.AssignmentAction.ASSIGN;
 
 @RestController
 @SecurityRequirement(name = "auth")
-@RequestMapping("/api/v1")
+@RequestMapping("/api/v1/roles")
 public class RolesApi {
 
     @Autowired
@@ -54,12 +54,12 @@ public class RolesApi {
     @Autowired
     private PermissionRepository permissionRepository;
 
-    @GetMapping(path = "/roles", produces = MediaType.APPLICATION_JSON_VALUE)
+    @GetMapping(produces = MediaType.APPLICATION_JSON_VALUE)
     public List<Role> retrieveAll() {
         return this.roleRepository.findAll();
     }
 
-    @GetMapping(path = "/role/{roleId}", produces = MediaType.APPLICATION_JSON_VALUE)
+    @GetMapping(path = "{roleId}", produces = MediaType.APPLICATION_JSON_VALUE)
     public Role retrieveOne(@PathVariable("roleId") Long roleId, HttpServletResponse response) {
         Role role = roleRepository.findById(roleId).get();
         if(role != null) {
@@ -70,7 +70,7 @@ public class RolesApi {
         }
     }
 
-    @GetMapping(path = "/role/{roleId}/permissions", produces = MediaType.APPLICATION_JSON_VALUE)
+    @GetMapping(path = "{roleId}/permissions", produces = MediaType.APPLICATION_JSON_VALUE)
     public Collection<Permission> retrievePermissions(@PathVariable("roleId") Long roleId, HttpServletResponse response) {
         Role role = roleRepository.findById(roleId).get();
         if(role != null) {
@@ -81,18 +81,19 @@ public class RolesApi {
         }
     }
 
-    @PostMapping(path = "/role", consumes = MediaType.APPLICATION_JSON_VALUE)
+    @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
     public void create(@RequestBody Role role, HttpServletResponse response) {
         Role existing = roleRepository.getRoleByName(role.getName());
         if (existing == null) {
             role.setId(null);
+            role.setDisabled(false);
             roleRepository.saveAndFlush(role);
         } else {
             response.setStatus(HttpServletResponse.SC_CONFLICT);
         }
     }
 
-    @PutMapping(path = "/role/{roleId}", consumes = MediaType.APPLICATION_JSON_VALUE)
+    @PutMapping(path = "/{roleId}", consumes = MediaType.APPLICATION_JSON_VALUE)
     public void update(@PathVariable("roleId") Long roleId, @RequestBody Role role, HttpServletResponse response) {
         Role existing = roleRepository.findById(roleId).get();
         if (existing != null) {
@@ -105,7 +106,7 @@ public class RolesApi {
         }
     }
 
-    @DeleteMapping(path = "/role/{roleId}")
+    @DeleteMapping(path = "/{roleId}")
     public void delete(@PathVariable("roleId") Long roleId, HttpServletResponse response) {
         if(roleRepository.existsById(roleId)) {
             roleRepository.deleteById(roleId);
@@ -114,7 +115,7 @@ public class RolesApi {
         }
     }
 
-    @PutMapping(path = "/role/{roleId}/permissions", consumes = MediaType.APPLICATION_JSON_VALUE)
+    @PutMapping(path = "/{roleId}/permissions", consumes = MediaType.APPLICATION_JSON_VALUE)
     public void permissionAssignment(@PathVariable("roleId") Long roleId, @RequestParam("action") AssignmentAction action,
                                      @RequestBody EntityAssignments assignments, HttpServletResponse response) {
         Role existingRole = roleRepository.findById(roleId).get();
