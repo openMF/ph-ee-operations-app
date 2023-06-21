@@ -12,7 +12,7 @@ public class ZeebeTaskListDto {
     private String taskForm;
     private String formData;
     private String assignee;
-    private String endToEndId;
+    private String businessKey;
     private List<String> candidateRoles;
     private List<String> previousSubmitters;
     private Boolean isAssignable;
@@ -82,12 +82,12 @@ public class ZeebeTaskListDto {
         this.assignee = assignee;
     }
 
-    public String getEndToEndId() {
-        return endToEndId;
+    public String getBusinessKey() {
+        return businessKey;
     }
 
-    public void setEndToEndId(String endToEndId) {
-        this.endToEndId = endToEndId;
+    public void setBusinessKey(String businessKey) {
+        this.businessKey = businessKey;
     }
 
     public List<String> getCandidateRoles() {

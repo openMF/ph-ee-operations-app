@@ -46,11 +46,11 @@ public class UserTaskJobHandler implements JobHandler {
     private TenantServerConnectionRepository tenantServerConnectionRepository;
 
     @Override
-    @JobWorker(timeout = 2592000000L, name = "human-tasklist", type = "io.camunda.zeebe:userTask", autoComplete = false)
+    @JobWorker(timeout = 2592000000L, name = "zeebe-tasklist", type = "io.camunda.zeebe:userTask", autoComplete = false)
     public void handle(JobClient client, ActivatedJob job) {
 
         try {
-            ThreadLocalContextUtil.setTenant(this.tenantServerConnectionRepository.findOneBySchemaName("binx"));
+            ThreadLocalContextUtil.setTenant(this.tenantServerConnectionRepository.findOneBySchemaName("binx")); //TODO: tenant name?
             final ZeebeTaskEntity entity = new ZeebeTaskEntity();
 
 
@@ -65,48 +65,57 @@ public class UserTaskJobHandler implements JobHandler {
             final String name = customHeaders.getOrDefault("name", job.getElementId());
             entity.setName(name);
 
-            final String description = customHeaders.getOrDefault("description", "");
+            final String description = customHeaders.getOrDefault("description", null);
             entity.setDescription(description);
 
-            final String taskForm = customHeaders.get("taskForm");
+            final String taskForm = customHeaders.getOrDefault("taskForm", null);
             entity.setTaskForm(taskForm);
 
-            final String zeebeFormData = customHeaders.get("formData");
-            List<FormData> formDataList = new ArrayList<>();
-            if (StringUtils.isNotEmpty(zeebeFormData)) {
-                JSONArray zeebeFormDataJsonArray = new JSONArray(zeebeFormData);
-                zeebeFormDataJsonArray.forEach(o -> {
-                    JSONObject jsonObject = (JSONObject) o;
-                    FormData formData = new FormData();
-                    String variableName = jsonObject.getString("variable");
-                    formData.setName(variableName);
-                    formData.setDescription(jsonObject.getString("description"));
-                    formData.setValue(variables.getOrDefault(variableName, null));
-                    formData.setIndex(jsonObject.getInt("index"));
-                    formDataList.add(formData);
-                });
-                try {
-                    entity.setFormData(objectMapper.writeValueAsString(formDataList));
-                } catch (JsonProcessingException e) {
-                    logger.error("Could not map form data object to string for taskId:" + taskId, e);
-                }
-            }
+            String formData = getFormData(taskId, customHeaders, variables);
+            entity.setFormData(formData);
 
             final String assignee = readAssignee(customHeaders, variables);
             entity.setAssignee(assignee);
 
             Set<ZeebeTaskCandidateRole> candidateRoles = getCandidateRoles(customHeaders, taskId);
-            Set<ZeebeTaskSubmitter> submitters = getSubmitters(variables, taskId, name);
             entity.setCandidateRoles(candidateRoles);
+
+            Set<ZeebeTaskSubmitter> submitters = getSubmitters(variables, taskId, name);
             entity.setPreviousSubmitters(submitters);
-            Object endToEndId = variables.getOrDefault("endToEndId", null);
-            entity.setEndToEndId(endToEndId == null ? null : endToEndId.toString());
+
+            final String businessKeyVariableName = customHeaders.getOrDefault("businessKey", null);
+            entity.setBusinessKey(variables.getOrDefault(businessKeyVariableName, taskId).toString());
 
             zeebeTaskRepository.save(entity);
 
         } finally {
             ThreadLocalContextUtil.clear();
         }
+    }
+
+    private String getFormData(long taskId, Map<String, String> customHeaders, Map<String, Object> variables) {
+        final String zeebeFormData = customHeaders.getOrDefault("formData", null);
+        List<FormData> formDataList = new ArrayList<>();
+        if (StringUtils.isNotEmpty(zeebeFormData)) {
+            JSONArray zeebeFormDataJsonArray = new JSONArray(zeebeFormData);
+            zeebeFormDataJsonArray.forEach(o -> {
+                JSONObject jsonObject = (JSONObject) o;
+                FormData formData = new FormData();
+                String variableName = jsonObject.getString("variable");
+                formData.setName(variableName);
+                formData.setDescription(jsonObject.getString("description"));
+                formData.setValue(variables.getOrDefault(variableName, null));
+                formData.setIndex(jsonObject.getInt("index"));
+                formDataList.add(formData);
+            });
+            try {
+                return objectMapper.writeValueAsString(formDataList);
+            } catch (JsonProcessingException e) {
+                logger.error("Could not map form data object to string for taskId:" + taskId, e);
+
+            }
+        }
+        return null;
     }
 
     private static String readAssignee(

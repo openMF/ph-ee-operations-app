@@ -58,8 +58,8 @@ public class ZeebeTaskEntity {
   @Column(name = "assignee")
   private String assignee;
 
-  @Column(name = "end_to_end_id")
-  private String endToEndId;
+  @Column(name = "business_key")
+  private String businessKey;
 
   @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER, orphanRemoval = true)
   @JoinColumn(name = "task_id")
@@ -133,12 +133,12 @@ public class ZeebeTaskEntity {
     this.assignee = assignee;
   }
 
-  public String getEndToEndId() {
-    return endToEndId;
+  public String getBusinessKey() {
+    return businessKey;
   }
 
-  public void setEndToEndId(String endToEndId) {
-    this.endToEndId = endToEndId;
+  public void setBusinessKey(String endToEndId) {
+    this.businessKey = endToEndId;
   }
 
   public Set<ZeebeTaskCandidateRole> getCandidateRoles() {

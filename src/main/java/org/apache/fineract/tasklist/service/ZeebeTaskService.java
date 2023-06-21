@@ -96,7 +96,7 @@ public class ZeebeTaskService {
         Set<String> failed = new HashSet<>();
         tasks.forEach(task -> {
             if (!isAssigneeEmpty(task) || isUserPreviousSubmitter(task, userName) || !userHaveCandidateRole(task, userRoles)) {
-                failed.add(task.getEndToEndId());
+                failed.add(task.getBusinessKey());
                 tasks.remove(task);
             } else {
                 task.setAssignee(userName);
@@ -106,7 +106,7 @@ public class ZeebeTaskService {
 
         ClaimTasksResponse claimTasksResponse = new ClaimTasksResponse();
         claimTasksResponse.setFailed(failed);
-        claimTasksResponse.setSuccessful(tasks.stream().map(ZeebeTaskEntity::getEndToEndId).collect(Collectors.toSet()));
+        claimTasksResponse.setSuccessful(tasks.stream().map(ZeebeTaskEntity::getBusinessKey).collect(Collectors.toSet()));
         return claimTasksResponse;
     }
 
@@ -146,7 +146,7 @@ public class ZeebeTaskService {
         Set<String> failed = new HashSet<>();
         tasks.forEach(task -> {
             if (!userName.equals(task.getAssignee())) {
-                failed.add(task.getEndToEndId());
+                failed.add(task.getBusinessKey());
                 tasks.remove(task);
             } else {
                 task.setAssignee(null);
@@ -156,7 +156,7 @@ public class ZeebeTaskService {
 
         ClaimTasksResponse claimTasksResponse = new ClaimTasksResponse();
         claimTasksResponse.setFailed(failed);
-        claimTasksResponse.setSuccessful(tasks.stream().map(ZeebeTaskEntity::getEndToEndId).collect(Collectors.toSet()));
+        claimTasksResponse.setSuccessful(tasks.stream().map(ZeebeTaskEntity::getBusinessKey).collect(Collectors.toSet()));
         return claimTasksResponse;
     }
 
@@ -179,7 +179,7 @@ public class ZeebeTaskService {
         zeebeTaskListDto.setFormData(zeebeTaskEntity.getFormData());
         zeebeTaskListDto.setTimestamp(zeebeTaskEntity.getTimestamp());
         zeebeTaskListDto.setAssignee(zeebeTaskEntity.getAssignee());
-        zeebeTaskListDto.setEndToEndId(zeebeTaskEntity.getEndToEndId());
+        zeebeTaskListDto.setBusinessKey(zeebeTaskEntity.getBusinessKey());
         zeebeTaskListDto.setCandidateRoles(zeebeTaskEntity.getCandidateRoles().stream().map(zeebeTaskCandidateRole -> zeebeTaskCandidateRole.getId().getRoleName()).collect(Collectors.toList()));
         zeebeTaskListDto.setPreviousSubmitters(zeebeTaskEntity.getPreviousSubmitters().stream().map(submitter -> submitter.getId().getUserName()).collect(Collectors.toList()));
         return zeebeTaskListDto;
