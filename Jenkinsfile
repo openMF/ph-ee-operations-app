@@ -3,7 +3,7 @@ pipeline {
     stages {
         stage('build') {
             steps {
-                sh './gradlew build'
+                sh 'mvn clean build'
             }
         }
         stage('docker') {
