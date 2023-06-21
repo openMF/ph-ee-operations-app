@@ -34,7 +34,7 @@
             <column name="task_form" type="TEXT"/>
             <column name="form_data" type="TEXT"/>
             <column name="assignee" type="VARCHAR(255)"/>
-            <column name="end_to_end_id" type="VARCHAR(255)"/>
+            <column name="business_key" type="VARCHAR(255)"/>
         </createTable>
         <createTable tableName="zeebe_task_candidate_role">
             <column name="task_id" type="BIGINT">
