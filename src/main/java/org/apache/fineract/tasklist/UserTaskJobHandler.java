@@ -119,12 +119,10 @@ public class UserTaskJobHandler implements JobHandler {
             final Map<String, String> customHeaders, Long taskId) {
         final String candidateRolesString = customHeaders.getOrDefault("io.camunda.zeebe:candidateGroups", null);
 
-        List<String> roleNames = StringUtil.commaSeparatedStringToList(candidateRolesString);
-        if (roleNames.isEmpty()) {
-            return Collections.emptySet();
-        } else {
-            return roleNames.stream().map(s -> new ZeebeTaskCandidateRole(new ZeebeTaskCandidateRoleId(taskId, s))).collect(Collectors.toSet());
-        }
+        return StringUtil.jsonArrayToStringList(candidateRolesString)
+                .stream()
+                .map(s -> new ZeebeTaskCandidateRole(new ZeebeTaskCandidateRoleId(taskId, s)))
+                .collect(Collectors.toSet());
     }
 
     private Set<ZeebeTaskSubmitter> getSubmitters(Map<String, Object> variables, Long taskId, String taskName) {

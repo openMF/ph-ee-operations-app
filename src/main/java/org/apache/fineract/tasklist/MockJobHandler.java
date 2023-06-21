@@ -28,6 +28,7 @@ public class MockJobHandler implements JobHandler {
         variablesAsMap.put("creditorBic", "OTPVHUH0");
         variablesAsMap.put("debtorName", "Fules Lajos");
         variablesAsMap.put("creditorName", "Bajszos Miklos");
+        variablesAsMap.put("rtpAmount", "500000000000000 EUR");
         client.newCompleteCommand(job).variables(variablesAsMap).send().join();
     }
 
