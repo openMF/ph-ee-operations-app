@@ -9,6 +9,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
+import java.math.BigDecimal;
 import java.util.Map;
 import java.util.UUID;
 
@@ -30,6 +31,7 @@ public class MockJobHandler implements JobHandler {
         variablesAsMap.put("creditorName", "Bajszos Miklos");
         variablesAsMap.put("rtpAmount", "500000000000000 EUR");
         variablesAsMap.put("internalCorrelationId", UUID.randomUUID().toString());
+        variablesAsMap.put("amount", new BigDecimal(5000));
         client.newCompleteCommand(job).variables(variablesAsMap).send().join();
     }
 

@@ -13,12 +13,14 @@ import org.apache.fineract.tasklist.entity.ZeebeTaskEntity;
 import org.apache.fineract.tasklist.entity.ZeebeTaskSubmitter;
 import org.apache.fineract.tasklist.repository.ZeebeTaskRepository;
 import org.apache.fineract.utils.StringUtil;
+import org.json.JSONArray;
 import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Component;
 
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -29,7 +31,6 @@ import java.util.stream.Collectors;
 
 @Component
 public class ZeebeTaskService {
-
 
     @Autowired
     private ZeebeTaskRepository zeebeTaskRepository;
@@ -53,10 +54,7 @@ public class ZeebeTaskService {
 
         Set<ZeebeTaskSubmitter> previousSubmitters = task.getPreviousSubmitters();
 
-        JSONObject variables = new JSONObject(variablesJson);
-        final Map<String, Object> variableMap = new HashMap<>();
-        variables.keySet().forEach(s -> variableMap.put(s, variables.get(s)));
-
+        final Map<String, Object> variableMap = createVariablesMap(variablesJson, task);
 
         List<String> submitterUserIds = new ArrayList<>(previousSubmitters
                 .stream()
@@ -222,5 +220,48 @@ public class ZeebeTaskService {
 
     private static boolean isAssigneeEmpty(ZeebeTaskEntity zeebeTaskEntity) {
         return StringUtils.isEmpty(zeebeTaskEntity.getAssignee());
+    }
+
+    private static Map<String, String> getVariableType(String taskForm) {
+        Map<String, String> variableTypes = new HashMap<>();
+        if (StringUtils.isNotEmpty(taskForm)) {
+            JSONArray taskFormJsonArray = new JSONArray(taskForm);
+            taskFormJsonArray.forEach(o -> {
+                JSONObject taskFormJsonObject = (JSONObject) o;
+                if (taskFormJsonObject.has("outputVariableType")) {
+                    variableTypes.put(taskFormJsonObject.getString("name"), taskFormJsonObject.getString("outputVariableType"));
+                }
+            });
+        }
+        return variableTypes;
+    }
+
+    private static Map<String, Object> createVariablesMap(String variablesJson, ZeebeTaskEntity task) {
+        JSONObject variables = new JSONObject(variablesJson);
+        final Map<String, Object> variableMap = new HashMap<>();
+        String taskForm = task.getTaskForm();
+        Map<String, String> variableTypes = getVariableType(taskForm);
+        variables.keySet().forEach(s -> {
+            if (variableTypes.containsKey(s)) {
+                String variableType = variableTypes.get(s);
+                String value = variables.getString(s);
+                if ("true".equalsIgnoreCase(value)) {
+                    variableMap.put(s, true);
+                } else if ("false".equalsIgnoreCase(value)) {
+                    variableMap.put(s, false);
+                } else if ("long".equals(variableType)) {
+                    variableMap.put(s, Long.valueOf(value));
+                } else if ("integer".equals(variableType)) {
+                    variableMap.put(s, Integer.valueOf(value));
+                } else if ("bigdecimal".equals(variableType)) {
+                    variableMap.put(s, new BigDecimal(value));
+                } else if ("string".equals(variableType)) {
+                    variableMap.put(s, value);
+                }
+            } else {
+                variableMap.put(s, variables.get(s));
+            }
+        });
+        return variableMap;
     }
 }
