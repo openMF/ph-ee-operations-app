@@ -86,9 +86,8 @@ public class ProcessVariableUtil {
 
     public static Set<ZeebeTaskSubmitter> getSubmitters(Map<String, Object> variables, Long taskId, String taskName) {
         final Object submittersObject = variables.getOrDefault(StringUtil.submitterVariableName(taskName), null);
-        String submittersString;
-        if (submittersObject != null) {
-            submittersString = submittersObject.toString();
+        if (submittersObject != null && StringUtils.isNotEmpty(submittersObject.toString())) {
+            String submittersString = submittersObject.toString();
             List<String> submitterNames = StringUtil.commaSeparatedStringToList(submittersString);
             if (submitterNames.isEmpty()) {
                 return Collections.emptySet();
