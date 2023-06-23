@@ -37,3 +37,10 @@ zeebe:
       gateway-address: 127.0.0.1:26500
     security:
       plaintext: true
+
+management:
+  endpoint:
+    health:
+      show-details: always
+      probes:
+        enabled: true
