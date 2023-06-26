@@ -4,6 +4,7 @@ import io.camunda.zeebe.client.api.response.ActivatedJob;
 import io.camunda.zeebe.client.api.worker.JobClient;
 import io.camunda.zeebe.client.api.worker.JobHandler;
 import io.camunda.zeebe.spring.client.annotation.JobWorker;
+import jakarta.annotation.PostConstruct;
 import org.apache.fineract.core.service.ThreadLocalContextUtil;
 import org.apache.fineract.organisation.tenant.TenantServerConnectionRepository;
 import org.apache.fineract.tasklist.entity.ZeebeTaskEntity;
@@ -11,6 +12,7 @@ import org.apache.fineract.tasklist.repository.ZeebeTaskRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import java.time.Instant;
@@ -33,13 +35,17 @@ public class UserTaskJobHandler implements JobHandler {
     @Autowired
     private TenantServerConnectionRepository tenantServerConnectionRepository;
 
+    @Value("${tenant.name}")
+    private String tenantName;
+
+
     @Override
     @JobWorker(timeout = 2592000000L, name = "zeebe-tasklist", type = "io.camunda.zeebe:userTask", autoComplete = false)
     public void handle(JobClient client, ActivatedJob job) {
 
         Long taskId = job.getKey();
         try {
-            ThreadLocalContextUtil.setTenant(this.tenantServerConnectionRepository.findOneBySchemaName("binx")); //TODO: tenant name?
+            ThreadLocalContextUtil.setTenant(this.tenantServerConnectionRepository.findOneBySchemaName(tenantName));
             final ZeebeTaskEntity entity = new ZeebeTaskEntity();
 
             entity.setId(taskId);

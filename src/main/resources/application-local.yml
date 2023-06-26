@@ -1,4 +1,4 @@
-tenants: "binx"
+tenants: ${TENANT_NAME}
 
 token:
   client:
@@ -44,3 +44,6 @@ management:
       show-details: always
       probes:
         enabled: true
+
+tenant:
+  name: ${TENANT_NAME}
