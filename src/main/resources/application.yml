@@ -1,15 +1,15 @@
 fineract:
   datasource:
     core:
-      host: operations-mysql
-      port: 3306
-      schema: tenants
-      username: root
-      password: mysql
+      host: ${DB_HOSTNAME:alluvial-dev.cluster-crhg2ihxmnkn.eu-central-1.rds.amazonaws.com}
+      port: ${DB_PORT:5432}
+      schema: ${DB_SCHEMA:ph_ee_operations}
+      username: ${DB_USERNAME:importer}
+      password: ${DB_PASSWORD:NTU5NTk3NzU2}
     common:
       protocol: jdbc
-      subprotocol: mysql
-      driverclass_name: com.mysql.cj.jdbc.Driver
+      subprotocol: postgresql
+      driverclass_name: org.postgresql.Driver
   tenant:
     host: ${FINERACT_DEFAULT_TENANTDB_HOSTNAME:localhost}
     port: ${FINERACT_DEFAULT_TENANTDB_PORT:3306}
@@ -21,12 +21,21 @@ fineract:
     name: ${FINERACT_DEFAULT_TENANTDB_NAME:fineract_default}
     description: ${FINERACT_DEFAULT_TENANTDB_DESCRIPTION:Default Demo Tenant}
 
+# comma separated list of tenants
+tenants: ${TENANTS:binx}
+
+channel-connector:
+  url: TODO
+  transfer-path: /channel/transfer
+
 token:
   user:
     access-validity-seconds: 600
     refresh-validity-seconds: 43200
   client:
     access-validity-seconds: 3600
+    channel:
+      secret: "p3456"
 
 config:
   imu:
@@ -48,6 +57,7 @@ spring:
     enabled: false
   liquibase:
     enabled: false
+    contexts: postgresql,initial_switch,tenant_store_db
     change-log: classpath:/db/changelog/db.changelog-master.xml
     parameters:
       fineract:
@@ -105,3 +115,22 @@ application:
 recall:
   bpmn-instant: "binx_hct_inst_outgoing_recall-binx"
   bpmn-batch: "binx_ig2_outgoing_recall-binx"
+
+zeebe:
+  client:
+    connection-mode: ADDRESS
+    worker:
+      threads: 1
+    job:
+      timeout: 2592000000 # 30 days
+    broker:
+      gatewayAddress: ${ZEEBE_GATEWAY_ADDRESS:#{'camunda8-zeebe-gateway:26500'}}
+    security:
+      plaintext: true
+
+management:
+  endpoint:
+    health:
+      show-details: always
+      probes:
+        enabled: true
