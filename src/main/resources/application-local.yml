@@ -15,8 +15,8 @@ fineract:
       host: localhost
       port: 5432
       schema: ph_ee_operations
-      username: importer
-      password: NTU5NTk3NzU2
+      username: postgres
+      password: password
     common:
       protocol: jdbc
       subprotocol: postgresql
