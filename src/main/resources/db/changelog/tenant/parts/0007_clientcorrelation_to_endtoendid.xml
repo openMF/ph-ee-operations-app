@@ -3,6 +3,6 @@
                    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
                    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.1.xsd">
     <changeSet author="fineract" id="1" objectQuotingStrategy="QUOTE_ALL_OBJECTS">
-        <renameColumn tableName="transfer" oldColumnName="clientcorrelationid" newColumnName="endtoendidentification"/>
+        <renameColumn tableName="transfers" oldColumnName="clientcorrelationid" newColumnName="endtoendidentification"/>
     </changeSet>
 </databaseChangeLog>
