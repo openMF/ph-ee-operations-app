@@ -33,6 +33,7 @@
     <include file="parts/0003_importer_tables.yaml" relativeToChangelogFile="true"/>
     <include file="parts/0004_initial-zeebe-task-list.xml" relativeToChangelogFile="true"/>
     <include file="parts/0006_bcrypt_default_password.xml" relativeToChangelogFile="true"/>
+    <include file="parts/0007_clientcorrelation_to_endtoendid.xml" relativeToChangelogFile="true"/>
     <!-- The first 2 changelog files are ran with the initial_switch context to handle the Flyway -> Liquibase migration -->
     <!-- The rest of the changelogs will not need this context set -->
 </databaseChangeLog>
