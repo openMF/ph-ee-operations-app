@@ -66,7 +66,6 @@ public class TenantAwareHeaderFilter extends GenericFilterBean {
                     throw new RuntimeException(
                             String.format("No tenant identifier found! Add request header: %s or request param: %s", TENANT_IDENTIFIER_REQUEST_HEADER, TENANT_IDENTIFIER_REQUEST_PARAM));
                 }
-//                tenantIdentifier = "binx";  //TODO: REMOVE ONCE THE OAUTH BASED AUTH WORKS!!!!!!!!!!!
                 ThreadLocalContextUtil.setTenant(this.repository.findOneBySchemaName(tenantIdentifier));
             }
             chain.doFilter(request, res);
@@ -77,7 +76,6 @@ public class TenantAwareHeaderFilter extends GenericFilterBean {
         } finally {
             task.stop();
             ThreadLocalContextUtil.clear();
-            logger.info(PlatformRequestLog.from(task, request).toString());
         }
     }
 }
