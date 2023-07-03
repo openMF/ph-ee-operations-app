@@ -76,7 +76,6 @@ public class TenantAwareHeaderFilter extends GenericFilterBean {
         } finally {
             task.stop();
             ThreadLocalContextUtil.clear();
-            logger.info(PlatformRequestLog.from(task, request).toString());
         }
     }
 }
