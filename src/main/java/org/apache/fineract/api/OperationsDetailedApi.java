@@ -3,33 +3,20 @@ package org.apache.fineract.api;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletResponse;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.fineract.data.ErrorResponse;
 import org.apache.fineract.exception.WriteToCsvException;
-import org.apache.fineract.operations.Filter;
-import org.apache.fineract.operations.TransactionRequest;
-import org.apache.fineract.operations.TransactionRequestRepository;
-import org.apache.fineract.operations.TransactionRequestSpecs;
-import org.apache.fineract.operations.TransactionRequestState;
-import org.apache.fineract.operations.TransactionRequest_;
-import org.apache.fineract.operations.Transfer;
-import org.apache.fineract.operations.TransferRepository;
-import org.apache.fineract.operations.TransferSpecs;
-import org.apache.fineract.operations.TransferStatus;
-import org.apache.fineract.operations.Transfer_;
+import org.apache.fineract.operations.*;
 import org.apache.fineract.utils.CsvUtility;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.io.UnsupportedEncodingException;
 import java.math.BigDecimal;
@@ -49,6 +36,9 @@ import static org.apache.fineract.core.service.OperatorUtils.dateFormat;
 public class OperationsDetailedApi {
 
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
+
+    @Value("${payment.internal-account-id-prefix}")
+    private String internalAccountIdPrefix;
 
     @Autowired
     private TransferRepository transferRepository;
@@ -77,35 +67,41 @@ public class OperationsDetailedApi {
             @RequestParam(value = "sortedOrder", required = false, defaultValue = "DESC") String sortedOrder) {
         List<Specification<Transfer>> specs = new ArrayList<>();
 
-        if (payerPartyId != null) {
-            if (payerPartyId.contains("%2B")) {
-                try {
-                    payerPartyId = URLDecoder.decode(payerPartyId, "UTF-8");
-                    logger.info("Decoded payerPartyId: " + payerPartyId);
-                } catch (UnsupportedEncodingException e) {
-                    e.printStackTrace();
+        if (StringUtils.isNotBlank(payerPartyId)) {
+            payerPartyId = urlDecode(payerPartyId, "Decoded payerPartyId: ");
+
+            if (payerPartyId.length() == 8) {
+                String likeTerm = "%" + payerPartyId;
+                if (StringUtils.isNotBlank(internalAccountIdPrefix)) {
+                    likeTerm = internalAccountIdPrefix + likeTerm;
                 }
+                logger.info("PayerPartyId is 8 characters long, using LIKE search to match internalAccountId: {}", likeTerm);
+                specs.add(TransferSpecs.like(Transfer_.payerPartyId, likeTerm));
+            } else {
+                specs.add(TransferSpecs.match(Transfer_.payerPartyId, payerPartyId));
             }
-            specs.add(TransferSpecs.match(Transfer_.payerPartyId, payerPartyId));
         }
-        if (payeePartyId != null) {
-            if (payeePartyId.contains("%2B")) {
-                try {
-                    payeePartyId = URLDecoder.decode(payeePartyId, "UTF-8");
-                    logger.info("Decoded payeePartyId: " + payeePartyId);
-                } catch (UnsupportedEncodingException e) {
-                    e.printStackTrace();
+        if (StringUtils.isNotBlank(payeePartyId)) {
+            payeePartyId = urlDecode(payeePartyId, "Decoded payeePartyId: ");
+
+            if (payeePartyId.length() == 8) {
+                String likeTerm = "%" + payeePartyId;
+                if (StringUtils.isNotBlank(internalAccountIdPrefix)) {
+                    likeTerm = internalAccountIdPrefix + likeTerm;
                 }
+                logger.info("PayeePartyId is 8 characters long, using LIKE search to match internalAccountId: {}", likeTerm);
+                specs.add(TransferSpecs.like(Transfer_.payeePartyId, likeTerm));
+            } else {
+                specs.add(TransferSpecs.match(Transfer_.payeePartyId, payeePartyId));
             }
-            specs.add(TransferSpecs.match(Transfer_.payeePartyId, payeePartyId));
         }
-        if (payeeDfspId != null) {
+        if (StringUtils.isNotBlank(payeeDfspId)) {
             specs.add(TransferSpecs.match(Transfer_.payeeDfspId, payeeDfspId));
         }
-        if (payerDfspId != null) {
+        if (StringUtils.isNotBlank(payerDfspId)) {
             specs.add(TransferSpecs.match(Transfer_.payerDfspId, payerDfspId));
         }
-        if (transactionId != null) {
+        if (StringUtils.isNotBlank(transactionId)) {
             specs.add(TransferSpecs.match(Transfer_.transactionId, transactionId));
         }
         if (status != null && parseStatus(status) != null) {
@@ -114,24 +110,17 @@ public class OperationsDetailedApi {
         if (amount != null) {
             specs.add(TransferSpecs.match(Transfer_.amount, amount));
         }
-        if (currency != null) {
+        if (StringUtils.isNotBlank(currency)) {
             specs.add(TransferSpecs.match(Transfer_.currency, currency));
         }
-        if (direction != null) {
+        if (StringUtils.isNotBlank(direction)) {
             specs.add(TransferSpecs.match(Transfer_.direction, direction));
         }
-        if (partyIdType != null) {
+        if (StringUtils.isNotBlank(partyIdType)) {
             specs.add(TransferSpecs.multiMatch(Transfer_.payeePartyIdType, Transfer_.payerPartyIdType, partyIdType));
         }
-        if (partyId != null) {
-            if (partyId.contains("%2B")) {
-                try {
-                    partyId = URLDecoder.decode(partyId, "UTF-8");
-                    logger.info("Decoded PartyId: " + partyId);
-                } catch (UnsupportedEncodingException e) {
-                    e.printStackTrace();
-                }
-            }
+        if (StringUtils.isNotBlank(partyId)) {
+            partyId = urlDecode(partyId, "Decoded PartyId: ");
             specs.add(TransferSpecs.multiMatch(Transfer_.payerPartyId, Transfer_.payeePartyId, partyId));
         }
         try {
@@ -153,7 +142,8 @@ public class OperationsDetailedApi {
             pager = PageRequest.of(page, size, Sort.by(Sort.Direction.fromString(sortedOrder), sortedBy));
         }
 
-        if (specs.size() > 0) {
+        logger.info("finding transfers based on {} specs", specs.size());
+        if (!specs.isEmpty()) {
             Specification<Transfer> compiledSpecs = specs.get(0);
             for (int i = 1; i < specs.size(); i++) {
                 compiledSpecs = compiledSpecs.and(specs.get(i));
@@ -163,6 +153,18 @@ public class OperationsDetailedApi {
         } else {
             return transferRepository.findAll(pager);
         }
+    }
+
+    private String urlDecode(String variable, String logPrefix) {
+        if (variable.contains("%2B")) {
+            try {
+                variable = URLDecoder.decode(variable, "UTF-8");
+                logger.info(logPrefix + variable);
+            } catch (UnsupportedEncodingException e) {
+                e.printStackTrace();
+            }
+        }
+        return variable;
     }
 
     @GetMapping("/transactionRequests")
@@ -264,9 +266,9 @@ public class OperationsDetailedApi {
             @RequestParam(value = "state", required = false) String state,
             @RequestBody Map<String, List<String>> body) {
 
-        if(!command.equalsIgnoreCase("export")) {
+        if (!command.equalsIgnoreCase("export")) {
             return new ErrorResponse.Builder()
-                    .setErrorCode(""+HttpServletResponse.SC_NOT_FOUND)
+                    .setErrorCode("" + HttpServletResponse.SC_NOT_FOUND)
                     .setErrorDescription(command + " not supported")
                     .setDeveloperMessage("Possible supported command is " + command).build();
         }
@@ -308,7 +310,7 @@ public class OperationsDetailedApi {
         if (data.isEmpty()) {
             response.setStatus(HttpServletResponse.SC_NOT_FOUND);
             return new ErrorResponse.Builder()
-                    .setErrorCode(""+HttpServletResponse.SC_NOT_FOUND)
+                    .setErrorCode("" + HttpServletResponse.SC_NOT_FOUND)
                     .setErrorDescription("Empty response")
                     .setDeveloperMessage("Empty response").build();
         }
@@ -402,7 +404,7 @@ public class OperationsDetailedApi {
      * @param specs the list of specification which is required to be merged in [baseSpec]
      */
     private <T> Specification<T> combineSpecs(Specification<T> baseSpec,
-                                                            List<Specification<T>> specs) {
+                                              List<Specification<T>> specs) {
         logger.info("Combining specs " + specs.size());
         for (Specification<T> Specification : specs) {
             baseSpec = baseSpec.and(Specification);

@@ -10,16 +10,6 @@ fineract:
       protocol: jdbc
       subprotocol: postgresql
       driverclass_name: org.postgresql.Driver
-  tenant:
-    host: ${FINERACT_DEFAULT_TENANTDB_HOSTNAME:localhost}
-    port: ${FINERACT_DEFAULT_TENANTDB_PORT:3306}
-    username: ${FINERACT_DEFAULT_TENANTDB_UID:root}
-    password: ${FINERACT_DEFAULT_TENANTDB_PWD:mysql}
-    parameters: ${FINERACT_DEFAULT_TENANTDB_CONN_PARAMS:}
-    timezone: ${FINERACT_DEFAULT_TENANTDB_TIMEZONE:Asia/Kolkata}
-    identifier: ${FINERACT_DEFAULT_TENANTDB_IDENTIFIER:default}
-    name: ${FINERACT_DEFAULT_TENANTDB_NAME:fineract_default}
-    description: ${FINERACT_DEFAULT_TENANTDB_DESCRIPTION:Default Demo Tenant}
 
 # comma separated list of tenants
 tenants: ${TENANTS:binx}
@@ -108,6 +98,7 @@ payment:
   modes:
     - id: "slcb"
       type: "BATCH"
+  internal-account-id-prefix: ""
 
 application:
   bucket-name: paymenthub-ee-dev

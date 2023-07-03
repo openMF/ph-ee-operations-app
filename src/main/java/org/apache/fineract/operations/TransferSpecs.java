@@ -24,9 +24,12 @@ public class TransferSpecs {
         return where((root, query, builder) -> builder.lessThanOrEqualTo(root.get(attribute), to));
     }
 
-
     public static <T> Specification<Transfer> match(SingularAttribute<Transfer, T> attribute, T input) {
         return where((root, query, builder) -> builder.equal(root.get(attribute), input));
+    }
+
+    public static <T> Specification<Transfer> like(SingularAttribute<Transfer, String> attribute, String input) {
+        return where((root, query, builder) -> builder.like(root.get(attribute), input));
     }
 
     public static <T> Specification<Transfer> multiMatch(SingularAttribute<Transfer, T> attribute1, SingularAttribute<Transfer, T> attribute2, T input) {
