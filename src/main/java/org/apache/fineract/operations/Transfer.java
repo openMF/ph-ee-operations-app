@@ -77,6 +77,10 @@ public class Transfer {
     @Column(name = "BATCH_ID")
     private String batchId;
 
+    @Column(name = "ENDTOENDIDENTIFICATION")
+    private String endToEndIdentification;
+
+
     public Transfer() {
     }
 
@@ -267,5 +271,13 @@ public class Transfer {
 
     public void setBatchId(String batchId) {
         this.batchId = batchId;
+    }
+
+    public String getEndToEndIdentification() {
+        return endToEndIdentification;
+    }
+
+    public void setEndToEndIdentification(String endToEndIdentification) {
+        this.endToEndIdentification = endToEndIdentification;
     }
 }
