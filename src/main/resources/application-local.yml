@@ -1,4 +1,4 @@
-tenants: ${TENANT_NAME}
+tenants: binx
 
 token:
   client:
@@ -46,4 +46,4 @@ management:
         enabled: true
 
 tenant:
-  name: ${TENANT_NAME}
+  name: binx

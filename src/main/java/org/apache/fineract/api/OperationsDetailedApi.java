@@ -64,7 +64,8 @@ public class OperationsDetailedApi {
             @RequestParam(value = "sortedBy", required = false) String sortedBy,
             @RequestParam(value = "partyId", required = false) String partyId,
             @RequestParam(value = "partyIdType", required = false) String partyIdType,
-            @RequestParam(value = "sortedOrder", required = false, defaultValue = "DESC") String sortedOrder) {
+            @RequestParam(value = "sortedOrder", required = false, defaultValue = "DESC") String sortedOrder,
+            @RequestParam(value = "endToEndIdentification", required = false) String endToEndIdentification) {
         List<Specification<Transfer>> specs = new ArrayList<>();
 
         if (StringUtils.isNotBlank(payerPartyId)) {
@@ -133,6 +134,10 @@ public class OperationsDetailedApi {
             }
         } catch (Exception e) {
             logger.warn("failed to parse dates {} / {}", startFrom, startTo);
+        }
+
+        if (StringUtils.isNotBlank(endToEndIdentification)) {
+            specs.add(TransferSpecs.match(Transfer_.endToEndIdentification, endToEndIdentification));
         }
 
         PageRequest pager;
