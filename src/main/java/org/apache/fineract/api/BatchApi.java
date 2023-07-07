@@ -67,22 +67,6 @@ public class BatchApi {
         return batchRepository.findAll(specifications, pager);
     }
 
-    @GetMapping("/batch/{batchId}")
-    public BatchDTO batchAggregation(@PathVariable(value = "batchId") String batchId,
-                                     @RequestParam(value = "requestId", required = false) String requestId,
-                                     @RequestParam(value = "command", required = false) String command) {
-        Batch batch = batchRepository.findByBatchId(batchId);
-
-        if (batch != null && batch.getResultGeneratedAt() != null
-                && new Date().getTime() - batch.getResultGeneratedAt().getTime() < 600000) {
-            return generateDetails(batch);
-        }
-        Batch newBatch = new Batch();
-        newBatch.setBatchId(batchId);
-        newBatch.setRequestId(requestId);
-        return generateDetails(newBatch);
-    }
-
     @GetMapping("/batch")
     public ResponseEntity<Object> batchDetails(@RequestParam(value = "batchId", required = false) String batchId,
                                                @RequestParam(value = "requestId", required = false) String requestId) {
@@ -93,6 +77,19 @@ public class BatchApi {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(errorMessage);
         }
         return ResponseEntity.ok(generateBatchSummaryResponse(batch));
+    }
+
+    @GetMapping("/batch/{batchId}")
+    public ResponseEntity<Object> batchAggregation(@PathVariable(value = "batchId") String batchId,
+                                     @RequestParam(value = "requestId", required = false) String requestId,
+                                     @RequestParam(value = "command", required = false, defaultValue = "aggregate") String command) {
+        Batch batch = batchRepository.findByBatchId(batchId);
+
+        if (batch != null && batch.getResultGeneratedAt() != null
+                && new Date().getTime() - batch.getResultGeneratedAt().getTime() < 600000) {
+            return ResponseEntity.ok(generateDetails(batch));
+        }
+        return null;
     }
 
     @GetMapping("/batch/detail")
@@ -308,10 +305,13 @@ public class BatchApi {
     }
 
     private BatchDTO generateBatchSummaryResponse(Batch batch) {
+        double batchFailedPercent = 0;
+        double batchCompletedPercent = 0;
 
-        double batchFailedPercent = (double) batch.getFailed() / batch.getTotalTransactions() * 100;
-        double batchCompletedPercent = (double) batch.getCompleted() / batch.getTotalTransactions() * 100;
-
+        if(batch.getTotalTransactions() != null){
+            batchFailedPercent = (double) batch.getFailed() / batch.getTotalTransactions() * 100;
+            batchCompletedPercent = (double) batch.getCompleted() / batch.getTotalTransactions() * 100;
+        }
         return new BatchDTO(batch.getBatchId(),
                 batch.getRequestId(), batch.getTotalTransactions(), batch.getOngoing(),
                 batch.getFailed(), batch.getCompleted(), new BigDecimal(batch.getTotalAmount()),
