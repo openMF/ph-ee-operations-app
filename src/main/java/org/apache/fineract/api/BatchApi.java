@@ -168,6 +168,19 @@ public class BatchApi {
         return ResponseEntity.ok(generateBatchSummaryResponse(batch));
     }
 
+    @GetMapping("/batch/{batchId}")
+    public ResponseEntity<Object> batchAggregation(@PathVariable(value = "batchId") String batchId,
+                                     @RequestParam(value = "requestId", required = false) String requestId,
+                                     @RequestParam(value = "command", required = false, defaultValue = "aggregate") String command) {
+        Batch batch = batchRepository.findByBatchId(batchId);
+
+        if (batch != null && batch.getResultGeneratedAt() != null
+                && new Date().getTime() - batch.getResultGeneratedAt().getTime() < 600000) {
+            return ResponseEntity.ok(generateDetails(batch));
+        }
+        return null;
+    }
+
     @GetMapping("/batch/detail")
     public Page<Transfer> batchDetails(HttpServletResponse httpServletResponse,
                                        @RequestParam(value = "batchId") String batchId,
@@ -387,10 +400,13 @@ public class BatchApi {
     }
 
     private BatchDTO generateBatchSummaryResponse(Batch batch) {
+        double batchFailedPercent = 0;
+        double batchCompletedPercent = 0;
 
-        double batchFailedPercent = (double) batch.getFailed() / batch.getTotalTransactions() * 100;
-        double batchCompletedPercent = (double) batch.getCompleted() / batch.getTotalTransactions() * 100;
-
+        if(batch.getTotalTransactions() != null){
+            batchFailedPercent = (double) batch.getFailed() / batch.getTotalTransactions() * 100;
+            batchCompletedPercent = (double) batch.getCompleted() / batch.getTotalTransactions() * 100;
+        }
         return new BatchDTO(batch.getBatchId(),
                 batch.getRequestId(), batch.getTotalTransactions(), batch.getOngoing(),
                 batch.getFailed(), batch.getCompleted(), new BigDecimal(batch.getTotalAmount()),
