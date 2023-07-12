@@ -94,35 +94,7 @@ public class TenantDatabaseUpgradeService {
     private String liquibaseContexts;
 
 
-    @PostConstruct
-    public void setupEnvironment() throws Exception {
-        String profile = System.getenv("SPRING_PROFILES_ACTIVE");
-        if (profile == null || !profile.contains("migrate")) {
-            logger.info("not running in migrate mode, skipping liquibase migrations");
-            return;
-        }
-
-        Connection connection = createConnection(hostname, port, username, password, connectionsSchema);
-        migrate("/db/changelog/db.changelog-master.xml", connection);
-        generateTenantsConnections();
-        migrateTenants();
-    }
-
-    private Connection createConnection(String hostname, int port, String username, String password, String schema) throws SQLException {
-        String jdbcUrl = String.format("%s:%s://%s:%s/%s", jdbcProtocol, jdbcSubprotocol, hostname, port, schema);
-        logger.info("connecting to JDBC URL {}", jdbcUrl);
-        return DriverManager.getConnection(jdbcUrl, username, password);
-    }
-
-    private void migrate(String changeLogFile, Connection connection) throws LiquibaseException, ClassNotFoundException, SQLException {
-        Class.forName(driverClass);
-        Database database = DatabaseFactory.getInstance().findCorrectDatabaseImplementation(new JdbcConnection(connection));
-        logger.info("starting Liquibase migrations using {} on database {}", changeLogFile, database);
-        Liquibase liquibase = new Liquibase(changeLogFile, new ClassLoaderResourceAccessor(), database);
-        liquibase.update(liquibaseContexts);
-    }
-
-    private void generateTenantsConnections() {
+    public void generateTenantsConnections(List<String> tenants) {
         for (String tenant : tenants) {
             logger.info("validating tenant '{}'", tenant);
             TenantServerConnection existingTenant = repository.findOneBySchemaName(tenant);
@@ -142,7 +114,7 @@ public class TenantDatabaseUpgradeService {
         }
     }
 
-    private void migrateTenants() {
+    public void migrateTenants() {
         List<String> errors = new ArrayList<>();
         for (TenantServerConnection tenant : repository.findAll()) {
             if (tenant.isAutoUpdateEnabled()) {
@@ -163,5 +135,19 @@ public class TenantDatabaseUpgradeService {
         if (errors.size() > 0) {
             throw new RuntimeException("Failed to migrate " + errors.size() + " tenants, errors were: " + errors);
         }
+    }
+
+    private Connection createConnection(String hostname, int port, String username, String password, String schema) throws SQLException {
+        String jdbcUrl = String.format("%s:%s://%s:%s/%s", jdbcProtocol, jdbcSubprotocol, hostname, port, schema);
+        logger.info("connecting to JDBC URL {}", jdbcUrl);
+        return DriverManager.getConnection(jdbcUrl, username, password);
+    }
+
+    private void migrate(String changeLogFile, Connection connection) throws LiquibaseException, ClassNotFoundException, SQLException {
+        Class.forName(driverClass);
+        Database database = DatabaseFactory.getInstance().findCorrectDatabaseImplementation(new JdbcConnection(connection));
+        logger.info("starting Liquibase migrations using {} on database {}", changeLogFile, database);
+        Liquibase liquibase = new Liquibase(changeLogFile, new ClassLoaderResourceAccessor(), database);
+        liquibase.update(liquibaseContexts);
     }
 }
