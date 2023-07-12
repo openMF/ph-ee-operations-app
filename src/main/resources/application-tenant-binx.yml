@@ -1,0 +1,25 @@
+tenants:
+  connections:
+    - name: binx
+      schema_server: localhost
+      schema_name: binx
+      schema_server_port: 5432
+      schema_username: postgres
+      schema_password: password
+      auto_update: true
+      pool_initial_size: 5
+      pool_validation_interval: 30000
+      pool_remove_abandoned: 1
+      pool_remove_abandoned_timeout: 60
+      pool_log_abandoned: 1
+      pool_abandon_when_percentage_full: 50
+      pool_test_on_borrow: 1
+      pool_max_active: 40
+      pool_min_idle: 20
+      pool_max_idle: 10
+      pool_suspect_timeout: 60
+      pool_time_between_eviction_runs_millis: 34000
+      pool_min_evictable_idle_time_millis: 60000
+      deadlock_max_retries: 0
+      deadlock_max_retry_interval: 1
+      schema_connection_parameters:

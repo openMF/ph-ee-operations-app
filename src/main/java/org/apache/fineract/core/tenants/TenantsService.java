@@ -21,6 +21,8 @@ public class TenantsService {
 
     private List<String> tenants;
 
+    @Autowired
+    TenantConnections tenantConnections;
 
     @Autowired
     private TenantDatabaseUpgradeService tenantDatabaseUpgradeService;
@@ -42,5 +44,7 @@ public class TenantsService {
             logger.info("Migration finished, exiting");
             System.exit(0);
         }
+
+        System.err.println(tenantConnections.getConnections());
     }
 }
