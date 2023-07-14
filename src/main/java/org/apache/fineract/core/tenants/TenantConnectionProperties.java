@@ -11,6 +11,8 @@ public class TenantConnectionProperties {
     String schemaUsername;
     String schemaPassword;
     String driverClass;
+    String jdbcProtocol;
+    String jdbcSubProtocol;
     String autoUpdate;
     String poolInitialSize;
     String poolValidationInterval;

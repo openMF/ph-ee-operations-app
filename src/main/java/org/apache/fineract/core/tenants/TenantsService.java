@@ -1,10 +1,12 @@
 package org.apache.fineract.core.tenants;
 
+import com.zaxxer.hikari.HikariDataSource;
 import jakarta.annotation.PostConstruct;
 import org.apache.fineract.core.service.DataSourcePerTenantService;
 import org.apache.fineract.core.service.migrate.TenantDatabaseUpgradeService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.DisposableBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Component;
@@ -20,7 +22,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 @Component
-public class TenantsService {
+public class TenantsService implements DisposableBean {
     private Logger logger = LoggerFactory.getLogger(this.getClass());
 
     @Autowired
@@ -74,5 +76,17 @@ public class TenantsService {
     // for initializing JPA repositories
     public Connection getAnyConnection() throws SQLException {
         return tenantDataSources.values().iterator().next().getConnection();
+    }
+
+    @Override
+    public void destroy() {
+        logger.info("Closing {} datasources", tenantDataSources.size());
+        this.tenantDataSources.forEach((name, ds) -> {
+            try {
+                ((HikariDataSource) ds).close();
+            } catch (Exception e) {
+                logger.error("Error closing datasource for tenant {}", name, e);
+            }
+        });
     }
 }

@@ -33,32 +33,21 @@ import java.util.Map;
 
 
 @Service
-public class DataSourcePerTenantService implements DisposableBean {
+public class DataSourcePerTenantService {
 
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
-    private final Map<Long, DataSource> tenantToDataSourceMap = new HashMap<>();
-
-    @Value("${fineract.datasource.common.protocol}")
-    private String jdbcProtocol;
-
-    @Value("${fineract.datasource.common.subprotocol}")
-    private String jdbcSubprotocol;
-
-    @Value("${fineract.datasource.common.driverclass_name}")
-    private String driverClass;
-
 
     public DataSource createNewDataSourceFor(TenantConnectionProperties tenant) {
         HikariConfig config = new HikariConfig();
         config.setUsername(tenant.getSchemaUsername());
         config.setPassword(tenant.getSchemaPassword());
-        config.setJdbcUrl(createJdbcUrl(jdbcProtocol, jdbcSubprotocol, tenant.getSchemaServer(), Integer.parseInt(tenant.getSchemaServerPort()), tenant.getSchemaName()));
+        config.setJdbcUrl(createJdbcUrl(tenant.getJdbcProtocol(), tenant.getJdbcSubProtocol(), tenant.getSchemaServer(), Integer.parseInt(tenant.getSchemaServerPort()), tenant.getSchemaName()));
         config.setAutoCommit(false);
         config.setConnectionInitSql("SELECT 1");
         config.setValidationTimeout(30000);
         config.setConnectionTestQuery("SELECT 1");
         config.setConnectionTimeout(30000);
-        config.setDriverClassName(driverClass);
+        config.setDriverClassName(tenant.getDriverClass());
         config.setIdleTimeout(600000);
         config.setMaximumPoolSize(20);
         config.setMinimumIdle(5);
@@ -80,12 +69,4 @@ public class DataSourcePerTenantService implements DisposableBean {
                 .toString();
     }
 
-    @Override
-    public void destroy() {
-        for (Map.Entry<Long, DataSource> entry : this.tenantToDataSourceMap.entrySet()) {
-            HikariDataSource ds = (HikariDataSource) entry.getValue();
-            ds.close();
-            logger.info("Datasource closed: {}", ds.getPoolName());
-        }
-    }
 }
