@@ -30,9 +30,6 @@ public class UserTaskJobHandler implements JobHandler {
     @Autowired
     private TenantsService tenantsService;
 
-    @Value("${tenant.name}")
-    private String tenantName;
-
 
     @Override
     @JobWorker(timeout = 2592000000L, name = "zeebe-tasklist", type = "io.camunda.zeebe:userTask", autoComplete = false)
@@ -40,7 +37,7 @@ public class UserTaskJobHandler implements JobHandler {
 
         Long taskId = job.getKey();
         try {
-            ThreadLocalContextUtil.setTenantConnection(tenantsService.getTenantConnection(tenantName));
+            ThreadLocalContextUtil.setTenantConnection(tenantsService.getAnyConnection());  // TODO @Karesz use the right tenant connection here
             final ZeebeTaskEntity entity = new ZeebeTaskEntity();
 
             entity.setId(taskId);
