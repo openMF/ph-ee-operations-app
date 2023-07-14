@@ -19,16 +19,13 @@
 package org.apache.fineract.core.service;
 
 import org.apache.fineract.core.tenants.TenantsService;
-import org.springframework.beans.BeansException;
-import org.springframework.beans.factory.BeanFactory;
-import org.springframework.beans.factory.BeanFactoryAware;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationListener;
-import org.springframework.context.event.ContextRefreshedEvent;
 import org.springframework.context.event.ContextStartedEvent;
 import org.springframework.jdbc.datasource.AbstractDataSource;
 import org.springframework.stereotype.Service;
 
+import javax.sql.DataSource;
 import java.sql.Connection;
 import java.sql.SQLException;
 
@@ -42,12 +39,12 @@ public class RoutingDataSource extends AbstractDataSource implements Application
 
     @Override
     public Connection getConnection() throws SQLException {
-        Connection tenantConnection = ThreadLocalContextUtil.getTenantConnection().getConnection();
-        if (tenantConnection == null && !initialized) {
+        DataSource tenantDataSource = ThreadLocalContextUtil.getTenantDataSource();
+        if (tenantDataSource == null && !initialized) {
             logger.warn("No tenant connection found in threadlocal context, returning the first connection to let JPA repositories initialize");
             return tenantsService.getAnyDataSource().getConnection();
         }
-        return tenantConnection;
+        return tenantDataSource.getConnection();
     }
 
     @Override

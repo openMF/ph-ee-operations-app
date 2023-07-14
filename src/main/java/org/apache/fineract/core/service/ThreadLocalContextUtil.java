@@ -28,7 +28,7 @@ public class ThreadLocalContextUtil {
         tenantcontext.set(dataSource);
     }
 
-    public static DataSource getTenantConnection() {
+    public static DataSource getTenantDataSource() {
         return tenantcontext.get();
     }
 
