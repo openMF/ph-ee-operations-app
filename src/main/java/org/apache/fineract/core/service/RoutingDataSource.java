@@ -18,7 +18,14 @@
  */
 package org.apache.fineract.core.service;
 
+import org.apache.fineract.core.tenants.TenantsService;
+import org.springframework.beans.BeansException;
+import org.springframework.beans.factory.BeanFactory;
+import org.springframework.beans.factory.BeanFactoryAware;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationListener;
+import org.springframework.context.event.ContextRefreshedEvent;
+import org.springframework.context.event.ContextStartedEvent;
 import org.springframework.jdbc.datasource.AbstractDataSource;
 import org.springframework.stereotype.Service;
 
@@ -27,19 +34,29 @@ import java.sql.SQLException;
 
 
 @Service
-public class RoutingDataSource extends AbstractDataSource {
+public class RoutingDataSource extends AbstractDataSource implements ApplicationListener<ContextStartedEvent> {
 
     @Autowired
-    private DataSourcePerTenantService dataSourcePerTenantService;
+    TenantsService tenantsService;
+    private boolean initialized;
 
     @Override
     public Connection getConnection() throws SQLException {
-        return dataSourcePerTenantService.retrieveDataSource().getConnection();
+        Connection tenantConnection = ThreadLocalContextUtil.getTenantConnection();
+        if (tenantConnection == null && !initialized) {
+            logger.warn("No tenant connection found in threadlocal context, returning the first connection to let JPA repositories initialize");
+            return tenantsService.getAnyConnection();
+        }
+        return tenantConnection;
     }
 
     @Override
     public Connection getConnection(final String username, final String password) throws SQLException {
-        return dataSourcePerTenantService.retrieveDataSource().getConnection(username, password);
+        return getConnection();
     }
 
+    @Override
+    public void onApplicationEvent(ContextStartedEvent event) {
+        this.initialized = true;
+    }
 }

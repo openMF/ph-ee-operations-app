@@ -20,11 +20,10 @@ package org.apache.fineract;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.camunda.zeebe.spring.client.EnableZeebeClient;
-import org.apache.fineract.core.service.AudienceVerifier;
 import org.apache.fineract.core.service.TenantAwareHeaderFilter;
-import org.apache.fineract.organisation.tenant.TenantServerConnectionRepository;
+import org.apache.fineract.core.tenants.TenantsService;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration;
 import org.springframework.boot.autoconfigure.jdbc.DataSourceTransactionManagerAutoConfiguration;
@@ -33,11 +32,6 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Primary;
-import org.springframework.core.io.ClassPathResource;
-import org.springframework.data.web.config.EnableSpringDataWebSupport;
-import org.springframework.scheduling.annotation.EnableAsync;
-import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.ProviderManager;
@@ -45,37 +39,24 @@ import org.springframework.security.authentication.dao.DaoAuthenticationProvider
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
-//import org.springframework.security.oauth2.provider.token.DefaultTokenServices;
-//import org.springframework.security.oauth2.provider.token.TokenStore;
-//import org.springframework.security.oauth2.provider.token.store.JwtAccessTokenConverter;
-//import org.springframework.security.oauth2.provider.token.store.JwtTokenStore;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import org.springframework.web.filter.CorsFilter;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @SpringBootApplication(exclude = {DataSourceAutoConfiguration.class,
         DataSourceTransactionManagerAutoConfiguration.class,
 //        FlywayAutoConfiguration.class,
         ErrorMvcAutoConfiguration.class})
 @EnableConfigurationProperties
-//@EnableAutoConfiguration(exclude = {DataSourceAutoConfiguration.class,
-//        DataSourceTransactionManagerAutoConfiguration.class,
-////        FlywayAutoConfiguration.class,
-//        ErrorMvcAutoConfiguration.class})
 @EnableZeebeClient
-//@EnableScheduling
-//@EnableAsync
-//@EnableSpringDataWebSupport
 public class ServerApplication {
+
+    @Autowired
+    private TenantsService tenantsService;
 
     /**
      * Spring security filter chain ordering, the tenant header filter
@@ -109,9 +90,9 @@ public class ServerApplication {
     }
 
     @Bean
-    public FilterRegistrationBean tenantFilter(TenantServerConnectionRepository repository) {
+    public FilterRegistrationBean tenantFilter() {
         FilterRegistrationBean registration = new FilterRegistrationBean();
-        registration.setFilter(new TenantAwareHeaderFilter(repository));
+        registration.setFilter(new TenantAwareHeaderFilter(tenantsService));
         registration.addUrlPatterns("/*");
         registration.setName("tenantFilter");
         registration.setOrder(Integer.MIN_VALUE + 1);

@@ -25,28 +25,23 @@ import liquibase.database.jvm.JdbcConnection;
 import liquibase.exception.LiquibaseException;
 import liquibase.resource.ClassLoaderResourceAccessor;
 import org.apache.fineract.core.service.DataSourcePerTenantService;
-import org.apache.fineract.core.service.ThreadLocalContextUtil;
-import org.apache.fineract.organisation.tenant.TenantServerConnection;
-import org.apache.fineract.organisation.tenant.TenantServerConnectionRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
-import jakarta.annotation.PostConstruct;
+import javax.sql.DataSource;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 @Service
 public class TenantDatabaseUpgradeService {
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
-
-    @Autowired
-    private TenantServerConnectionRepository repository;
 
     @Autowired
     private DataSourcePerTenantService dataSourcePerTenantService;
@@ -94,42 +89,17 @@ public class TenantDatabaseUpgradeService {
     private String liquibaseContexts;
 
 
-    public void generateTenantsConnections(List<String> tenants) {
-        for (String tenant : tenants) {
-            logger.info("validating tenant '{}'", tenant);
-            TenantServerConnection existingTenant = repository.findOneBySchemaName(tenant);
-            if (existingTenant == null) {
-                logger.info("generating tenant '{}'", tenant);
-                TenantServerConnection tenantServerConnection = new TenantServerConnection();
-                tenantServerConnection.setSchemaName(tenant);
-                tenantServerConnection.setSchemaServer(hostname);
-                tenantServerConnection.setSchemaServerPort(String.valueOf(port));
-                tenantServerConnection.setSchemaUsername(username);
-                tenantServerConnection.setSchemaPassword(password);
-                tenantServerConnection.setAutoUpdateEnabled(true);
-                repository.saveAndFlush(tenantServerConnection);
-            } else {
-                logger.debug("found existing tenant {}", existingTenant);
-            }
-        }
-    }
-
-    public void migrateTenants() {
+    public void migrateTenants(Map<String, DataSource> tenants) {
         List<String> errors = new ArrayList<>();
-        for (TenantServerConnection tenant : repository.findAll()) {
-            if (tenant.isAutoUpdateEnabled()) {
-                try {
-                    logger.debug("migrating tenant {}", tenant);
-                    ThreadLocalContextUtil.setTenant(tenant);
-                    Connection connection = createConnection(tenant.getSchemaServer(), Integer.parseInt(tenant.getSchemaServerPort()), tenant.getSchemaUsername(), tenant.getSchemaPassword(), tenant.getSchemaName());
-                    migrate("/db/changelog/tenant/initial-switch-changelog-tenant.xml", connection);
+        for (String name : tenants.keySet()) {
+            DataSource dataSource = tenants.get(name);
+            try {
+                logger.debug("migrating tenant {}", name);
+                migrate("/db/changelog/tenant/initial-switch-changelog-tenant.xml", dataSource.getConnection());
 
-                } catch (Exception e) {
-                    logger.error("Error migrating tenant {}: {}", tenant, e);
-                    errors.add(e.getMessage());
-                } finally {
-                    ThreadLocalContextUtil.clear();
-                }
+            } catch (Exception e) {
+                logger.error("Error migrating tenant {}: {}", name, e);
+                errors.add(e.getMessage());
             }
         }
         if (errors.size() > 0) {

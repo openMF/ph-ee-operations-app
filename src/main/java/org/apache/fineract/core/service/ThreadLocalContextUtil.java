@@ -18,19 +18,17 @@
  */
 package org.apache.fineract.core.service;
 
-import org.apache.fineract.organisation.tenant.TenantServerConnection;
-import org.springframework.util.Assert;
+import java.sql.Connection;
 
 public class ThreadLocalContextUtil {
 
-    private static final ThreadLocal<TenantServerConnection> tenantcontext = new ThreadLocal<>();
+    private static final ThreadLocal<Connection> tenantcontext = new ThreadLocal<>();
 
-    public static void setTenant(final TenantServerConnection tenant) {
-        Assert.notNull(tenant, "tenant cannot be null");
-        tenantcontext.set(tenant);
+    public static void setTenantConnection(Connection connection) {
+        tenantcontext.set(connection);
     }
 
-    public static TenantServerConnection getTenant() {
+    public static Connection getTenantConnection() {
         return tenantcontext.get();
     }
 

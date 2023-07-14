@@ -1,6 +1,5 @@
 package org.apache.fineract.core.service;
 
-import org.apache.fineract.organisation.tenant.TenantServerConnection;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 //import org.springframework.security.oauth2.common.exceptions.InvalidTokenException;

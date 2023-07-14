@@ -4,9 +4,8 @@ import io.camunda.zeebe.client.api.response.ActivatedJob;
 import io.camunda.zeebe.client.api.worker.JobClient;
 import io.camunda.zeebe.client.api.worker.JobHandler;
 import io.camunda.zeebe.spring.client.annotation.JobWorker;
-import jakarta.annotation.PostConstruct;
 import org.apache.fineract.core.service.ThreadLocalContextUtil;
-import org.apache.fineract.organisation.tenant.TenantServerConnectionRepository;
+import org.apache.fineract.core.tenants.TenantsService;
 import org.apache.fineract.tasklist.entity.ZeebeTaskEntity;
 import org.apache.fineract.tasklist.repository.ZeebeTaskRepository;
 import org.slf4j.Logger;
@@ -18,11 +17,7 @@ import org.springframework.stereotype.Component;
 import java.time.Instant;
 import java.util.Map;
 
-import static org.apache.fineract.utils.ProcessVariableUtil.getAssignee;
-import static org.apache.fineract.utils.ProcessVariableUtil.getCandidateRoles;
-import static org.apache.fineract.utils.ProcessVariableUtil.getFormData;
-import static org.apache.fineract.utils.ProcessVariableUtil.getSubmitters;
-import static org.apache.fineract.utils.ProcessVariableUtil.getTaskFormWithDefaultValueMappings;
+import static org.apache.fineract.utils.ProcessVariableUtil.*;
 
 @Component
 public class UserTaskJobHandler implements JobHandler {
@@ -33,7 +28,7 @@ public class UserTaskJobHandler implements JobHandler {
     private ZeebeTaskRepository zeebeTaskRepository;
 
     @Autowired
-    private TenantServerConnectionRepository tenantServerConnectionRepository;
+    private TenantsService tenantsService;
 
     @Value("${tenant.name}")
     private String tenantName;
@@ -45,7 +40,7 @@ public class UserTaskJobHandler implements JobHandler {
 
         Long taskId = job.getKey();
         try {
-            ThreadLocalContextUtil.setTenant(this.tenantServerConnectionRepository.findOneBySchemaName(tenantName));
+            ThreadLocalContextUtil.setTenantConnection(tenantsService.getTenantConnection(tenantName));
             final ZeebeTaskEntity entity = new ZeebeTaskEntity();
 
             entity.setId(taskId);
@@ -72,7 +67,7 @@ public class UserTaskJobHandler implements JobHandler {
 
         } catch (Exception e) {
             logger.error(String.format("Error while saving human task with id %s", taskId), e);
-            throw e;
+            throw new RuntimeException(e);
         } finally {
             ThreadLocalContextUtil.clear();
         }

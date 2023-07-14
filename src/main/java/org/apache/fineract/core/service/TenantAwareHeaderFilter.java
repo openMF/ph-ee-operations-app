@@ -24,7 +24,7 @@ import jakarta.servlet.ServletResponse;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.apache.commons.lang3.time.StopWatch;
-import org.apache.fineract.organisation.tenant.TenantServerConnectionRepository;
+import org.apache.fineract.core.tenants.TenantsService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -41,10 +41,11 @@ public class TenantAwareHeaderFilter extends GenericFilterBean {
     private static final String EXCLUDED_URL = "/oauth/token_key";
     private static final String EXCLUDED_ACTUATOR_PREFIX = "/actuator";
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
-    private final TenantServerConnectionRepository repository;
 
-    public TenantAwareHeaderFilter(TenantServerConnectionRepository repository) {
-        this.repository = repository;
+    private final TenantsService tenantService;
+
+    public TenantAwareHeaderFilter(TenantsService tenantService) {
+        this.tenantService = tenantService;
     }
 
     @Override
@@ -66,7 +67,7 @@ public class TenantAwareHeaderFilter extends GenericFilterBean {
                     throw new RuntimeException(
                             String.format("No tenant identifier found! Add request header: %s or request param: %s", TENANT_IDENTIFIER_REQUEST_HEADER, TENANT_IDENTIFIER_REQUEST_PARAM));
                 }
-                ThreadLocalContextUtil.setTenant(this.repository.findOneBySchemaName(tenantIdentifier));
+                ThreadLocalContextUtil.setTenantConnection(tenantService.getTenantConnection(tenantIdentifier));
             }
             chain.doFilter(request, res);
         } catch (Exception e) {

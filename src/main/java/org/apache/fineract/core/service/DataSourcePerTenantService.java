@@ -20,7 +20,7 @@ package org.apache.fineract.core.service;
 
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
-import org.apache.fineract.organisation.tenant.TenantServerConnection;
+import org.apache.fineract.core.tenants.TenantConnectionProperties;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.DisposableBean;
@@ -62,41 +62,8 @@ public class DataSourcePerTenantService implements DisposableBean {
     @Value("${fineract.datasource.common.driverclass_name}")
     private String driverClass;
 
-    public DataSource retrieveDataSource() {
-        DataSource tenantDataSource;
 
-        final TenantServerConnection tenant = ThreadLocalContextUtil.getTenant();
-        if (tenant != null) {
-            synchronized (this.tenantToDataSourceMap) {
-                if (this.tenantToDataSourceMap.containsKey(tenant.getId())) {
-                    tenantDataSource = this.tenantToDataSourceMap.get(tenant.getId());
-                } else {
-                    tenantDataSource = createNewDataSourceFor(tenant);
-                    this.tenantToDataSourceMap.put(tenant.getId(), tenantDataSource);
-                }
-            }
-        } else {
-            synchronized (this.tenantToDataSourceMap) {
-                long defaultConnectionKey = 0;
-                if (this.tenantToDataSourceMap.containsKey(defaultConnectionKey)) {
-                    tenantDataSource = this.tenantToDataSourceMap.get(defaultConnectionKey);
-                } else {
-                    TenantServerConnection defaultConnection = new TenantServerConnection();
-                    defaultConnection.setSchemaServer(defaultHostname);
-                    defaultConnection.setSchemaServerPort(String.valueOf(defaultPort));
-                    defaultConnection.setSchemaName(defaultSchema);
-                    defaultConnection.setSchemaUsername(defaultUsername);
-                    defaultConnection.setSchemaPassword(defaultPassword);
-                    tenantDataSource = createNewDataSourceFor(defaultConnection);
-                    this.tenantToDataSourceMap.put(defaultConnectionKey, tenantDataSource);
-                }
-            }
-        }
-
-        return tenantDataSource;
-    }
-
-    private DataSource createNewDataSourceFor(TenantServerConnection tenant) {
+    public DataSource createNewDataSourceFor(TenantConnectionProperties tenant) {
         HikariConfig config = new HikariConfig();
         config.setUsername(tenant.getSchemaUsername());
         config.setPassword(tenant.getSchemaPassword());
