@@ -38,21 +38,6 @@ public class DataSourcePerTenantService implements DisposableBean {
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
     private final Map<Long, DataSource> tenantToDataSourceMap = new HashMap<>();
 
-    @Value("${fineract.datasource.core.port}")
-    private int defaultPort;
-
-    @Value("${fineract.datasource.core.host}")
-    private String defaultHostname;
-
-    @Value("${fineract.datasource.core.schema}")
-    private String defaultSchema;
-
-    @Value("${fineract.datasource.core.username}")
-    private String defaultUsername;
-
-    @Value("${fineract.datasource.core.password}")
-    private String defaultPassword;
-
     @Value("${fineract.datasource.common.protocol}")
     private String jdbcProtocol;
 
@@ -67,8 +52,7 @@ public class DataSourcePerTenantService implements DisposableBean {
         HikariConfig config = new HikariConfig();
         config.setUsername(tenant.getSchemaUsername());
         config.setPassword(tenant.getSchemaPassword());
-        config.setJdbcUrl(createJdbcUrl(jdbcProtocol, jdbcSubprotocol, tenant.getSchemaServer(),
-                Integer.parseInt(tenant.getSchemaServerPort()), tenant.getSchemaName()));
+        config.setJdbcUrl(createJdbcUrl(jdbcProtocol, jdbcSubprotocol, tenant.getSchemaServer(), Integer.parseInt(tenant.getSchemaServerPort()), tenant.getSchemaName()));
         config.setAutoCommit(false);
         config.setConnectionInitSql("SELECT 1");
         config.setValidationTimeout(30000);

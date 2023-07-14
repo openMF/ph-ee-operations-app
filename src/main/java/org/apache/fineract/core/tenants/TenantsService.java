@@ -60,7 +60,7 @@ public class TenantsService {
 
         if (List.of(activeProfiles).contains("migrate")) {
             logger.info("Running in migration mode, migrating tenants");
-            tenantDatabaseUpgradeService.migrateTenants(tenantDataSources);
+            tenantDatabaseUpgradeService.migrateTenants(tenantDataSources, tenantConnectionProperties);
             logger.info("Migration finished, exiting");
             System.exit(0);
         }

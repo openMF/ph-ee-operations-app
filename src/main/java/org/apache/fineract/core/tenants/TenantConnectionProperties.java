@@ -10,6 +10,7 @@ public class TenantConnectionProperties {
     String schemaServerPort;
     String schemaUsername;
     String schemaPassword;
+    String driverClass;
     String autoUpdate;
     String poolInitialSize;
     String poolValidationInterval;

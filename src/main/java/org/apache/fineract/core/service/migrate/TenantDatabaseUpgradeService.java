@@ -25,6 +25,7 @@ import liquibase.database.jvm.JdbcConnection;
 import liquibase.exception.LiquibaseException;
 import liquibase.resource.ClassLoaderResourceAccessor;
 import org.apache.fineract.core.service.DataSourcePerTenantService;
+import org.apache.fineract.core.tenants.TenantConnectionProperties;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -33,7 +34,6 @@ import org.springframework.stereotype.Service;
 
 import javax.sql.DataSource;
 import java.sql.Connection;
-import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
@@ -43,59 +43,19 @@ import java.util.Map;
 public class TenantDatabaseUpgradeService {
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
-    @Autowired
-    private DataSourcePerTenantService dataSourcePerTenantService;
-
-    @Value("${fineract.datasource.core.host}")
-    private String hostname;
-
-    @Value("${fineract.datasource.core.port}")
-    private int port;
-
-    @Value("${fineract.datasource.core.username}")
-    private String username;
-
-    @Value("${fineract.datasource.core.password}")
-    private String password;
-
-    @Value("${fineract.datasource.common.protocol}")
-    private String jdbcProtocol;
-
-    @Value("${fineract.datasource.common.subprotocol}")
-    private String jdbcSubprotocol;
-
-    @Value("${fineract.datasource.common.driverclass_name}")
-    private String driverClass;
-
-    @Value("${fineract.datasource.core.schema}")
-    private String connectionsSchema;
-
-    @Value("${token.user.access-validity-seconds}")
-    private String userTokenAccessValiditySeconds;
-
-    @Value("${token.user.refresh-validity-seconds}")
-    private String userTokenRefreshValiditySeconds;
-
-    @Value("${token.client.access-validity-seconds}")
-    private String clientAccessTokenValidity;
-
-    @Value("${token.client.channel.secret}")
-    private String channelClientSecret;
-
-    @Value("#{'${tenants}'.split(',')}")
-    private List<String> tenants;
-
     @Value("${spring.liquibase.contexts}")
     private String liquibaseContexts;
 
 
-    public void migrateTenants(Map<String, DataSource> tenants) {
+    public void migrateTenants(Map<String, DataSource> tenants, Map<String, TenantConnectionProperties> tenantConnectionProperties) {
         List<String> errors = new ArrayList<>();
         for (String name : tenants.keySet()) {
             DataSource dataSource = tenants.get(name);
+            TenantConnectionProperties connectionProperties = tenantConnectionProperties.get(name);
+
             try {
                 logger.debug("migrating tenant {}", name);
-                migrate("/db/changelog/tenant/initialize-tenant.xml", dataSource.getConnection());
+                migrate("/db/changelog/tenant/initialize-tenant.xml", dataSource.getConnection(), connectionProperties.getDriverClass());
 
             } catch (Exception e) {
                 logger.error("Error migrating tenant {}: {}", name, e);
@@ -107,7 +67,7 @@ public class TenantDatabaseUpgradeService {
         }
     }
 
-    private void migrate(String changeLogFile, Connection connection) throws LiquibaseException, ClassNotFoundException, SQLException {
+    private void migrate(String changeLogFile, Connection connection, String driverClass) throws LiquibaseException, ClassNotFoundException, SQLException {
         Class.forName(driverClass);
         Database database = DatabaseFactory.getInstance().findCorrectDatabaseImplementation(new JdbcConnection(connection));
         logger.info("starting Liquibase migrations using {} on database {}", changeLogFile, database);

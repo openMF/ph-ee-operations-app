@@ -6,6 +6,7 @@ tenants:
       schema_server_port: 5432
       schema_username: postgres
       schema_password: password
+      driver_class: "org.postgresql.Driver"
       auto_update: true
       pool_initial_size: 5
       pool_validation_interval: 30000
