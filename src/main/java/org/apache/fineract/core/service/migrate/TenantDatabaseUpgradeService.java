@@ -95,7 +95,7 @@ public class TenantDatabaseUpgradeService {
             DataSource dataSource = tenants.get(name);
             try {
                 logger.debug("migrating tenant {}", name);
-                migrate("/db/changelog/tenant/initial-switch-changelog-tenant.xml", dataSource.getConnection());
+                migrate("/db/changelog/tenant/initialize-tenant.xml", dataSource.getConnection());
 
             } catch (Exception e) {
                 logger.error("Error migrating tenant {}: {}", name, e);

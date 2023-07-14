@@ -45,22 +45,6 @@ spring:
       enabled: false
   jmx:
     enabled: false
-  liquibase:
-    enabled: false
-    contexts: postgresql,initial_switch,tenant_store_db
-    change-log: classpath:/db/changelog/db.changelog-master.xml
-    parameters:
-      fineract:
-        tenant:
-          identifier: ${fineract.tenant.identifier}
-          description: ${fineract.tenant.description}
-          timezone: ${fineract.tenant.timezone}
-          schema-name: ${fineract.tenant.name}
-          host: ${fineract.tenant.host}
-          port: ${fineract.tenant.port}
-          username: ${fineract.tenant.username}
-          password: ${fineract.tenant.password}
-          parameters: ${fineract.tenant.parameters}
 
 server:
   port: 5000
