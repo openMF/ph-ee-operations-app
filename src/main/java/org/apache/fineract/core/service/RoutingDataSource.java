@@ -42,10 +42,10 @@ public class RoutingDataSource extends AbstractDataSource implements Application
 
     @Override
     public Connection getConnection() throws SQLException {
-        Connection tenantConnection = ThreadLocalContextUtil.getTenantConnection();
+        Connection tenantConnection = ThreadLocalContextUtil.getTenantConnection().getConnection();
         if (tenantConnection == null && !initialized) {
             logger.warn("No tenant connection found in threadlocal context, returning the first connection to let JPA repositories initialize");
-            return tenantsService.getAnyConnection();
+            return tenantsService.getAnyDataSource().getConnection();
         }
         return tenantConnection;
     }

@@ -67,7 +67,7 @@ public class TenantAwareHeaderFilter extends GenericFilterBean {
                     throw new RuntimeException(
                             String.format("No tenant identifier found! Add request header: %s or request param: %s", TENANT_IDENTIFIER_REQUEST_HEADER, TENANT_IDENTIFIER_REQUEST_PARAM));
                 }
-                ThreadLocalContextUtil.setTenantConnection(tenantService.getTenantConnection(tenantIdentifier));
+                ThreadLocalContextUtil.setTenantDataSource(tenantService.getTenantDataSource(tenantIdentifier));
             }
             chain.doFilter(request, res);
         } catch (Exception e) {

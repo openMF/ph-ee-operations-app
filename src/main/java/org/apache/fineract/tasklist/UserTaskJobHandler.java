@@ -11,7 +11,6 @@ import org.apache.fineract.tasklist.repository.ZeebeTaskRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import java.time.Instant;
@@ -37,7 +36,7 @@ public class UserTaskJobHandler implements JobHandler {
 
         Long taskId = job.getKey();
         try {
-            ThreadLocalContextUtil.setTenantConnection(tenantsService.getAnyConnection());  // TODO @Karesz use the right tenant connection here
+            ThreadLocalContextUtil.setTenantDataSource(tenantsService.getAnyDataSource());  // TODO @Karesz use the right tenant connection here
             final ZeebeTaskEntity entity = new ZeebeTaskEntity();
 
             entity.setId(taskId);

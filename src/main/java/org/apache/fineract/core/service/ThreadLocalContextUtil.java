@@ -18,17 +18,17 @@
  */
 package org.apache.fineract.core.service;
 
-import java.sql.Connection;
+import javax.sql.DataSource;
 
 public class ThreadLocalContextUtil {
 
-    private static final ThreadLocal<Connection> tenantcontext = new ThreadLocal<>();
+    private static final ThreadLocal<DataSource> tenantcontext = new ThreadLocal<>();
 
-    public static void setTenantConnection(Connection connection) {
-        tenantcontext.set(connection);
+    public static void setTenantDataSource(DataSource dataSource) {
+        tenantcontext.set(dataSource);
     }
 
-    public static Connection getTenantConnection() {
+    public static DataSource getTenantConnection() {
         return tenantcontext.get();
     }
 

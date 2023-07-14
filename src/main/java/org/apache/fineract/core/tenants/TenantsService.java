@@ -69,13 +69,13 @@ public class TenantsService implements DisposableBean {
     }
 
 
-    public Connection getTenantConnection(String tenantIdentifier) throws SQLException {
-        return tenantDataSources.get(tenantIdentifier).getConnection();
+    public DataSource getTenantDataSource(String tenantIdentifier) {
+        return tenantDataSources.get(tenantIdentifier);
     }
 
     // for initializing JPA repositories
-    public Connection getAnyConnection() throws SQLException {
-        return tenantDataSources.values().iterator().next().getConnection();
+    public DataSource getAnyDataSource() {
+        return tenantDataSources.values().iterator().next();
     }
 
     @Override
