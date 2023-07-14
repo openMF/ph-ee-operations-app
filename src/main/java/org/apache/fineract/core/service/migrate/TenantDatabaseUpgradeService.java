@@ -107,12 +107,6 @@ public class TenantDatabaseUpgradeService {
         }
     }
 
-    private Connection createConnection(String hostname, int port, String username, String password, String schema) throws SQLException {
-        String jdbcUrl = String.format("%s:%s://%s:%s/%s", jdbcProtocol, jdbcSubprotocol, hostname, port, schema);
-        logger.info("connecting to JDBC URL {}", jdbcUrl);
-        return DriverManager.getConnection(jdbcUrl, username, password);
-    }
-
     private void migrate(String changeLogFile, Connection connection) throws LiquibaseException, ClassNotFoundException, SQLException {
         Class.forName(driverClass);
         Database database = DatabaseFactory.getInstance().findCorrectDatabaseImplementation(new JdbcConnection(connection));

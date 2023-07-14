@@ -191,11 +191,6 @@
             <artifactId>postgresql</artifactId>
             <version>42.6.0</version>
         </dependency>
-<!--        <dependency>-->
-<!--            <groupId>io.camunda</groupId>-->
-<!--            <artifactId>zeebe-client-java</artifactId>-->
-<!--            <version>8.2.6</version>-->
-<!--        </dependency>-->
         <dependency>
             <groupId>io.netty</groupId>
             <artifactId>netty-bom</artifactId>
@@ -223,11 +218,6 @@
                 </exclusion>
             </exclusions>
         </dependency>
-        <!--        <dependency>-->
-<!--            <groupId>io.camunda</groupId>-->
-<!--            <artifactId>spring-zeebe-starter</artifactId>-->
-<!--            <version>8.2.1</version>-->
-<!--        </dependency>-->
     </dependencies>
 
     <build>
