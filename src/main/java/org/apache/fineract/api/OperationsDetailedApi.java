@@ -1,16 +1,15 @@
 package org.apache.fineract.api;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import org.apache.commons.lang3.StringEscapeUtils;
 import org.apache.fineract.data.ErrorResponse;
 import org.apache.fineract.exception.WriteToCsvException;
 import org.apache.fineract.operations.*;
+import org.apache.fineract.organisation.user.AppUser;
+import org.apache.fineract.organisation.user.AppUserRepository;
 import org.apache.fineract.utils.CsvUtility;
 import org.apache.fineract.utils.DateUtil;
-import org.mifos.connector.common.channel.dto.PhErrorDTO;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,16 +18,18 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specifications;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
-import io.swagger.v3.oas.annotations.media.Schema;
+
 import javax.servlet.http.HttpServletResponse;
-import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.math.BigDecimal;
 import java.net.URLDecoder;
 import java.util.ArrayList;
-import java.util.Map;
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
 import static org.apache.fineract.core.service.OperatorUtils.dateFormat;
 
@@ -52,6 +53,9 @@ public class OperationsDetailedApi {
 
     @Autowired
     private DateUtil dateUtil;
+
+    @Autowired
+    private AppUserRepository appUserRepository;
 
     @GetMapping("/transfers")
     public Page<TransferResponse> transfers(
@@ -218,9 +222,6 @@ public class OperationsDetailedApi {
         if (payerPartyId != null) {
             specs.add(TransactionRequestSpecs.match(TransactionRequest_.payerPartyId, payerPartyId));
         }
-        if (payeePartyId != null) {
-            specs.add(TransactionRequestSpecs.match(TransactionRequest_.payeePartyId, payeePartyId));
-        }
         if (payeeDfspId != null) {
             specs.add(TransactionRequestSpecs.match(TransactionRequest_.payeeDfspId, payeeDfspId));
         }
@@ -235,9 +236,6 @@ public class OperationsDetailedApi {
         }
         if (amount != null) {
             specs.add(TransactionRequestSpecs.match(TransactionRequest_.amount, amount));
-        }
-        if (currency != null) {
-            specs.add(TransactionRequestSpecs.match(TransactionRequest_.currency, currency));
         }
         if (clientCorrelationId != null) {
             specs.add(TransactionRequestSpecs.match(TransactionRequest_.clientCorrelationId, clientCorrelationId));
@@ -263,6 +261,10 @@ public class OperationsDetailedApi {
             logger.warn("failed to parse dates {} / {}", startFrom, startTo);
         }
 
+        return transactionRequestFilter(specs, sortedBy, sortedOrder, page, size, currency, payeePartyId);
+    }
+
+    public Page<TransactionRequest> transactionRequestFilter(List<Specifications<TransactionRequest>> specs, String sortedBy, String sortedOrder, Integer page, Integer size, String currency, String payeePartyId) {
         PageRequest pager;
         if (sortedBy == null || "startedAt".equals(sortedBy)) {
             pager = new PageRequest(page, size, new Sort(Sort.Direction.valueOf(sortedOrder), "startedAt"));
@@ -270,7 +272,37 @@ public class OperationsDetailedApi {
             pager = new PageRequest(page, size, new Sort(Sort.Direction.valueOf(sortedOrder), sortedBy));
         }
 
-        if (specs.size() > 0) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        // Check if the user is authenticated
+        if (authentication != null && authentication.isAuthenticated()) {
+            // Get the authenticated user by username
+            AppUser currentUser = appUserRepository.findAppUserByName(authentication.getName());
+            // filter transactions by dukas assigned to the user
+            if (currentUser.getPayeePartyIdsList() == null) {
+                // user not allowed to see any duka data, return empty page of transactions
+                logger.info("user not allowed to see any duka data");
+                return new PageImpl<>(Collections.emptyList(), pager, 0);
+            } else
+                checkUserDukasAssigned(currentUser, payeePartyId, specs);
+
+            // filter transactions by currencies assigned to the user
+            if (currentUser.getCurrenciesList() == null) {
+                // user not allowed to see any currency data, return empty page of transactions
+                logger.info("user not allowed to see any currency data");
+                return new PageImpl<>(Collections.emptyList(), pager, 0);
+            } else
+                checkUserCurrenciesAssigned(currentUser, currency, specs);
+
+        } else {
+            logger.info("authenticated user not found");
+            return new PageImpl<>(Collections.emptyList(), pager, 0);
+        }
+
+        return transactionRequestsResponse(specs, pager);
+    }
+
+    private Page<TransactionRequest> transactionRequestsResponse(List<Specifications<TransactionRequest>> specs, PageRequest pager) {
+        if (!specs.isEmpty()) {
             Specifications<TransactionRequest> compiledSpecs = specs.get(0);
             for (int i = 1; i < specs.size(); i++) {
                 compiledSpecs = compiledSpecs.and(specs.get(i));
@@ -279,6 +311,43 @@ public class OperationsDetailedApi {
         } else {
             return transactionRequestRepository.findAll(pager);
         }
+    }
+
+    private List<Specifications<TransactionRequest>> checkUserCurrenciesAssigned(AppUser currentUser, String currency, List<Specifications<TransactionRequest>> specs) {
+        if (!currentUser.getCurrenciesList().isEmpty()) {
+            // user is assigned currency in the list
+            if (currency != null && currentUser.getCurrenciesList().contains(currency)) {
+                specs.add(TransactionRequestSpecs.match(TransactionRequest_.currency, currency));
+            } else {
+                specs.add(TransactionRequestSpecs.in(TransactionRequest_.currency, currentUser.getCurrenciesList()));
+            }
+
+        } else {
+            // user is allowed to see data from all currencies. Check if they wanna filter for a specific currency, otherwise don't add to spec
+            if (currency != null) {
+                specs.add(TransactionRequestSpecs.match(TransactionRequest_.currency, currency));
+            }
+        }
+        return specs;
+    }
+
+    private List<Specifications<TransactionRequest>> checkUserDukasAssigned(AppUser currentUser, String payeePartyId, List<Specifications<TransactionRequest>> specs) {
+        if (!currentUser.getPayeePartyIdsList().isEmpty()) {
+            // user is assigned dukas in the list
+            if (payeePartyId != null && currentUser.getPayeePartyIdsList().contains(payeePartyId)) {
+                specs.add(TransactionRequestSpecs.match(TransactionRequest_.payeePartyId, payeePartyId));
+            } else {
+                specs.add(TransactionRequestSpecs.in(TransactionRequest_.payeePartyId, currentUser.getPayeePartyIdsList()));
+            }
+
+        } else {
+            // user is allowed to see data from all dukas. Check if they wanna filter for a specific payee, otherwise don't add to spec
+            if (payeePartyId != null && currentUser.getPayeePartyIdsList().contains(payeePartyId)) {
+                specs.add(TransactionRequestSpecs.match(TransactionRequest_.payeePartyId, payeePartyId));
+            }
+
+        }
+        return specs;
     }
 
     /**
