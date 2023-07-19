@@ -1,6 +1,7 @@
 package org.apache.fineract.api;
 
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.fineract.config.PaymentModeConfiguration;
 import org.apache.fineract.file.FileTransferService;
 import org.apache.fineract.operations.*;
@@ -9,6 +10,7 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specifications;
 import org.springframework.web.bind.annotation.*;
@@ -51,7 +53,8 @@ public class BatchApi {
     public Page<Batch> getBatches(@RequestParam(value = "page", required = false, defaultValue = "1") Integer page,
                                   @RequestParam(value = "size", required = false, defaultValue = "10") Integer size,
                                   @RequestParam(value = "sortedBy", required = false) String sortedBy,
-                                  @RequestParam(value = "sortedOrder", required = false, defaultValue = "DESC") String sortedOrder
+                                  @RequestParam(value = "sortedOrder", required = false, defaultValue = "DESC") String sortedOrder,
+                                  @RequestParam(value = "batchId", required = false) String batchId
     ) {
         Specifications<Batch> specifications = BatchSpecs.match(Batch_.subBatchId, null);
 
@@ -60,6 +63,10 @@ public class BatchApi {
             pager = new PageRequest(page, size, new Sort(Sort.Direction.fromString(sortedOrder), "startedAt"));
         } else {
             pager = new PageRequest(page, size, new Sort(Sort.Direction.fromString(sortedOrder), sortedBy));
+        }
+
+        if(!StringUtils.isEmpty(batchId)){
+            return batchRepository.findAllByBatchId(batchId, pager);
         }
 
         return batchRepository.findAll(specifications, pager);
