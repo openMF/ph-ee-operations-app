@@ -28,22 +28,8 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
-import javax.persistence.CascadeType;
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.FetchType;
-import javax.persistence.JoinColumn;
-import javax.persistence.JoinTable;
-import javax.persistence.ManyToMany;
-import javax.persistence.ManyToOne;
-import javax.persistence.Table;
-import javax.persistence.Temporal;
-import javax.persistence.TemporalType;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Date;
-import java.util.List;
-import java.util.Objects;
+import javax.persistence.*;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Entity
@@ -102,6 +88,79 @@ public class AppUser extends AbstractPersistableCustom<Long> implements UserDeta
     @Column(name = "password_never_expires", nullable = false)
     private boolean passwordNeverExpires;
 
+    /**
+     * Comma-separated string of payee party IDs / DUKAS assigned with the user.
+     * Return empty array to show that user is allowed to view all
+     */
+    @Column(name = "payee_party_ids")
+    private String payeePartyIds;
+    /**
+     * Comma-separated string of currencies assigned to the user.
+     * Return empty array to show that user is not allowed to view any
+     */
+    @Column(name = "currencies")
+    private String currencies;
+
+    /**
+     * Comma-separated string of payee party ID types / SOURCE / MNOs assigned to the user.
+     * Return empty array to show that user is not allowed to view any
+     */
+    @Column(name = "payee_party_id_types")
+    private String payeePartyIdTypes;
+
+    public List<String> getPayeePartyIdsList() {
+        if (payeePartyIds != null && !payeePartyIds.isEmpty()) {
+            return Arrays.stream(payeePartyIds.split(","))
+                    .collect(Collectors.toList());
+        } else {
+            return new ArrayList<>();
+        }
+    }
+
+    public void setPayeePartyIdsList(List<String> newPayeePartyIds) {
+        if (newPayeePartyIds != null && !newPayeePartyIds.isEmpty()) {
+            payeePartyIds = String.join(",", newPayeePartyIds);
+        } else {
+            payeePartyIds = null;
+        }
+    }
+
+    public List<String> getCurrenciesList() {
+        if (currencies != null && !currencies.isEmpty()) {
+            return Arrays.stream(currencies.split(","))
+                    .collect(Collectors.toList());
+        } else {
+            return new ArrayList<>();
+        }
+    }
+
+    public void setCurrenciesList(List<String> currenciesList) {
+        if (currenciesList != null && !currenciesList.isEmpty()) {
+            currencies = String.join(",", currenciesList);
+        } else {
+            currencies = null;
+        }
+    }
+
+    public List<String> getPayeePartyIdTypesList() {
+        if (payeePartyIdTypes != null && !payeePartyIdTypes.isEmpty()) {
+            if (payeePartyIdTypes.equalsIgnoreCase("*"))
+                return new ArrayList<>();
+            return Arrays.stream(payeePartyIdTypes.split(","))
+                    .collect(Collectors.toList());
+        } else {
+            return null;
+        }
+    }
+
+    public void setPayeePartyIdTypesList(List<String> newPayeePartyIdTypes) {
+        if (payeePartyIdTypes != null && !payeePartyIdTypes.isEmpty()) {
+            payeePartyIdTypes = String.join(",", newPayeePartyIdTypes);
+        } else {
+            payeePartyIdTypes = null;
+        }
+    }
+
     @Override
     @JsonIgnore
     public Collection<GrantedAuthority> getAuthorities() {
@@ -110,7 +169,7 @@ public class AppUser extends AbstractPersistableCustom<Long> implements UserDeta
             if (!role.getDisabled()) {
                 final Collection<Permission> permissions = role.getPermissions();
                 for (final Permission permission : permissions) {
-                    if(!finalPermissions.contains(permission)) {
+                    if (!finalPermissions.contains(permission)) {
                         finalPermissions.add(permission);
                     }
                 }
