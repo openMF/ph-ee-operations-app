@@ -34,18 +34,34 @@ steps:
     displayName: Get git tag
 
   - script: |
+      # Determine linting scope
+      if [[ "${BUILD_REASON}" == "PullRequest" ]]; then
+        echo "This is a PR build, scanning delta only"
+        export VALIDATE_ALL_CODEBASE=false
+        export GITHUB_SHA=$(git log -1 --pretty=%B | sed -e 's/^Merge //' -e 's/ into.*//')
+      else
+        echo "This is a regular build"
+        export VALIDATE_ALL_CODEBASE=true
+        export GITHUB_SHA=${BUILD_SOURCEVERSION}
+      fi
+      echo "VALIDATE_ALL_CODEBASE=${VALIDATE_ALL_CODEBASE}"
+      echo "GITHUB_SHA=${GITHUB_SHA}"
+      
       docker run -v "$(System.DefaultWorkingDirectory):/tmp/lint" \
-      -e GIT_AUTHORIZATION_BEARER=$(System.AccessToken) \
-      -e CI=true \
-      -e TF_BUILD=true \
-      -e SYSTEM_ACCESSTOKEN=$(System.AccessToken) \
-      -e SYSTEM_COLLECTIONURI=$(System.CollectionUri) \
-      -e SYSTEM_PULLREQUEST_PULLREQUESTID=$(System.PullRequest.PullRequestId) \
-      -e SYSTEM_TEAMPROJECT=$(System.TeamProject) \
-      -e BUILD_BUILD_ID=$(Build.BuildId) \
-      -e BUILD_REPOSITORY_ID=$(Build.Repository.ID) \
-      oxsecurity/megalinter-java:v6
-    displayName: Run MegaLinter
+        -e GITHUB_TOKEN \
+        -e VALIDATE_ALL_CODEBASE \
+        -e APPLY_FIXES=none \
+        -e GITHUB_STATUS_REPORTER=true \
+        -e GITHUB_COMMENT_REPORTER=true \
+        -e CI=true \
+        -e GITHUB_REF="$(Build.SourceBranch)" \
+        -e GITHUB_REPOSITORY="$(Build.Repository.ID)" \
+        -e GITHUB_TARGET_URL="$(System.CollectionUri)$(System.TeamProject)/_build/results?buildId=$(Build.BuildId)&view=logs&j=$(System.JobId)&t=$(System.TaskInstanceId)" \
+        -e GITHUB_SHA \
+        oxsecurity/megalinter-cupcake:latest
+      displayName: MegaLinter analysis
+      env:
+      GITHUB_TOKEN: $(GITHUB_TOKEN)
 
   - task: Docker@2
       displayName: Login to Azure registry
@@ -58,7 +74,7 @@ steps:
       condition: and(succeeded(), or(eq(variables['Build.SourceBranchName'], 'main'), eq(variables['Build.SourceBranchName'], 'develop'), startsWith(variables['Build.SourceBranch'], 'refs/heads/release/')))
       inputs:
         containerRegistry: "azurecr-oaf"
-        repository: "oneacrefund/paymenthub-backend"
+        repository: "oneacrefund/operations-app"
         command: "push"
         tags: "$(IMAGE_TAGS)"
 
@@ -67,5 +83,5 @@ steps:
       condition: and(succeeded(), or(eq(variables['Build.SourceBranchName'], 'main'), eq(variables['Build.SourceBranchName'], 'develop'), startsWith(variables['Build.SourceBranch'], 'refs/heads/release/')))
       inputs:
         PathtoPublish: $(Build.ArtifactStagingDirectory)
-        ArtifactName: "paymenthub-backend"
+        ArtifactName: "operations-app"
         publishLocation: "Container"
