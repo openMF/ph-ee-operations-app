@@ -278,7 +278,7 @@ public class OperationsDetailedApi {
             // Get the authenticated user by username
             AppUser currentUser = appUserRepository.findAppUserByName(authentication.getName());
             // filter transactions by dukas assigned to the user
-            if (currentUser.getPayeePartyIdsList() == null) {
+            if (currentUser.getPayeePartyIdsList().isEmpty()) {
                 // user not allowed to see any duka data, return empty page of transactions
                 logger.info("user not allowed to see any duka data");
                 return new PageImpl<>(Collections.emptyList(), pager, 0);
@@ -286,7 +286,7 @@ public class OperationsDetailedApi {
                 checkUserDukasAssigned(currentUser, payeePartyId, specs);
 
             // filter transactions by currencies assigned to the user
-            if (currentUser.getCurrenciesList() == null) {
+            if (currentUser.getCurrenciesList().isEmpty()) {
                 // user not allowed to see any currency data, return empty page of transactions
                 logger.info("user not allowed to see any currency data");
                 return new PageImpl<>(Collections.emptyList(), pager, 0);
@@ -314,7 +314,12 @@ public class OperationsDetailedApi {
     }
 
     private List<Specifications<TransactionRequest>> checkUserCurrenciesAssigned(AppUser currentUser, String currency, List<Specifications<TransactionRequest>> specs) {
-        if (!currentUser.getCurrenciesList().isEmpty()) {
+        if (currentUser.getCurrenciesList().equals(Collections.singletonList("*"))) {
+            // user is allowed to see data from all currencies. Check if they wanna filter for a specific currency, otherwise don't add to spec
+            if (currency != null) {
+                specs.add(TransactionRequestSpecs.match(TransactionRequest_.currency, currency));
+            }
+        } else {
             // user is assigned currency in the list
             if (currency != null && currentUser.getCurrenciesList().contains(currency)) {
                 specs.add(TransactionRequestSpecs.match(TransactionRequest_.currency, currency));
@@ -322,28 +327,22 @@ public class OperationsDetailedApi {
                 specs.add(TransactionRequestSpecs.in(TransactionRequest_.currency, currentUser.getCurrenciesList()));
             }
 
-        } else {
-            // user is allowed to see data from all currencies. Check if they wanna filter for a specific currency, otherwise don't add to spec
-            if (currency != null) {
-                specs.add(TransactionRequestSpecs.match(TransactionRequest_.currency, currency));
-            }
         }
         return specs;
     }
 
     private List<Specifications<TransactionRequest>> checkUserDukasAssigned(AppUser currentUser, String payeePartyId, List<Specifications<TransactionRequest>> specs) {
-        if (!currentUser.getPayeePartyIdsList().isEmpty()) {
+        if (currentUser.getPayeePartyIdsList().equals(Collections.singletonList("*"))) {
+            // user is allowed to see data from all dukas. Check if they wanna filter for a specific payee, otherwise don't add to spec
+            if (payeePartyId != null && currentUser.getPayeePartyIdsList().contains(payeePartyId)) {
+                specs.add(TransactionRequestSpecs.match(TransactionRequest_.payeePartyId, payeePartyId));
+            }
+        } else {
             // user is assigned dukas in the list
             if (payeePartyId != null && currentUser.getPayeePartyIdsList().contains(payeePartyId)) {
                 specs.add(TransactionRequestSpecs.match(TransactionRequest_.payeePartyId, payeePartyId));
             } else {
                 specs.add(TransactionRequestSpecs.in(TransactionRequest_.payeePartyId, currentUser.getPayeePartyIdsList()));
-            }
-
-        } else {
-            // user is allowed to see data from all dukas. Check if they wanna filter for a specific payee, otherwise don't add to spec
-            if (payeePartyId != null && currentUser.getPayeePartyIdsList().contains(payeePartyId)) {
-                specs.add(TransactionRequestSpecs.match(TransactionRequest_.payeePartyId, payeePartyId));
             }
 
         }

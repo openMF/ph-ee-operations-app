@@ -96,26 +96,24 @@ public class AppUser extends AbstractPersistableCustom<Long> implements UserDeta
     private String payeePartyIds;
     /**
      * Comma-separated string of currencies assigned to the user.
-     * Return empty array to show that user is allowed to view all
+     * Return empty array to show that user is not allowed to view any
      */
     @Column(name = "currencies")
     private String currencies;
 
     /**
      * Comma-separated string of payee party ID types / SOURCE / MNOs assigned to the user.
-     * Return empty array to show that user is allowed to view all
+     * Return empty array to show that user is not allowed to view any
      */
     @Column(name = "payee_party_id_types")
     private String payeePartyIdTypes;
 
     public List<String> getPayeePartyIdsList() {
         if (payeePartyIds != null && !payeePartyIds.isEmpty()) {
-            if (payeePartyIds.equalsIgnoreCase("*"))
-                return new ArrayList<>();
             return Arrays.stream(payeePartyIds.split(","))
                     .collect(Collectors.toList());
         } else {
-            return null;
+            return new ArrayList<>();
         }
     }
 
@@ -129,12 +127,10 @@ public class AppUser extends AbstractPersistableCustom<Long> implements UserDeta
 
     public List<String> getCurrenciesList() {
         if (currencies != null && !currencies.isEmpty()) {
-            if (currencies.equalsIgnoreCase("*"))
-                return new ArrayList<>();
             return Arrays.stream(currencies.split(","))
                     .collect(Collectors.toList());
         } else {
-            return null;
+            return new ArrayList<>();
         }
     }
 
