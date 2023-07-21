@@ -1,11 +1,14 @@
 fineract:
   datasource:
     core:
-      host: operations-mysql
-      port: 3306
+      host: localhost
+      # host: operations-mysql
+      port: 8889
       schema: tenants
       username: root
-      password: mysql
+      password: root
+      # username: root
+      # password: mysql
     common:
       protocol: jdbc
       subprotocol: mysql
@@ -17,10 +20,12 @@ interface:
 
 token:
   user:
-    access-validity-seconds: 600
+    access-validity-seconds: 3600
     refresh-validity-seconds: 43200
   client:
     access-validity-seconds: 3600
+    channel:
+      secret: ""
 
 config:
   imu:
@@ -44,7 +49,7 @@ spring:
     enabled: false
 
 server:
-  port: 5000
+  port: 5050
 
 rest:
   authorization:
@@ -56,7 +61,7 @@ rest:
         authority: "hasAuthority('ALL_FUNCTIONS')"
 logging:
   level:
-    ROOT: ERROR
+    ROOT: INFO
     pattern:
       console: "%clr(%d{dd-MM-yyyy HH:mm:ss.SSS}){faint} %clr(${LOG_LEVEL_PATTERN:-%5p}) %clr([%35.35t]){faint} %clr(%-28.28logger{28}){cyan} %clr(:){faint}%X{BUSINESS-LOG} %m%n${LOG_EXCEPTION_CONVERSION_WORD:-%wEx}"
 
@@ -82,3 +87,9 @@ payment:
 
 application:
   bucket-name: paymenthub-ee-dev
+
+channel-connector:
+  url: http://bb-connector-channel.mifos.io
+  transfer-path: /channel/transfer
+
+tenants: "oaf"
