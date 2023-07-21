@@ -27,19 +27,12 @@ import org.apache.fineract.organisation.user.AppUserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletResponse;
 import java.util.Collection;
 import java.util.List;
+import java.util.Optional;
 
 import static java.util.stream.Collectors.toList;
 import static org.apache.fineract.api.AssignmentAction.ASSIGN;
@@ -114,12 +107,39 @@ public class UsersApi {
 
     @DeleteMapping(path = "/user/{userId}", produces = MediaType.TEXT_HTML_VALUE)
     public void delete(@PathVariable("userId") Long userId, HttpServletResponse response) {
-        if(appuserRepository.findById(userId).isPresent()) {
+        if (appuserRepository.findById(userId).isPresent()) {
             appuserRepository.deleteById(userId);
         } else {
             response.setStatus(HttpServletResponse.SC_NOT_FOUND);
         }
     }
+
+    @PutMapping(path = "/user/{userId}/currencies", consumes = MediaType.APPLICATION_JSON_VALUE)
+    public void userCurrenciesAssignment(@PathVariable("userId") Long userId,
+                                         @RequestBody List<String> currencies, HttpServletResponse response) {
+        Optional<AppUser> existingUser = appuserRepository.findById(userId);
+        if (existingUser.isPresent()) {
+            AppUser user = existingUser.get();
+            user.setCurrenciesList(currencies);
+            appuserRepository.saveAndFlush(user);
+        } else {
+            response.setStatus(HttpServletResponse.SC_NOT_FOUND);
+        }
+    }
+
+    @PutMapping(path = "/user/{userId}/payeePartyIds", consumes = MediaType.APPLICATION_JSON_VALUE)
+    public void userPayeePartyIdsAssignment(@PathVariable("userId") Long userId,
+                                            @RequestBody List<String> payeePartyIds, HttpServletResponse response) {
+        Optional<AppUser> existingUser = appuserRepository.findById(userId);
+        if (existingUser.isPresent()) {
+            AppUser user = existingUser.get();
+            user.setPayeePartyIdsList(payeePartyIds);
+            appuserRepository.saveAndFlush(user);
+        } else {
+            response.setStatus(HttpServletResponse.SC_NOT_FOUND);
+        }
+    }
+
 
     @PutMapping(path = "/user/{userId}/roles", consumes = MediaType.APPLICATION_JSON_VALUE)
     public void userAssignment(@PathVariable("userId") Long userId, @RequestParam("action") AssignmentAction action,
