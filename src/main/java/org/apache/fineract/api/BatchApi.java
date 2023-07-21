@@ -3,6 +3,7 @@ package org.apache.fineract.api;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.fineract.config.PaymentModeConfiguration;
+import org.apache.fineract.data.SubBatchDetail;
 import org.apache.fineract.file.FileTransferService;
 import org.apache.fineract.operations.*;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -10,7 +11,6 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specifications;
 import org.springframework.web.bind.annotation.*;
@@ -19,10 +19,7 @@ import java.io.File;
 import java.io.FileWriter;
 import java.math.BigDecimal;
 import javax.servlet.http.HttpServletResponse;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 import static org.apache.fineract.core.service.OperatorUtils.strip;
 
@@ -53,8 +50,7 @@ public class BatchApi {
     public Page<Batch> getBatches(@RequestParam(value = "page", required = false, defaultValue = "1") Integer page,
                                   @RequestParam(value = "size", required = false, defaultValue = "10") Integer size,
                                   @RequestParam(value = "sortedBy", required = false) String sortedBy,
-                                  @RequestParam(value = "sortedOrder", required = false, defaultValue = "DESC") String sortedOrder,
-                                  @RequestParam(value = "batchId", required = false) String batchId
+                                  @RequestParam(value = "sortedOrder", required = false, defaultValue = "DESC") String sortedOrder
     ) {
         Specifications<Batch> specifications = BatchSpecs.match(Batch_.subBatchId, null);
 
@@ -63,10 +59,6 @@ public class BatchApi {
             pager = new PageRequest(page, size, new Sort(Sort.Direction.fromString(sortedOrder), "startedAt"));
         } else {
             pager = new PageRequest(page, size, new Sort(Sort.Direction.fromString(sortedOrder), sortedBy));
-        }
-
-        if(!StringUtils.isEmpty(batchId)){
-            return batchRepository.findAllByBatchId(batchId, pager);
         }
 
         return batchRepository.findAll(specifications, pager);
@@ -150,6 +142,8 @@ public class BatchApi {
         List<Transfer> transfers = transferRepository.findAllByBatchId(batch.getBatchId());
 
         List<Batch> allBatches = batchRepository.findAllByBatchId(batch.getBatchId());
+
+        List<SubBatchDetail> subBatchDetailList = fetchSubBatchDetails(allBatches);
 
         Long completed = 0L;
         Long failed = 0L;
@@ -246,7 +240,7 @@ public class BatchApi {
                 batch.getRequestId(), batch.getTotalTransactions(), batch.getOngoing(),
                 batch.getFailed(), batch.getCompleted(), totalAmount, completedAmount,
                 ongoingAmount, failedAmount, batch.getResult_file(), batch.getNote(),
-                batchCompletedPercent.toString(), batchFailedPercent.toString());
+                batchCompletedPercent.toString(), batchFailedPercent.toString(), subBatchDetailList);
 
         response.setCreated_at(""+batch.getStartedAt());
         response.setModes(modes.toString());
@@ -264,6 +258,20 @@ public class BatchApi {
         }
 
         return response;
+    }
+
+    private List<SubBatchDetail> fetchSubBatchDetails(List<Batch> allBatches) {
+        List<SubBatchDetail> subBatchDetailList = new ArrayList<>();
+
+        for(Batch batch : allBatches){
+            if(StringUtils.isNotEmpty(batch.getSubBatchId())){
+                SubBatchDetail subBatchDetail = new SubBatchDetail();
+                subBatchDetail.setSubBatchId(batch.getSubBatchId());
+                subBatchDetail.setStartedAt(batch.getStartedAt());
+                subBatchDetailList.add(subBatchDetail);
+            }
+        }
+        return subBatchDetailList;
     }
 
     private String createDetailsFile(List<Transfer> transfers) {
