@@ -6,6 +6,8 @@ import org.apache.fineract.config.PaymentModeConfiguration;
 import org.apache.fineract.data.SubBatchDetail;
 import org.apache.fineract.file.FileTransferService;
 import org.apache.fineract.operations.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
@@ -45,6 +47,8 @@ public class BatchApi {
 
     @Value("${application.bucket-name}")
     private String bucketName;
+
+    private Logger logger = LoggerFactory.getLogger(this.getClass());
 
     @GetMapping("/batches")
     public Page<Batch> getBatches(@RequestParam(value = "page", required = false, defaultValue = "1") Integer page,
@@ -138,7 +142,7 @@ public class BatchApi {
     private BatchDTO generateDetails (Batch batch) {
 
         StringBuilder modes = new StringBuilder();
-
+        logger.info("Batch ID: {}", batch.getBatchId());
         List<Transfer> transfers = transferRepository.findAllByBatchId(batch.getBatchId());
 
         List<Batch> allBatches = batchRepository.findAllByBatchId(batch.getBatchId());
@@ -235,7 +239,7 @@ public class BatchApi {
         batchRepository.save(batch);
         batchCompletedPercent = (double) batch.getCompleted() / total * 100;
         batchFailedPercent = (double) batch.getFailed() / total * 100;
-
+        logger.info("Batch ID {}", batch.getBatchId());
         BatchDTO response = new BatchDTO(batch.getBatchId(),
                 batch.getRequestId(), batch.getTotalTransactions(), batch.getOngoing(),
                 batch.getFailed(), batch.getCompleted(), totalAmount, completedAmount,
