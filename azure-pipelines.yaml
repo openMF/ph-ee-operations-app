@@ -64,37 +64,37 @@ steps:
       GITHUB_TOKEN: $(GITHUB_TOKEN)
 
   - task: Gradle@3
-      displayName: Gradlew build
-      inputs:
-        gradleWrapperFile: "gradlew"
-        tasks: "bootJar :test --info --build-cache"
-        publishJUnitResults: true
-        javaHomeOption: "JDKVersion"
-        jdkVersionOption: "1.11"
-        # codeCoverageToolOption: 'JaCoCo'
-        classFilesDirectories: build/classes/java/main/
-        sonarQubeRunAnalysis: false
-        spotBugsAnalysis: false
+    displayName: Gradlew build
+    inputs:
+      gradleWrapperFile: "gradlew"
+      tasks: "bootJar :test --info --build-cache"
+      publishJUnitResults: true
+      javaHomeOption: "JDKVersion"
+      jdkVersionOption: "1.11"
+      # codeCoverageToolOption: 'JaCoCo'
+      classFilesDirectories: build/classes/java/main/
+      sonarQubeRunAnalysis: false
+      spotBugsAnalysis: false
 
   - task: Docker@2
-      displayName: Login to Azure registry
-      inputs:
-        containerRegistry: azurecr-oaf
-        command: "login"
+    displayName: Login to Azure registry
+    inputs:
+      containerRegistry: azurecr-oaf
+      command: "login"
 
   - task: Docker@2
-      displayName: push image to registry
-      condition: and(succeeded(), or(eq(variables['Build.SourceBranchName'], 'main'), eq(variables['Build.SourceBranchName'], 'develop'), startsWith(variables['Build.SourceBranch'], 'refs/heads/release/')))
-      inputs:
-        containerRegistry: "azurecr-oaf"
-        repository: "oneacrefund/operations-app"
-        command: "push"
-        tags: "$(IMAGE_TAGS)"
+    displayName: push image to registry
+    condition: and(succeeded(), or(eq(variables['Build.SourceBranchName'], 'main'), eq(variables['Build.SourceBranchName'], 'develop'), startsWith(variables['Build.SourceBranch'], 'refs/heads/release/')))
+    inputs:
+      containerRegistry: "azurecr-oaf"
+      repository: "oneacrefund/operations-app"
+      command: "push"
+      tags: "$(IMAGE_TAGS)"
 
   - task: PublishBuildArtifacts@1
-      displayName: Publish configuration package
-      condition: and(succeeded(), or(eq(variables['Build.SourceBranchName'], 'main'), eq(variables['Build.SourceBranchName'], 'develop'), startsWith(variables['Build.SourceBranch'], 'refs/heads/release/')))
-      inputs:
-        PathtoPublish: $(Build.ArtifactStagingDirectory)
-        ArtifactName: "operations-app"
-        publishLocation: "Container"
+    displayName: Publish configuration package
+    condition: and(succeeded(), or(eq(variables['Build.SourceBranchName'], 'main'), eq(variables['Build.SourceBranchName'], 'develop'), startsWith(variables['Build.SourceBranch'], 'refs/heads/release/')))
+    inputs:
+      PathtoPublish: $(Build.ArtifactStagingDirectory)
+      ArtifactName: "operations-app"
+      publishLocation: "Container"
