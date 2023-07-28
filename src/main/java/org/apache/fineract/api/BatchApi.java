@@ -35,6 +35,9 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.math.BigDecimal;
+import javax.servlet.http.HttpServletResponse;
+import java.math.RoundingMode;
+import java.text.DecimalFormat;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -161,7 +164,7 @@ public class BatchApi {
                                                @RequestParam(value = "requestId", required = false) String requestId) {
         Batch batch = batchRepository.findByBatchId(batchId);
 
-        if (batch==null) {
+        if (batch == null) {
             String errorMessage = "Batch corresponding to batchId: " + batchId + " does not exist.";
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(errorMessage);
         }
@@ -174,11 +177,11 @@ public class BatchApi {
                                      @RequestParam(value = "command", required = false, defaultValue = "aggregate") String command) {
         Batch batch = batchRepository.findByBatchId(batchId);
 
-        if (batch != null && batch.getResultGeneratedAt() != null
-                && new Date().getTime() - batch.getResultGeneratedAt().getTime() < 600000) {
-            return ResponseEntity.ok(generateDetails(batch));
+        if (batch == null) {
+            String errorMessage = "Batch corresponding to batchId: " + batchId + " does not exist.";
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(errorMessage);
         }
-        return null;
+        return ResponseEntity.ok(generateDetails(batch));
     }
 
     @GetMapping("/batch/detail")
@@ -404,15 +407,19 @@ public class BatchApi {
         double batchCompletedPercent = 0;
 
         if(batch.getTotalTransactions() != null){
-            batchFailedPercent = (double) batch.getFailed() / batch.getTotalTransactions() * 100;
-            batchCompletedPercent = (double) batch.getCompleted() / batch.getTotalTransactions() * 100;
+            batchFailedPercent = ((double) batch.getFailed()) / batch.getTotalTransactions() * 100;
+            batchCompletedPercent = ((double) batch.getCompleted()) / batch.getTotalTransactions() * 100;
         }
+
+        DecimalFormat decimalFormat = new DecimalFormat("#.##");
+        decimalFormat.setRoundingMode(RoundingMode.FLOOR);
+
         return new BatchDTO(batch.getBatchId(),
                 batch.getRequestId(), batch.getTotalTransactions(), batch.getOngoing(),
                 batch.getFailed(), batch.getCompleted(), new BigDecimal(batch.getTotalAmount()),
                 new BigDecimal(batch.getCompletedAmount()), new BigDecimal(batch.getOngoingAmount()),
                 new BigDecimal(batch.getFailedAmount()), batch.getResult_file(), batch.getNote(),
-                Double.toString(batchCompletedPercent), Double.toString(batchFailedPercent));
+                decimalFormat.format(batchCompletedPercent), decimalFormat.format(batchFailedPercent));
     }
 
 }
