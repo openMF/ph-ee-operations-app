@@ -23,15 +23,15 @@ import java.util.Map;
 
 public enum GroupTypes {
 
-    INVALID(0l, "lendingStrategy.invalid", "invalid"), //
-    CENTER(1l, "groupTypes.center", "center"), //
-    GROUP(2l, "groupTypes.group", "group"); //
+    INVALID(0L, "lendingStrategy.invalid", "invalid"), //
+    CENTER(1L, "groupTypes.center", "center"), //
+    GROUP(2L, "groupTypes.group", "group"); //
 
     private Long id;
     private String code;
     private String value;
 
-    private GroupTypes(final Long id, final String code, final String value) {
+    GroupTypes(final Long id, final String code, final String value) {
         this.id = id;
         this.code = code;
         this.value = value;
@@ -40,6 +40,7 @@ public enum GroupTypes {
     private static final Map<Long, GroupTypes> intToEnumMap = new HashMap<>();
     private static long minValue;
     private static long maxValue;
+
     static {
         int i = 0;
         for (final GroupTypes type : GroupTypes.values()) {

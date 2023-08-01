@@ -4,9 +4,9 @@ import java.math.BigDecimal;
 
 public class BatchDTO {
 
-    private String batch_id;
+    private String batchId;
 
-    private String request_id;
+    private String requestId;
 
     private Long total;
 
@@ -28,7 +28,7 @@ public class BatchDTO {
 
     private String notes;
 
-    private String created_at;
+    private String createdAt;
 
     private String status;
 
@@ -59,8 +59,8 @@ public class BatchDTO {
     public BatchDTO(String batchId, String requestId, Long totalTransactions, Long ongoing, Long failed, Long completed,
             BigDecimal total_amount, BigDecimal completed_amount, BigDecimal ongoing_amount, BigDecimal failed_amount, String result_file,
             String note, String failPercentage, String successPercentage) {
-        this.batch_id = batchId;
-        this.request_id = requestId;
+        this.batchId = batchId;
+        this.requestId = requestId;
         this.total = totalTransactions;
         this.ongoing = ongoing;
         this.failed = failed;
@@ -78,8 +78,8 @@ public class BatchDTO {
     public BatchDTO(String batch_id, String request_id, Long total, Long ongoing, Long failed, Long successful, BigDecimal totalAmount,
             BigDecimal successfulAmount, BigDecimal pendingAmount, BigDecimal failedAmount, String file, String notes, String created_at,
             String status, String modes, String purpose, String failPercentage, String successPercentage) {
-        this.batch_id = batch_id;
-        this.request_id = request_id;
+        this.batchId = batch_id;
+        this.requestId = request_id;
         this.total = total;
         this.ongoing = ongoing;
         this.failed = failed;
@@ -90,7 +90,7 @@ public class BatchDTO {
         this.failedAmount = failedAmount;
         this.file = file;
         this.notes = notes;
-        this.created_at = created_at;
+        this.createdAt = created_at;
         this.status = status;
         this.modes = modes;
         this.purpose = purpose;
@@ -99,19 +99,19 @@ public class BatchDTO {
     }
 
     public String getBatch_id() {
-        return batch_id;
+        return batchId;
     }
 
     public void setBatch_id(String batch_id) {
-        this.batch_id = batch_id;
+        this.batchId = batch_id;
     }
 
     public String getRequest_id() {
-        return request_id;
+        return requestId;
     }
 
     public void setRequest_id(String request_id) {
-        this.request_id = request_id;
+        this.requestId = request_id;
     }
 
     public Long getTotal() {
@@ -195,11 +195,11 @@ public class BatchDTO {
     }
 
     public String getCreated_at() {
-        return created_at;
+        return createdAt;
     }
 
     public void setCreated_at(String created_at) {
-        this.created_at = created_at;
+        this.createdAt = created_at;
     }
 
     public String getStatus() {

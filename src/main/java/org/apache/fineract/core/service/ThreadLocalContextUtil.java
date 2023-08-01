@@ -21,7 +21,9 @@ package org.apache.fineract.core.service;
 import org.apache.fineract.organisation.tenant.TenantServerConnection;
 import org.springframework.util.Assert;
 
-public class ThreadLocalContextUtil {
+public final class ThreadLocalContextUtil {
+
+    private ThreadLocalContextUtil() {}
 
     private static final ThreadLocal<TenantServerConnection> tenantcontext = new ThreadLocal<>();
 

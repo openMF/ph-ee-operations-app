@@ -48,7 +48,7 @@ public class Batch extends AbstractPersistableCustom<Long> {
     private Long completedAmount;
 
     @Column(name = "RESULT_FILE")
-    private String result_file;
+    private String resultFile;
 
     @Column(name = "RESULT_GENERATED_AT")
     private Date resultGeneratedAt;
@@ -135,11 +135,11 @@ public class Batch extends AbstractPersistableCustom<Long> {
     }
 
     public String getResult_file() {
-        return result_file;
+        return resultFile;
     }
 
     public void setResult_file(String result_file) {
-        this.result_file = result_file;
+        this.requestFile = result_file;
     }
 
     public Date getResultGeneratedAt() {

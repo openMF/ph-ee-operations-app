@@ -48,7 +48,7 @@ public class AzureFileTransferImpl implements FileTransferService {
             temp.delete();
             return content;
         } catch (Exception e) {
-            e.printStackTrace();
+            logger.debug("{}", e.getMessage());
         }
         return null;
     }

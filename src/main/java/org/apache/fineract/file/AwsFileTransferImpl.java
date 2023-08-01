@@ -42,7 +42,7 @@ public class AwsFileTransferImpl implements FileTransferService {
             byte[] content = IOUtils.toByteArray(inputStream);
             return content;
         } catch (IOException e) {
-            e.printStackTrace();
+            logger.debug("{}", e.getMessage());
         }
         return null;
     }

@@ -11,7 +11,9 @@ import javax.persistence.criteria.Predicate;
 import javax.persistence.metamodel.SingularAttribute;
 import org.springframework.data.jpa.domain.Specifications;
 
-public class TransactionRequestSpecs {
+public final class TransactionRequestSpecs {
+
+    private TransactionRequestSpecs() {}
 
     public static Specifications<TransactionRequest> between(SingularAttribute<TransactionRequest, Date> attribute, Date from, Date to) {
         return where((root, query, builder) -> builder.and(builder.greaterThanOrEqualTo(root.get(attribute), from),

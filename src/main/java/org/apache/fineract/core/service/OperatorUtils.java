@@ -2,7 +2,9 @@ package org.apache.fineract.core.service;
 
 import java.text.SimpleDateFormat;
 
-public class OperatorUtils {
+public final class OperatorUtils {
+
+    private OperatorUtils() {}
 
     public static String strip(String str) {
         return str.replaceAll("^\"|\"$", "");

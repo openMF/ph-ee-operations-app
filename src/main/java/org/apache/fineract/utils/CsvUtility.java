@@ -11,7 +11,9 @@ import javax.servlet.http.HttpServletResponse;
 import org.apache.fineract.data.ErrorCode;
 import org.apache.fineract.exception.WriteToCsvException;
 
-public class CsvUtility {
+public final class CsvUtility {
+
+    private CsvUtility() {}
 
     public static <T> void writeToCsv(HttpServletResponse response, List<T> listOfData) throws WriteToCsvException {
         response.setContentType("text/csv");

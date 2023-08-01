@@ -24,6 +24,8 @@ import org.apache.fineract.operations.TransferRepository;
 import org.apache.fineract.operations.TransferStatus;
 import org.apache.fineract.operations.Variable;
 import org.apache.fineract.operations.VariableRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
@@ -59,6 +61,8 @@ public class BatchApi {
 
     @Value("${application.bucket-name}")
     private String bucketName;
+
+    public Logger logger = LoggerFactory.getLogger(this.getClass());
 
     @GetMapping("/batches")
     public Page<Batch> getBatches(@RequestParam(value = "page", required = false, defaultValue = "1") Integer page,
@@ -249,7 +253,7 @@ public class BatchApi {
         response.setCreated_at("" + batch.getStartedAt());
         response.setModes(modes.toString());
         response.setPurpose("Unknown purpose");
-        System.out.println("Batch details generated for batchId: " + response.getSuccessPercentage());
+        logger.info("Batch details generated for batchId: {}", response.getSuccessPercentage());
 
         if (batch.getCompleted().longValue() == batch.getTotalTransactions().longValue()) {
             response.setStatus("COMPLETED");
@@ -265,33 +269,33 @@ public class BatchApi {
     }
 
     private String createDetailsFile(List<Transfer> transfers) {
-        String CSV_SEPARATOR = ",";
+        String csvSeparator = ",";
         File tempFile = new File(System.currentTimeMillis() + "_response.csv");
         try (FileWriter writer = new FileWriter(tempFile.getName()); BufferedWriter bw = new BufferedWriter(writer)) {
             for (Transfer transfer : transfers) {
                 StringBuffer oneLine = new StringBuffer();
                 oneLine.append(transfer.getTransactionId());
-                oneLine.append(CSV_SEPARATOR);
+                oneLine.append(csvSeparator);
                 oneLine.append(transfer.getStatus().toString());
-                oneLine.append(CSV_SEPARATOR);
+                oneLine.append(csvSeparator);
                 oneLine.append(transfer.getPayeeDfspId());
-                oneLine.append(CSV_SEPARATOR);
+                oneLine.append(csvSeparator);
                 oneLine.append(transfer.getPayeePartyId());
-                oneLine.append(CSV_SEPARATOR);
+                oneLine.append(csvSeparator);
                 oneLine.append(transfer.getPayerDfspId());
-                oneLine.append(CSV_SEPARATOR);
+                oneLine.append(csvSeparator);
                 oneLine.append(transfer.getPayerPartyId());
-                oneLine.append(CSV_SEPARATOR);
+                oneLine.append(csvSeparator);
                 oneLine.append(transfer.getAmount().toString());
-                oneLine.append(CSV_SEPARATOR);
+                oneLine.append(csvSeparator);
                 oneLine.append(transfer.getCurrency());
-                oneLine.append(CSV_SEPARATOR);
+                oneLine.append(csvSeparator);
                 oneLine.append(transfer.getErrorInformation());
-                oneLine.append(CSV_SEPARATOR);
+                oneLine.append(csvSeparator);
                 oneLine.append(transfer.getStartedAt().toString());
-                oneLine.append(CSV_SEPARATOR);
+                oneLine.append(csvSeparator);
                 oneLine.append(transfer.getCompletedAt().toString());
-                oneLine.append(CSV_SEPARATOR);
+                oneLine.append(csvSeparator);
                 bw.write(oneLine.toString());
                 bw.newLine();
             }

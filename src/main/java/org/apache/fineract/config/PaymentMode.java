@@ -9,7 +9,8 @@ import lombok.Setter;
 @NoArgsConstructor
 public class PaymentMode {
 
-    private String id, type;
+    private String id;
+    private String type;
 
     public PaymentMode(String id, String type) {
         this.id = id;

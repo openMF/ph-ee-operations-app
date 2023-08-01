@@ -2,7 +2,8 @@ package org.apache.fineract.config;
 
 public class EndpointSetting {
 
-    private String endpoint, authority;
+    private String endpoint;
+    private String authority;
 
     public EndpointSetting() {}
 

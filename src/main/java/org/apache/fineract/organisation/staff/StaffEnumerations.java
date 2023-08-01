@@ -18,7 +18,9 @@
  */
 package org.apache.fineract.organisation.staff;
 
-public class StaffEnumerations {
+public final class StaffEnumerations {
+
+    private StaffEnumerations() {}
 
     public static EnumOptionData organisationalRole(final Integer id) {
         return organisationalRole(StaffOrganisationalRoleType.fromInt(id));

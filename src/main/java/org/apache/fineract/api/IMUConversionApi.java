@@ -47,7 +47,7 @@ public class IMUConversionApi {
             CurrencyRateLock lockedRate = currencyRateLockRepository.findOneByUniqueKey(imuConversion.getLockKey());
             if (lockedRate == null) {
                 uniqueKey = imuConversion.getLockKey();
-            } else if (!lockedRate.isExpiredAtDate(currentDate)) {// ??
+            } else if (!lockedRate.isExpiredAtDate(currentDate)) { // ??
                 rate = lockedRate.getRate();
                 if (!imuConversion.getFailWhenExpired()) {
                     lockedRate.setExpireBy(expireBy);

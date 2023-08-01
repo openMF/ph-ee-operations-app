@@ -23,13 +23,13 @@ public final class CsvWriter<T> {
         T call() throws Exception;
     }
 
-    private final ICsvBeanWriter iCsvBeanWriter;
+    private final ICsvBeanWriter icsvBeanWriter;
     private final String[] csvHeader;
     private final List<T> data;
     private final String[] nameMapping;
 
     private CsvWriter(PrintWriter printWriter, String[] csvHeader, List<T> data, String[] nameMapping) {
-        this.iCsvBeanWriter = new CsvBeanWriter(printWriter, CsvPreference.STANDARD_PREFERENCE);
+        this.icsvBeanWriter = new CsvBeanWriter(printWriter, CsvPreference.STANDARD_PREFERENCE);
         this.csvHeader = csvHeader;
         this.data = data;
         this.nameMapping = nameMapping;
@@ -57,7 +57,7 @@ public final class CsvWriter<T> {
      */
     private void writeCsvHeaders(String[] csvHeader) throws WriteToCsvException {
         performErrorProneTask(new WriteToCsvException(ErrorCode.CSV_WRITE_HEADER, "Unable to write csv headers"), () -> {
-            iCsvBeanWriter.writeHeader(csvHeader);
+            icsvBeanWriter.writeHeader(csvHeader);
             return null;
         });
     }
@@ -75,7 +75,7 @@ public final class CsvWriter<T> {
     private void writeData(String[] nameMapping, List<T> objects) throws WriteToCsvException {
         for (T data : objects) {
             performErrorProneTask(new WriteToCsvException(ErrorCode.CSV_WRITE_DATA, "Unable to write csv headers"), () -> {
-                iCsvBeanWriter.write(data, nameMapping);
+                icsvBeanWriter.write(data, nameMapping);
                 return null;
             });
         }
@@ -89,7 +89,7 @@ public final class CsvWriter<T> {
      */
     private void closeStream() throws WriteToCsvException {
         performErrorProneTask(new WriteToCsvException(ErrorCode.CSV_STREAM, "Unable to close/flush stream"), () -> {
-            iCsvBeanWriter.close();
+            icsvBeanWriter.close();
             return null;
         });
     }

@@ -6,7 +6,9 @@ import java.util.Date;
 import javax.persistence.metamodel.SingularAttribute;
 import org.springframework.data.jpa.domain.Specifications;
 
-public class TransferSpecs {
+public final class TransferSpecs {
+
+    private TransferSpecs() {}
 
     public static Specifications<Transfer> between(SingularAttribute<Transfer, Date> attribute, Date from, Date to) {
         return where((root, query, builder) -> builder.and(builder.greaterThanOrEqualTo(root.get(attribute), from),

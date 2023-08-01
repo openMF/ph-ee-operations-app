@@ -10,7 +10,7 @@ public class ErrorResponse extends HashMap<String, String> {
 
         private final String text;
 
-        private Key(final String text) {
+        Key(final String text) {
             this.text = text;
         }
     }

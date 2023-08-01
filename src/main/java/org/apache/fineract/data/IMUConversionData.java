@@ -42,7 +42,9 @@ public class IMUConversionData {
     }
 
     public void setAmount(BigDecimal amount) {
-        if (amount != null) amount = amount.setScale(2, RoundingMode.HALF_UP);
+        if (amount != null) {
+            amount = amount.setScale(2, RoundingMode.HALF_UP);
+        }
         this.amount = amount;
     }
 
@@ -51,7 +53,9 @@ public class IMUConversionData {
     }
 
     public void setRate(BigDecimal rate) {
-        if (rate != null) rate = rate.setScale(2, RoundingMode.HALF_UP);
+        if (rate != null) {
+            rate = rate.setScale(2, RoundingMode.HALF_UP);
+        }
         this.rate = rate;
     }
 
@@ -60,7 +64,9 @@ public class IMUConversionData {
     }
 
     public void setConvertedAmount(BigDecimal convertedAmount) {
-        if (convertedAmount != null) convertedAmount = convertedAmount.setScale(2, RoundingMode.HALF_UP);
+        if (convertedAmount != null) {
+            convertedAmount = convertedAmount.setScale(2, RoundingMode.HALF_UP);
+        }
         this.convertedAmount = convertedAmount;
     }
 

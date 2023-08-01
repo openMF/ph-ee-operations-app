@@ -91,7 +91,7 @@ public class OperationsDetailedApi {
                     payerPartyId = URLDecoder.decode(payerPartyId, "UTF-8");
                     logger.info("Decoded payerPartyId: " + payerPartyId);
                 } catch (UnsupportedEncodingException e) {
-                    e.printStackTrace();
+                    logger.debug(" {}", e.getMessage());
                 }
             }
             specs.add(TransferSpecs.match(Transfer_.payerPartyId, payerPartyId));
@@ -102,7 +102,7 @@ public class OperationsDetailedApi {
                     payeePartyId = URLDecoder.decode(payeePartyId, "UTF-8");
                     logger.info("Decoded payeePartyId: " + payeePartyId);
                 } catch (UnsupportedEncodingException e) {
-                    e.printStackTrace();
+                    logger.debug(" {}", e.getMessage());
                 }
             }
             specs.add(TransferSpecs.match(Transfer_.payeePartyId, payeePartyId));
@@ -140,7 +140,7 @@ public class OperationsDetailedApi {
                     partyId = URLDecoder.decode(partyId, "UTF-8");
                     logger.info("Decoded PartyId: " + partyId);
                 } catch (UnsupportedEncodingException e) {
-                    e.printStackTrace();
+                    logger.debug(" {}", e.getMessage());
                 }
             }
             specs.add(TransferSpecs.multiMatch(Transfer_.payerPartyId, Transfer_.payeePartyId, partyId));
@@ -193,7 +193,7 @@ public class OperationsDetailedApi {
                 transferResponseList.add(transferResponse);
             } catch (Exception e) {
                 logger.error("Error parsing errorInformation into DTO: {}", e.getMessage());
-                e.printStackTrace();
+                logger.debug(" {}", e.getMessage());
                 if (transferResponse != null) {
                     transferResponseList.add(transferResponse);
                 }
