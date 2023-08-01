@@ -61,7 +61,7 @@ public class TenantsService implements DisposableBean {
         });
 
         if (List.of(activeProfiles).contains("migrate")) {
-            logger.info("Running in migration mode, migrating tenants");
+            logger.info("Running in migration mode, migrating tenants: {}", tenantDataSources.keySet());
             tenantDatabaseUpgradeService.migrateTenants(tenantDataSources, tenantConnectionProperties);
             logger.info("Migration finished, exiting");
             System.exit(0);

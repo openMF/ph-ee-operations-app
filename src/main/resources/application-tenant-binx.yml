@@ -2,7 +2,7 @@ tenants:
   connections:
     - name: binx
       schema_server: localhost
-      schema_name: binx
+      schema_name: binx_operations_binx_tenant_dev
       schema_server_port: 5432
       schema_username: postgres
       schema_password: password
