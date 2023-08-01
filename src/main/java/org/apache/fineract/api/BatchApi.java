@@ -1,15 +1,18 @@
 package org.apache.fineract.api;
 
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.fineract.config.PaymentModeConfiguration;
 import org.apache.fineract.file.FileTransferService;
 import org.apache.fineract.operations.*;
+import org.apache.fineract.utils.DateUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.data.jpa.domain.Specifications;
 import org.springframework.web.bind.annotation.*;
 import java.io.BufferedWriter;
@@ -21,9 +24,11 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Optional;
-
+import java.util.ArrayList;
+import static org.apache.fineract.core.service.OperatorUtils.dateFormat;
 import static org.apache.fineract.core.service.OperatorUtils.strip;
 
+@Slf4j
 @RestController
 @SecurityRequirement(name = "auth")
 @RequestMapping("/api/v1")
@@ -43,6 +48,9 @@ public class BatchApi {
 
     @Autowired
     private PaymentModeConfiguration paymentModeConfig;
+
+    @Autowired
+    private DateUtil dateUtil;
 
     @Value("${application.bucket-name}")
     private String bucketName;
@@ -64,6 +72,65 @@ public class BatchApi {
 
         return batchRepository.findAll(specifications, pager);
     }
+
+    @GetMapping("/batch")
+    public Page<Batch> getBatch(@RequestParam(value = "offset", required = false, defaultValue = "0") Integer offset,
+                                @RequestParam(value = "limit", required = false, defaultValue = "10") Integer limit,
+                                @RequestParam(value = "sort", required = false, defaultValue = "+COMPLETED_AT") String sort,
+                                @RequestParam(value = "dateFrom", required = false) String startFrom,
+                                @RequestParam(value = "dateTo", required = false) String startTo) {
+
+        List<Specification<Batch>> specifications = new ArrayList<>();
+
+        if (startFrom != null) {
+            startFrom = dateUtil.getUTCFormat(startFrom);
+        }
+        if (startTo != null) {
+            startTo = dateUtil.getUTCFormat(startTo);
+        }
+        try {
+            if (startFrom != null && startTo != null) {
+                specifications.add(BatchSpecs.between(Batch_.startedAt, dateFormat().parse(startFrom), dateFormat().parse(startTo)));
+            } else if (startFrom != null) {
+                specifications.add(BatchSpecs.later(Batch_.startedAt, dateFormat().parse(startFrom)));
+            } else if (startTo != null) {
+                specifications.add(BatchSpecs.earlier(Batch_.startedAt, dateFormat().parse(startTo)));
+            }
+        } catch (Exception e) {
+            log.warn("failed to parse dates {} / {}", startFrom, startTo);
+        }
+        Integer page = Math.floorDiv(offset, limit);
+
+
+        Sort.Direction sortDirection = null;
+        String sortedBy = null;
+        if (sort.contains("+") && sort.split("\\+").length == 2) {
+            sortDirection = Sort.Direction.ASC;
+            sortedBy = sort.split("\\+")[1];
+        } else if (sort.contains("-") && sort.split("\\+").length == 2) {
+			sortDirection = Sort.Direction.DESC;
+            sortedBy = sort.split("\\+")[1];
+        } else {
+            sortDirection = Sort.Direction.ASC;
+        }
+
+        Sort sortObject = new Sort(sortDirection, sortedBy);
+        PageRequest pager = PageRequest.of(page, limit, sortObject);
+
+        Page<Batch> batchPage;
+        if (specifications.size() > 0) {
+            Specification<Batch> compiledBatchSpecification = specifications.get(0);
+            for (int i = 0; i < specifications.size(); i++) {
+                compiledBatchSpecification = compiledBatchSpecification.and(specifications.get(i));
+            }
+            batchPage = batchRepository.findAll(compiledBatchSpecification, pager);
+        } else {
+            batchPage = batchRepository.findAll(pager);
+        }
+
+        return batchPage;
+    }
+
 
     @GetMapping("/batch")
     public BatchDTO batchDetails(@RequestParam(value = "batchId", required = false) String batchId,
