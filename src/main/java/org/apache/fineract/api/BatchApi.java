@@ -73,7 +73,7 @@ public class BatchApi {
         return batchRepository.findAll(specifications, pager);
     }
 
-    @GetMapping("/batch")
+    @GetMapping("/batch/report")
     public List<Batch> getBatch123(@RequestParam(value = "sort", required = false, defaultValue = "+completedAt")
                                        String sort,
                                 @RequestParam(value = "dateFrom", required = false) String startFrom,
@@ -130,7 +130,7 @@ public class BatchApi {
         return batches;
     }
 
-    /*@GetMapping("/batch")
+    @GetMapping("/batch")
     public BatchDTO batchDetails(@RequestParam(value = "batchId", required = false) String batchId,
                                  @RequestParam(value = "requestId", required = false) String requestId) {
         Batch batch = batchRepository.findByBatchId(batchId);
@@ -152,7 +152,7 @@ public class BatchApi {
            return generateDetails(batch1);
         }
 
-    }*/
+    }
 
     @GetMapping("/batch/detail")
     public Page<Transfer> batchDetails(HttpServletResponse httpServletResponse,
