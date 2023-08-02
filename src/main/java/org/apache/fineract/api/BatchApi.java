@@ -55,7 +55,7 @@ public class BatchApi {
     @Value("${application.bucket-name}")
     private String bucketName;
 
-    @GetMapping("/batches")
+    /*@GetMapping("/batches")
     public Page<Batch> getBatches(@RequestParam(value = "page", required = false, defaultValue = "1") Integer page,
                                   @RequestParam(value = "size", required = false, defaultValue = "10") Integer size,
                                   @RequestParam(value = "sortedBy", required = false) String sortedBy,
@@ -71,10 +71,12 @@ public class BatchApi {
         }
 
         return batchRepository.findAll(specifications, pager);
-    }
+    }*/
 
-    @GetMapping("/batch/report")
-    public List<Batch> getBatch123(@RequestParam(value = "sort", required = false, defaultValue = "+completedAt")
+    @GetMapping("/batches")
+    public Page<Batch> getBatch123(@RequestParam(value = "offset", required = false, defaultValue = "0") Integer offset,
+                                   @RequestParam(value = "limit", required = false, defaultValue = "10") Integer limit,
+                                   @RequestParam(value = "sort", required = false, defaultValue = "+completedAt")
                                        String sort,
                                 @RequestParam(value = "dateFrom", required = false) String startFrom,
                                 @RequestParam(value = "dateTo", required = false) String startTo) {
@@ -115,19 +117,21 @@ public class BatchApi {
         sortedBy = sortedBy.replace(" ", "");
         log.info("Sorting by: {} and Sorting direction: {}", sortedBy, sortDirection.name());
 
+        Integer page = Math.floorDiv(offset, limit);
         Sort sortObject = new Sort(sortDirection, sortedBy);
-        List<Batch> batches;
+        PageRequest pager = PageRequest.of(page, limit, sortObject);
+        Page<Batch> batchPage;
         if (specifications.size() > 0) {
             Specification<Batch> compiledBatchSpecification = specifications.get(0);
             for (int i = 0; i < specifications.size(); i++) {
                 compiledBatchSpecification = compiledBatchSpecification.and(specifications.get(i));
             }
-            batches = batchRepository.findAll(compiledBatchSpecification, sortObject);
+            batchPage = batchRepository.findAll(compiledBatchSpecification, pager);
         } else {
-            batches = batchRepository.findAll(sortObject);
+            batchPage = batchRepository.findAll(pager);
         }
 
-        return batches;
+        return batchPage;
     }
 
     @GetMapping("/batch")
