@@ -55,7 +55,7 @@ public class BatchApi {
     @Value("${application.bucket-name}")
     private String bucketName;
 
-    /*@GetMapping("/batches")
+    @GetMapping("/batches")
     public Page<Batch> getBatches(@RequestParam(value = "page", required = false, defaultValue = "1") Integer page,
                                   @RequestParam(value = "size", required = false, defaultValue = "10") Integer size,
                                   @RequestParam(value = "sortedBy", required = false) String sortedBy,
@@ -71,10 +71,10 @@ public class BatchApi {
         }
 
         return batchRepository.findAll(specifications, pager);
-    }*/
+    }
 
     @GetMapping("/batch")
-    public List<Batch> getBatch123(@RequestParam(value = "sort", required = false, defaultValue = "+COMPLETED_AT")
+    public List<Batch> getBatch123(@RequestParam(value = "sort", required = false, defaultValue = "+completedAt")
                                        String sort,
                                 @RequestParam(value = "dateFrom", required = false) String startFrom,
                                 @RequestParam(value = "dateTo", required = false) String startTo) {
@@ -104,13 +104,16 @@ public class BatchApi {
         String sortedBy = null;
         if (sort.contains("+") && sort.split("\\+").length == 2) {
             sortDirection = Sort.Direction.ASC;
-            sortedBy = sort.split("\\+")[1];
-        } else if (sort.contains("-") && sort.split("\\+").length == 2) {
+            sortedBy = sort.split("/+")[1];
+        } else if (sort.contains("-") && sort.split("-").length == 2) {
 			sortDirection = Sort.Direction.DESC;
-            sortedBy = sort.split("\\+")[1];
+            sortedBy = sort.split("-")[1];
         } else {
             sortDirection = Sort.Direction.ASC;
+            sortedBy = sort;
         }
+        sortedBy = sortedBy.replace(" ", "");
+        log.info("Sorting by: {} and Sorting direction: {}", sortedBy, sortDirection.name());
 
         Sort sortObject = new Sort(sortDirection, sortedBy);
         List<Batch> batches;
@@ -127,8 +130,7 @@ public class BatchApi {
         return batches;
     }
 
-
-    @GetMapping("/batch")
+    /*@GetMapping("/batch")
     public BatchDTO batchDetails(@RequestParam(value = "batchId", required = false) String batchId,
                                  @RequestParam(value = "requestId", required = false) String requestId) {
         Batch batch = batchRepository.findByBatchId(batchId);
@@ -150,7 +152,7 @@ public class BatchApi {
            return generateDetails(batch1);
         }
 
-    }
+    }*/
 
     @GetMapping("/batch/detail")
     public Page<Transfer> batchDetails(HttpServletResponse httpServletResponse,

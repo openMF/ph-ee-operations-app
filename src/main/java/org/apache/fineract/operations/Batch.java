@@ -92,5 +92,4 @@ public class Batch extends AbstractPersistableCustom<Long> {
     public Batch(Long workflowInstanceKey) {
         this.workflowInstanceKey = workflowInstanceKey;
     }
-
 }
