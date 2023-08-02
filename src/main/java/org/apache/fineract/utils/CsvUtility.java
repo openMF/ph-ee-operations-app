@@ -24,8 +24,7 @@ public final class CsvUtility {
         String headerValue = "attachment; filename=" + filename;
         response.setHeader(headerKey, headerValue);
 
-        PrintWriter printWriter = performErrorProneTask(
-                new WriteToCsvException(ErrorCode.CSV_GET_WRITER, "Unable get writer from HttpServletResponse"), response::getWriter);
+        PrintWriter printWriter = performErrorProneTask(ErrorCode.CSV_GET_WRITER, "Unable get writer from HttpServletResponse", response::getWriter);
 
         // Print writer fetch success
 

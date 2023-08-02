@@ -56,7 +56,7 @@ public final class CsvWriter<T> {
      * @see [performErrorProneTask]
      */
     private void writeCsvHeaders(String[] csvHeader) throws WriteToCsvException {
-        performErrorProneTask(new WriteToCsvException(ErrorCode.CSV_WRITE_HEADER, "Unable to write csv headers"), () -> {
+        performErrorProneTask(ErrorCode.CSV_WRITE_HEADER, "Unable to write csv headers", () -> {
             icsvBeanWriter.writeHeader(csvHeader);
             return null;
         });
@@ -74,7 +74,7 @@ public final class CsvWriter<T> {
      */
     private void writeData(String[] nameMapping, List<T> objects) throws WriteToCsvException {
         for (T data : objects) {
-            performErrorProneTask(new WriteToCsvException(ErrorCode.CSV_WRITE_DATA, "Unable to write csv headers"), () -> {
+            performErrorProneTask(ErrorCode.CSV_WRITE_DATA, "Unable to write csv headers", () -> {
                 icsvBeanWriter.write(data, nameMapping);
                 return null;
             });
@@ -88,7 +88,7 @@ public final class CsvWriter<T> {
      * @see [performErrorProneTask]
      */
     private void closeStream() throws WriteToCsvException {
-        performErrorProneTask(new WriteToCsvException(ErrorCode.CSV_STREAM, "Unable to close/flush stream"), () -> {
+        performErrorProneTask(ErrorCode.CSV_STREAM, "Unable to close/flush stream", () -> {
             icsvBeanWriter.close();
             return null;
         });
@@ -97,7 +97,8 @@ public final class CsvWriter<T> {
     /**
      * Use this function to perform the task which are prone to errors along with custom [WriteToCsvException] instance.
      *
-     * @param exception
+     * @param errorDescription
+     * @param errorCode
      *            an instance of [WriteToCsvException], which is to be thrown on error occurred
      * @param callback
      *            the task which needs to be performed under try block
@@ -107,11 +108,12 @@ public final class CsvWriter<T> {
      * @throws WriteToCsvException
      *             if callbacks throws and exception
      */
-    public static <T> T performErrorProneTask(WriteToCsvException exception, Callback<T> callback) throws WriteToCsvException {
+    public static <T> T performErrorProneTask(ErrorCode errorCode,String errorDescription, Callback<T> callback) throws WriteToCsvException {
         try {
             return callback.call();
         } catch (Exception e) {
-            throw  new WriteToCsvException(e,ErrorCode.CSV_WRITE_DATA);
+            WriteToCsvException writeToCsvException = new WriteToCsvException(errorCode, errorDescription, e);
+            throw writeToCsvException;
         }
     }
 

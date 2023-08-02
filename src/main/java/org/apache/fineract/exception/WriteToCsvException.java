@@ -21,15 +21,13 @@ public class WriteToCsvException extends Exception {
         this.errorDescription = errorDescription;
         this.developerMessage = errorDescription;
     }
-
-    public WriteToCsvException(Exception e, ErrorCode errorCode) {
-        super(e.getLocalizedMessage());
+    public WriteToCsvException(ErrorCode errorCode, String errorDescription, Throwable e) {
+        super(errorDescription);
         this.errorCode = errorCode;
-        this.errorDescription = e.getLocalizedMessage();
+        this.errorDescription = errorDescription;
         this.developerMessage = errorDescription;
+        this.setStackTrace(e.getStackTrace());
     }
-
-    public void setDeveloperMessage(String developerMessage) {}
 
     public String getErrorCode() {
         return errorCode.name();
