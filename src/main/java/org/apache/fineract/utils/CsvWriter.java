@@ -111,9 +111,7 @@ public final class CsvWriter<T> {
         try {
             return callback.call();
         } catch (Exception e) {
-            exception.setStackTrace(e.getStackTrace());
-            exception.setDeveloperMessage(e.getLocalizedMessage());
-            throw exception;
+            throw  new WriteToCsvException(e,ErrorCode.CSV_WRITE_DATA);
         }
     }
 

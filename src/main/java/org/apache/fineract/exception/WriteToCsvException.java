@@ -4,7 +4,7 @@ import org.apache.fineract.data.ErrorCode;
 
 public class WriteToCsvException extends Exception {
 
-    private String developerMessage;
+    private final String developerMessage;
     private final String errorDescription;
     private final ErrorCode errorCode;
 
@@ -22,9 +22,14 @@ public class WriteToCsvException extends Exception {
         this.developerMessage = errorDescription;
     }
 
-    public void setDeveloperMessage(String developerMessage) {
-        this.developerMessage = developerMessage;
+    public WriteToCsvException(Exception e, ErrorCode errorCode) {
+        super(e.getLocalizedMessage());
+        this.errorCode = errorCode;
+        this.errorDescription = e.getLocalizedMessage();
+        this.developerMessage = errorDescription;
     }
+
+    public void setDeveloperMessage(String developerMessage) {}
 
     public String getErrorCode() {
         return errorCode.name();

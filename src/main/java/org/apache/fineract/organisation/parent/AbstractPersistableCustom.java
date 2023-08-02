@@ -27,7 +27,7 @@ import javax.persistence.MappedSuperclass;
 import org.springframework.data.domain.Persistable;
 
 @MappedSuperclass
-public abstract class AbstractPersistableCustom<PK extends Serializable> implements Persistable<Long> {
+public abstract class AbstractPersistableCustom<K extends Serializable> implements Persistable<Long> {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
