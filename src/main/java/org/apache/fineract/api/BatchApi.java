@@ -143,9 +143,10 @@ public class BatchApi {
             log.warn("failed to parse dates {} / {}", startFrom, startTo);
             return new ArrayList<>();
         }
+        count = batchRepository.countTransaction("%", "%");
         log.info("Count data: {}", count);
 		log.info("Count data: {}", objectMapper.writeValueAsString(count));
-        return batchRepository.findAllPaged(pager);
+        return batchRepository.findAllPaged("%", "%", pager);
     }
 
     @GetMapping("/batch")

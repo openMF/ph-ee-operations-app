@@ -21,8 +21,10 @@ public interface BatchRepository extends JpaRepository<Batch, Long>, JpaSpecific
 
     List<Batch> findAllByBatchId(String batchId);
 
-	@Query(value = "SELECT bt FROM Batch bt")
-	List<Batch> findAllPaged(Pageable pageable);
+	@Query(value = "SELECT bt FROM Batch bt " +
+            "WHERE bt.registeringInstitutionId LIKE :registeringInstitutionId AND " +
+            "bt.payerFsp LIKE :payerFsp")
+	List<Batch> findAllPaged(String registeringInstitutionId, String payerFsp, Pageable pageable);
 
     @Query(value = "SELECT bt FROM Batch bt WHERE bt.startedAt >= :dateFrom AND " +
             "bt.registeringInstitutionId LIKE :registeringInstitutionId AND " +
@@ -38,6 +40,12 @@ public interface BatchRepository extends JpaRepository<Batch, Long>, JpaSpecific
             "bt.registeringInstitutionId LIKE :registeringInstitutionId AND " +
             "bt.payerFsp LIKE :payerFsp")
     List<Batch> findAllFilterDateBetween(Date dateFrom, Date dateTo, String registeringInstitutionId, String payerFsp, Pageable pageable);
+
+
+    @Query(value = "SELECT COUNT(bt) as totalCount, SUM(bt.totalTransactions) as totalTransactions FROM Batch bt " +
+            "WHERE bt.registeringInstitutionId LIKE :registeringInstitutionId AND " +
+            "bt.payerFsp LIKE :payerFsp")
+    HashMap<String, Integer> countTransaction(String registeringInstitutionId, String payerFsp);
 
     @Query(value = "SELECT COUNT(bt) as totalCount, SUM(bt.totalTransactions) as totalTransactions FROM Batch bt " +
             "WHERE bt.startedAt >= :dateFrom AND " +
