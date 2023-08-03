@@ -22,23 +22,23 @@ public interface BatchRepository extends JpaRepository<Batch, Long>, JpaSpecific
     List<Batch> findAllByBatchId(String batchId);
 
 	@Query(value = "SELECT bt FROM Batch bt " +
-            "WHERE bt.registeringInstitutionId LIKE :registeringInstitutionId AND " +
-            "bt.payerFsp LIKE :payerFsp")
+            "WHERE (bt.registeringInstitutionId LIKE :registeringInstitutionId or bt.registeringInstitutionId IS NULL) AND " +
+            "(bt.payerFsp LIKE :payerFsp or bt.payerFsp IS NULL)")
 	List<Batch> findAllPaged(String registeringInstitutionId, String payerFsp, Pageable pageable);
 
     @Query(value = "SELECT bt FROM Batch bt WHERE bt.startedAt >= :dateFrom AND " +
-            "bt.registeringInstitutionId LIKE :registeringInstitutionId AND " +
-            "bt.payerFsp LIKE :payerFsp")
+            "(bt.registeringInstitutionId LIKE :registeringInstitutionId or bt.registeringInstitutionId IS NULL) AND " +
+            "(bt.payerFsp LIKE :payerFsp or bt.payerFsp IS NULL)")
     List<Batch> findAllFilterDateFrom(Date dateFrom, String registeringInstitutionId, String payerFsp, Pageable pageable);
 
     @Query(value = "SELECT bt FROM Batch bt WHERE bt.startedAt <= :dateTo AND " +
-            "bt.registeringInstitutionId LIKE :registeringInstitutionId AND " +
-            "bt.payerFsp LIKE :payerFsp")
+            "(bt.registeringInstitutionId LIKE :registeringInstitutionId or bt.registeringInstitutionId IS NULL) AND " +
+            "(bt.payerFsp LIKE :payerFsp or bt.payerFsp IS NULL)")
     List<Batch> findAllFilterDateTo(Date dateTo, String registeringInstitutionId, String payerFsp, Pageable pageable);
 
     @Query(value = "SELECT bt FROM Batch bt WHERE bt.startedAt BETWEEN :dateFrom AND :dateTo AND " +
-            "bt.registeringInstitutionId LIKE :registeringInstitutionId AND " +
-            "bt.payerFsp LIKE :payerFsp")
+            "(bt.registeringInstitutionId LIKE :registeringInstitutionId or bt.registeringInstitutionId IS NULL) AND " +
+            "(bt.payerFsp LIKE :payerFsp or bt.payerFsp IS NULL)")
     List<Batch> findAllFilterDateBetween(Date dateFrom, Date dateTo, String registeringInstitutionId, String payerFsp, Pageable pageable);
 
 
@@ -49,20 +49,20 @@ public interface BatchRepository extends JpaRepository<Batch, Long>, JpaSpecific
 
     @Query(value = "SELECT COUNT(bt) as totalCount, SUM(bt.totalTransactions) as totalTransactions FROM Batch bt " +
             "WHERE bt.startedAt >= :dateFrom AND " +
-            "bt.registeringInstitutionId LIKE :registeringInstitutionId AND " +
-            "bt.payerFsp LIKE :payerFsp")
+            "(bt.registeringInstitutionId LIKE :registeringInstitutionId or bt.registeringInstitutionId IS NULL) AND " +
+            "(bt.payerFsp LIKE :payerFsp or bt.payerFsp IS NULL)")
     Long countTransactionDateFrom(Date dateFrom, String registeringInstitutionId, String payerFsp);
 
     @Query(value = "SELECT COUNT(bt) as totalCount, SUM(bt.totalTransactions) as totalTransactions FROM Batch bt " +
             "WHERE bt.startedAt <= :dateTo AND " +
             "(bt.registeringInstitutionId LIKE :registeringInstitutionId or bt.registeringInstitutionId IS NULL) AND " +
-            "(bt.payerFsp LIKE :payerFsp)")
+            "(bt.payerFsp LIKE :payerFsp or bt.payerFsp IS NULL)")
     Long countTransactionDateTo(Date dateTo, String registeringInstitutionId, String payerFsp);
 
     @Query(value = "SELECT COUNT(bt) as totalCount, SUM(bt.totalTransactions) as totalTransactions FROM Batch bt " +
             "WHERE bt.startedAt BETWEEN :dateFrom AND :dateTo AND " +
-            "bt.registeringInstitutionId LIKE :registeringInstitutionId AND " +
-            "bt.payerFsp LIKE :payerFsp")
+            "(bt.registeringInstitutionId LIKE :registeringInstitutionId or bt.registeringInstitutionId IS NULL) AND " +
+            "(bt.payerFsp LIKE :payerFsp or bt.payerFsp IS NULL)")
     Long countTransactionDateBetween(Date dateFrom, Date dateTo, String registeringInstitutionId, String payerFsp);
 
 }
