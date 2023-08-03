@@ -115,36 +115,40 @@ public class BatchApi {
         }
         BatchPaginatedResponse batchPaginatedResponse = new BatchPaginatedResponse();
         Long count;
+        List<Batch> batches;
         try {
             if (startFrom != null && startTo != null) {
                 count = batchRepository.countTransactionDateBetween(
                         dateFormat().parse(startFrom), dateFormat().parse(startTo),
                         "%", "%");
-                batchPaginatedResponse.setData(batchRepository.findAllFilterDateBetween(
+               batches = batchRepository.findAllFilterDateBetween(
                         dateFormat().parse(startFrom), dateFormat().parse(startTo),
                         "%", "%",
-                        pager));
+                        pager);
             } else if (startFrom != null) {
                 log.info("Date: {}", startFrom);
                 count = batchRepository.countTransactionDateFrom(
                         startFrom,
                         "%", "%");
-                batchPaginatedResponse.setData(batchRepository.findAllFilterDateFrom(
+                batches = batchRepository.findAllFilterDateFrom(
                         startFrom,
-                        "%", "%", pager));
+                        "%", "%", pager);
             } else if (startTo != null) {
                 count = batchRepository.countTransactionDateTo(
                         dateFormat().parse(startTo),
                         "%", "%");
-                batchPaginatedResponse.setData(batchRepository.findAllFilterDateTo(
+                batches = batchRepository.findAllFilterDateTo(
                         dateFormat().parse(startTo),
-                        "%", "%", pager));
+                        "%", "%", pager);
+            } else {
+                count = batchRepository.countTransaction("%", "%");
+                batches = batchRepository.findAllPaged("%", "%", pager);
             }
         } catch (Exception e) {
             log.warn("failed to parse dates {} / {}", startFrom, startTo);
+            return null;
         }
-        count = batchRepository.countTransaction("%", "%");
-        batchPaginatedResponse.setData(batchRepository.findAllPaged("%", "%", pager));
+        batchPaginatedResponse.setData(batches);
         batchPaginatedResponse.setTotalBatches(count);
         return batchPaginatedResponse;
     }
