@@ -125,11 +125,12 @@ public class BatchApi {
                         "%", "%",
                         pager));
             } else if (startFrom != null) {
+                log.info("Date: {}", startFrom);
                 count = batchRepository.countTransactionDateFrom(
-                        dateFormat().parse(startFrom),
+                        startFrom,
                         "%", "%");
                 batchPaginatedResponse.setData(batchRepository.findAllFilterDateFrom(
-                        dateFormat().parse(startFrom),
+                        startFrom,
                         "%", "%", pager));
             } else if (startTo != null) {
                 count = batchRepository.countTransactionDateTo(
