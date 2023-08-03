@@ -20,8 +20,8 @@ public interface BatchRepository extends JpaRepository<Batch, Long>, JpaSpecific
 
     List<Batch> findAllByBatchId(String batchId);
 
-	@Query(value = "SELECT bt FROM Batch bt ORDER BY :orderBy")
-	List<Batch> findAll(String orderBy, Pageable pageable);
+	@Query(value = "SELECT bt FROM Batch bt")
+	List<Batch> findAllPaged(Pageable pageable);
 
     @Query(value = "SELECT bt FROM Batch bt WHERE bt.startedAt > :dateFrom ORDER BY :orderBy")
     List<Batch> findAllFilterDateFrom(Date dateFrom, String orderBy, Pageable pageable);

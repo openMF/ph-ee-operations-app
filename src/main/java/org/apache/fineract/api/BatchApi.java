@@ -86,10 +86,24 @@ public class BatchApi {
                                 @RequestParam(value = "dateFrom", required = false) String startFrom,
                                 @RequestParam(value = "dateTo", required = false) String startTo) {
 
+        Sort.Direction sortDirection = null;
+        String sortedBy = null;
+        if (sort.contains("+") && sort.split("\\+").length == 2) {
+            sortDirection = Sort.Direction.ASC;
+            sortedBy = sort.split("\\+")[1];
+        } else if (sort.contains("-") && sort.split("-").length == 2) {
+            sortDirection = Sort.Direction.DESC;
+            sortedBy = sort.split("-")[1];
+        } else {
+            sortDirection = Sort.Direction.ASC;
+            sortedBy = sort;
+        }
+        sortedBy = sortedBy.replace(" ", "");
+        log.info("Sorting by: {} and Sorting direction: {}", sortedBy, sortDirection.name());
         Integer page = Math.floorDiv(offset, limit);
-        Sort sortObject = new Sort(Sort.Direction.ASC, "completedAt");
+        Sort sortObject = new Sort(sortDirection, sortedBy);
         PageRequest pager = PageRequest.of(page, limit, sortObject);
-        return batchRepository.findAll("completedAt ASC", pager);
+        return batchRepository.findAllPaged(pager);
 
         /*List<Specification<Batch>> specifications = new ArrayList<>();
 
