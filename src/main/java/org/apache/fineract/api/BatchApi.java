@@ -78,16 +78,9 @@ public class BatchApi {
         return batchRepository.findAll(specifications, pager);
     }*/
 
-    @GetMapping("/batches")
-    public List<Batch> getBatch123(@RequestParam(value = "offset", required = false, defaultValue = "0") Integer offset,
-                                   @RequestParam(value = "limit", required = false, defaultValue = "10") Integer limit,
-                                   @RequestParam(value = "sort", required = false, defaultValue = "+completedAt")
-                                       String sort,
-                                @RequestParam(value = "dateFrom", required = false) String startFrom,
-                                @RequestParam(value = "dateTo", required = false) String startTo) {
-
-        Sort.Direction sortDirection = null;
-        String sortedBy = null;
+    private Sort getSortObject(String sort) {
+        Sort.Direction sortDirection;
+        String sortedBy;
         if (sort.contains("+") && sort.split("\\+").length == 2) {
             sortDirection = Sort.Direction.ASC;
             sortedBy = sort.split("\\+")[1];
@@ -100,14 +93,20 @@ public class BatchApi {
         }
         sortedBy = sortedBy.replace(" ", "");
         log.info("Sorting by: {} and Sorting direction: {}", sortedBy, sortDirection.name());
-        Integer page = Math.floorDiv(offset, limit);
-        Sort sortObject = new Sort(sortDirection, sortedBy);
+        return new Sort(sortDirection, sortedBy);
+    }
+
+    @GetMapping("/batches")
+    public List<Batch> getBatch123(@RequestParam(value = "offset", required = false, defaultValue = "0") Integer offset,
+                                   @RequestParam(value = "limit", required = false, defaultValue = "10") Integer limit,
+                                   @RequestParam(value = "sort", required = false, defaultValue = "+completedAt")
+                                       String sort,
+                                @RequestParam(value = "dateFrom", required = false) String startFrom,
+                                @RequestParam(value = "dateTo", required = false) String startTo) throws JsonProcessingException {
+
+        Sort sortObject = getSortObject(sort);
+        int page = Math.floorDiv(offset, limit);
         PageRequest pager = PageRequest.of(page, limit, sortObject);
-        return batchRepository.findAllPaged(pager);
-
-        /*List<Specification<Batch>> specifications = new ArrayList<>();
-
-        specifications.add(BatchSpecs.match(Batch_.subBatchId, null));
 
         if (startFrom != null) {
             startFrom = dateUtil.getUTCFormat(startFrom);
@@ -115,56 +114,38 @@ public class BatchApi {
         if (startTo != null) {
             startTo = dateUtil.getUTCFormat(startTo);
         }
+        HashMap<String, Integer> count = new HashMap<>();
         try {
             if (startFrom != null && startTo != null) {
-                specifications.add(BatchSpecs.between(Batch_.startedAt, dateFormat().parse(startFrom), dateFormat().parse(startTo)));
+                count = batchRepository.countTransactionDateBetween(
+                        dateFormat().parse(startFrom), dateFormat().parse(startTo),
+                        "%", "%");
+                return batchRepository.findAllFilterDateBetween(
+                        dateFormat().parse(startFrom), dateFormat().parse(startTo),
+                        "%", "%",
+                        pager);
             } else if (startFrom != null) {
-                specifications.add(BatchSpecs.later(Batch_.startedAt, dateFormat().parse(startFrom)));
+                count = batchRepository.countTransactionDateFrom(
+                        dateFormat().parse(startFrom),
+                        "%", "%");
+                return batchRepository.findAllFilterDateFrom(
+                        dateFormat().parse(startFrom),
+                        "%", "%", pager);
             } else if (startTo != null) {
-                specifications.add(BatchSpecs.earlier(Batch_.startedAt, dateFormat().parse(startTo)));
+                count = batchRepository.countTransactionDateTo(
+                        dateFormat().parse(startTo),
+                        "%", "%");
+                return batchRepository.findAllFilterDateTo(
+                        dateFormat().parse(startTo),
+                        "%", "%", pager);
             }
         } catch (Exception e) {
             log.warn("failed to parse dates {} / {}", startFrom, startTo);
+            return new ArrayList<>();
         }
-
-
-        Sort.Direction sortDirection = null;
-        String sortedBy = null;
-        if (sort.contains("+") && sort.split("\\+").length == 2) {
-            sortDirection = Sort.Direction.ASC;
-            sortedBy = sort.split("\\+")[1];
-        } else if (sort.contains("-") && sort.split("-").length == 2) {
-			sortDirection = Sort.Direction.DESC;
-            sortedBy = sort.split("-")[1];
-        } else {
-            sortDirection = Sort.Direction.ASC;
-            sortedBy = sort;
-        }
-        sortedBy = sortedBy.replace(" ", "");
-        log.info("Sorting by: {} and Sorting direction: {}", sortedBy, sortDirection.name());
-
-        Integer page = Math.floorDiv(offset, limit);
-        Sort sortObject = new Sort(sortDirection, sortedBy);
-        PageRequest pager = PageRequest.of(page, limit, sortObject);
-        Page<Batch> batchPage;
-        if (specifications.size() > 0) {
-            Specification<Batch> compiledBatchSpecification = specifications.get(0);
-            for (int i = 0; i < specifications.size(); i++) {
-                compiledBatchSpecification = compiledBatchSpecification.and(specifications.get(i));
-            }
-            batchPage = batchRepository.findAll(compiledBatchSpecification, pager);
-        } else {
-            batchPage = batchRepository.findAll(pager);
-        }
-
-
-        try {
-            System.out.println(objectMapper.writeValueAsString(page));
-            return objectMapper.writeValueAsString(page);
-        } catch (JsonProcessingException e) {
-            e.printStackTrace();
-            return e.getMessage();
-        }*/
+        log.info("Count data: {}", count);
+		log.info("Count data: {}", objectMapper.writeValueAsString(count));
+        return batchRepository.findAllPaged(pager);
     }
 
     @GetMapping("/batch")

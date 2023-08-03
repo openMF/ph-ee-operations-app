@@ -9,6 +9,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.lang.Nullable;
 
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
 
 public interface BatchRepository extends JpaRepository<Batch, Long>, JpaSpecificationExecutor<Batch> {
@@ -23,12 +24,37 @@ public interface BatchRepository extends JpaRepository<Batch, Long>, JpaSpecific
 	@Query(value = "SELECT bt FROM Batch bt")
 	List<Batch> findAllPaged(Pageable pageable);
 
-    @Query(value = "SELECT bt FROM Batch bt WHERE bt.startedAt > :dateFrom ORDER BY :orderBy")
-    List<Batch> findAllFilterDateFrom(Date dateFrom, String orderBy, Pageable pageable);
+    @Query(value = "SELECT bt FROM Batch bt WHERE bt.startedAt >= :dateFrom AND " +
+            "bt.registeringInstitutionId LIKE :registeringInstitutionId AND " +
+            "bt.payerFsp LIKE :payerFsp")
+    List<Batch> findAllFilterDateFrom(Date dateFrom, String registeringInstitutionId, String payerFsp, Pageable pageable);
 
-    @Query(value = "SELECT bt FROM Batch bt WHERE bt.startedAt < :dateTo ORDER BY :orderBy")
-    List<Batch> findAllFilterDateTo(Date dateTo, String orderBy, Pageable pageable);
+    @Query(value = "SELECT bt FROM Batch bt WHERE bt.startedAt <= :dateTo AND " +
+            "bt.registeringInstitutionId LIKE :registeringInstitutionId AND " +
+            "bt.payerFsp LIKE :payerFsp")
+    List<Batch> findAllFilterDateTo(Date dateTo, String registeringInstitutionId, String payerFsp, Pageable pageable);
 
-    @Query(value = "SELECT bt FROM Batch bt WHERE bt.startedAt BETWEEN :dateFrom AND :dateTo ORDER BY :orderBy")
-    List<Batch> findAllFilterDateBetween(Date dateFrom, Date dateTo, String orderBy, Pageable pageable);
+    @Query(value = "SELECT bt FROM Batch bt WHERE bt.startedAt BETWEEN :dateFrom AND :dateTo AND " +
+            "bt.registeringInstitutionId LIKE :registeringInstitutionId AND " +
+            "bt.payerFsp LIKE :payerFsp")
+    List<Batch> findAllFilterDateBetween(Date dateFrom, Date dateTo, String registeringInstitutionId, String payerFsp, Pageable pageable);
+
+    @Query(value = "SELECT COUNT(bt) as count, SUM(bt.totalTransactions) as totalTransactions FROM Batch bt " +
+            "WHERE bt.startedAt >= :dateFrom AND " +
+            "bt.registeringInstitutionId LIKE :registeringInstitutionId AND " +
+            "bt.payerFsp LIKE :payerFsp")
+    HashMap<String, Integer> countTransactionDateFrom(Date dateFrom, String registeringInstitutionId, String payerFsp);
+
+    @Query(value = "SELECT COUNT(bt) as count, SUM(bt.totalTransactions) as totalTransactions FROM Batch bt " +
+            "WHERE bt.startedAt <= :dateTo AND " +
+            "bt.registeringInstitutionId LIKE :registeringInstitutionId AND " +
+            "bt.payerFsp LIKE :payerFsp")
+    HashMap<String, Integer> countTransactionDateTo(Date dateFrom, String registeringInstitutionId, String payerFsp);
+
+    @Query(value = "SELECT COUNT(bt) as count, SUM(bt.totalTransactions) as totalTransactions FROM Batch bt " +
+            "WHERE bt.startedAt BETWEEN :dateFrom AND :dateTo AND " +
+            "bt.registeringInstitutionId LIKE :registeringInstitutionId AND " +
+            "bt.payerFsp LIKE :payerFsp")
+    HashMap<String, Integer> countTransactionDateBetween(Date dateFrom, Date dateTo, String registeringInstitutionId, String payerFsp);
+
 }
