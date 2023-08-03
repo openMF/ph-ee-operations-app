@@ -79,14 +79,19 @@ public class BatchApi {
     }*/
 
     @GetMapping("/batches")
-    public String getBatch123(@RequestParam(value = "offset", required = false, defaultValue = "0") Integer offset,
+    public List<Batch> getBatch123(@RequestParam(value = "offset", required = false, defaultValue = "0") Integer offset,
                                    @RequestParam(value = "limit", required = false, defaultValue = "10") Integer limit,
                                    @RequestParam(value = "sort", required = false, defaultValue = "+completedAt")
                                        String sort,
                                 @RequestParam(value = "dateFrom", required = false) String startFrom,
                                 @RequestParam(value = "dateTo", required = false) String startTo) {
 
-        List<Specification<Batch>> specifications = new ArrayList<>();
+        Integer page = Math.floorDiv(offset, limit);
+        Sort sortObject = new Sort(Sort.Direction.ASC, "completedAt");
+        PageRequest pager = PageRequest.of(page, limit, sortObject);
+        return batchRepository.findAll("completedAt ASC", pager);
+
+        /*List<Specification<Batch>> specifications = new ArrayList<>();
 
         specifications.add(BatchSpecs.match(Batch_.subBatchId, null));
 
@@ -145,7 +150,7 @@ public class BatchApi {
         } catch (JsonProcessingException e) {
             e.printStackTrace();
             return e.getMessage();
-        }
+        }*/
     }
 
     @GetMapping("/batch")
