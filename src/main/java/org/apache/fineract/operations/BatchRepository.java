@@ -43,8 +43,8 @@ public interface BatchRepository extends JpaRepository<Batch, Long>, JpaSpecific
 
 
     @Query(value = "SELECT COUNT(bt) as totalCount, SUM(bt.totalTransactions) as totalTransactions FROM Batch bt " +
-            "WHERE bt.registeringInstitutionId LIKE :registeringInstitutionId AND " +
-            "bt.payerFsp LIKE :payerFsp")
+            "WHERE (bt.registeringInstitutionId LIKE :registeringInstitutionId or bt.registeringInstitutionId IS NULL) AND " +
+            "(bt.payerFsp LIKE :payerFsp OR bt.payerFsp IS NULL)")
     Long countTransaction(String registeringInstitutionId, String payerFsp);
 
     @Query(value = "SELECT COUNT(bt) as totalCount, SUM(bt.totalTransactions) as totalTransactions FROM Batch bt " +
@@ -55,8 +55,8 @@ public interface BatchRepository extends JpaRepository<Batch, Long>, JpaSpecific
 
     @Query(value = "SELECT COUNT(bt) as totalCount, SUM(bt.totalTransactions) as totalTransactions FROM Batch bt " +
             "WHERE bt.startedAt <= :dateTo AND " +
-            "bt.registeringInstitutionId LIKE :registeringInstitutionId AND " +
-            "bt.payerFsp LIKE :payerFsp")
+            "(bt.registeringInstitutionId LIKE :registeringInstitutionId or bt.registeringInstitutionId IS NULL) AND " +
+            "(bt.payerFsp LIKE :payerFsp)")
     Long countTransactionDateTo(Date dateTo, String registeringInstitutionId, String payerFsp);
 
     @Query(value = "SELECT COUNT(bt) as totalCount, SUM(bt.totalTransactions) as totalTransactions FROM Batch bt " +
