@@ -49,7 +49,7 @@ public interface BatchRepository extends JpaRepository<Batch, Long>, JpaSpecific
             "WHERE bt.startedAt <= :dateTo AND " +
             "bt.registeringInstitutionId LIKE :registeringInstitutionId AND " +
             "bt.payerFsp LIKE :payerFsp")
-    HashMap<String, Integer> countTransactionDateTo(Date dateFrom, String registeringInstitutionId, String payerFsp);
+    HashMap<String, Integer> countTransactionDateTo(Date dateTo, String registeringInstitutionId, String payerFsp);
 
     @Query(value = "SELECT COUNT(bt) as totalCount, SUM(bt.totalTransactions) as totalTransactions FROM Batch bt " +
             "WHERE bt.startedAt BETWEEN :dateFrom AND :dateTo AND " +
