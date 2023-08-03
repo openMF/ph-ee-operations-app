@@ -29,7 +29,7 @@ public interface BatchRepository extends JpaRepository<Batch, Long>, JpaSpecific
     @Query(value = "SELECT bt FROM Batch bt WHERE bt.startedAt >= :dateFrom AND " +
             "(bt.registeringInstitutionId LIKE :registeringInstitutionId or bt.registeringInstitutionId IS NULL) AND " +
             "(bt.payerFsp LIKE :payerFsp or bt.payerFsp IS NULL)")
-    List<Batch> findAllFilterDateFrom(String dateFrom, String registeringInstitutionId, String payerFsp, Pageable pageable);
+    List<Batch> findAllFilterDateFrom(Date dateFrom, String registeringInstitutionId, String payerFsp, Pageable pageable);
 
     @Query(value = "SELECT bt FROM Batch bt WHERE bt.startedAt <= :dateTo AND " +
             "(bt.registeringInstitutionId LIKE :registeringInstitutionId or bt.registeringInstitutionId IS NULL) AND " +
@@ -51,7 +51,7 @@ public interface BatchRepository extends JpaRepository<Batch, Long>, JpaSpecific
             "WHERE bt.startedAt >= :dateFrom AND " +
             "(bt.registeringInstitutionId LIKE :registeringInstitutionId or bt.registeringInstitutionId IS NULL) AND " +
             "(bt.payerFsp LIKE :payerFsp or bt.payerFsp IS NULL)")
-    Long countTransactionDateFrom(String dateFrom, String registeringInstitutionId, String payerFsp);
+    Long countTransactionDateFrom(Date dateFrom, String registeringInstitutionId, String payerFsp);
 
     @Query(value = "SELECT COUNT(bt) as totalCount, SUM(bt.totalTransactions) as totalTransactions FROM Batch bt " +
             "WHERE bt.startedAt <= :dateTo AND " +

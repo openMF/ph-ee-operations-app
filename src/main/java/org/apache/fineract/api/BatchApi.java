@@ -128,10 +128,10 @@ public class BatchApi {
             } else if (startFrom != null) {
                 log.info("Date: {}", startFrom);
                 count = batchRepository.countTransactionDateFrom(
-                        startFrom,
+                        dateFormat().parse(startFrom),
                         "%", "%");
                 batches = batchRepository.findAllFilterDateFrom(
-                        startFrom,
+                        dateFormat().parse(startFrom),
                         "%", "%", pager);
             } else if (startTo != null) {
                 count = batchRepository.countTransactionDateTo(
