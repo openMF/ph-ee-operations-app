@@ -45,24 +45,24 @@ public interface BatchRepository extends JpaRepository<Batch, Long>, JpaSpecific
     @Query(value = "SELECT COUNT(bt) as totalCount, SUM(bt.totalTransactions) as totalTransactions FROM Batch bt " +
             "WHERE bt.registeringInstitutionId LIKE :registeringInstitutionId AND " +
             "bt.payerFsp LIKE :payerFsp")
-    HashMap<String, Integer> countTransaction(String registeringInstitutionId, String payerFsp);
+    Long countTransaction(String registeringInstitutionId, String payerFsp);
 
     @Query(value = "SELECT COUNT(bt) as totalCount, SUM(bt.totalTransactions) as totalTransactions FROM Batch bt " +
             "WHERE bt.startedAt >= :dateFrom AND " +
             "bt.registeringInstitutionId LIKE :registeringInstitutionId AND " +
             "bt.payerFsp LIKE :payerFsp")
-    HashMap<String, Integer> countTransactionDateFrom(Date dateFrom, String registeringInstitutionId, String payerFsp);
+    Long countTransactionDateFrom(Date dateFrom, String registeringInstitutionId, String payerFsp);
 
     @Query(value = "SELECT COUNT(bt) as totalCount, SUM(bt.totalTransactions) as totalTransactions FROM Batch bt " +
             "WHERE bt.startedAt <= :dateTo AND " +
             "bt.registeringInstitutionId LIKE :registeringInstitutionId AND " +
             "bt.payerFsp LIKE :payerFsp")
-    HashMap<String, Integer> countTransactionDateTo(Date dateTo, String registeringInstitutionId, String payerFsp);
+    Long countTransactionDateTo(Date dateTo, String registeringInstitutionId, String payerFsp);
 
     @Query(value = "SELECT COUNT(bt) as totalCount, SUM(bt.totalTransactions) as totalTransactions FROM Batch bt " +
             "WHERE bt.startedAt BETWEEN :dateFrom AND :dateTo AND " +
             "bt.registeringInstitutionId LIKE :registeringInstitutionId AND " +
             "bt.payerFsp LIKE :payerFsp")
-    HashMap<String, Integer> countTransactionDateBetween(Date dateFrom, Date dateTo, String registeringInstitutionId, String payerFsp);
+    Long countTransactionDateBetween(Date dateFrom, Date dateTo, String registeringInstitutionId, String payerFsp);
 
 }

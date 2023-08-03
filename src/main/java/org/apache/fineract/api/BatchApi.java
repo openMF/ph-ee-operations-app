@@ -114,7 +114,7 @@ public class BatchApi {
         if (startTo != null) {
             startTo = dateUtil.getUTCFormat(startTo);
         }
-        HashMap<String, Integer> count = new HashMap<>();
+        Long count;
         try {
             if (startFrom != null && startTo != null) {
                 count = batchRepository.countTransactionDateBetween(
@@ -145,7 +145,6 @@ public class BatchApi {
         }
         count = batchRepository.countTransaction("%", "%");
         log.info("Count data: {}", count);
-		log.info("Count data: {}", objectMapper.writeValueAsString(count));
         return batchRepository.findAllPaged("%", "%", pager);
     }
 
