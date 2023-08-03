@@ -97,13 +97,12 @@ public class BatchApi {
     }
 
     @GetMapping("/batches")
-    public List<Batch> getBatch123(@RequestParam(value = "offset", required = false, defaultValue = "0") Integer offset,
+    public BatchPaginatedResponse getBatch123(@RequestParam(value = "offset", required = false, defaultValue = "0") Integer offset,
                                    @RequestParam(value = "limit", required = false, defaultValue = "10") Integer limit,
                                    @RequestParam(value = "sort", required = false, defaultValue = "+completedAt")
                                        String sort,
                                 @RequestParam(value = "dateFrom", required = false) String startFrom,
                                 @RequestParam(value = "dateTo", required = false) String startTo) throws JsonProcessingException {
-
         Sort sortObject = getSortObject(sort);
         int page = Math.floorDiv(offset, limit);
         PageRequest pager = PageRequest.of(page, limit, sortObject);
@@ -114,38 +113,39 @@ public class BatchApi {
         if (startTo != null) {
             startTo = dateUtil.getUTCFormat(startTo);
         }
+        BatchPaginatedResponse batchPaginatedResponse = new BatchPaginatedResponse();
         Long count;
         try {
             if (startFrom != null && startTo != null) {
                 count = batchRepository.countTransactionDateBetween(
                         dateFormat().parse(startFrom), dateFormat().parse(startTo),
                         "%", "%");
-                return batchRepository.findAllFilterDateBetween(
+                batchPaginatedResponse.setData(batchRepository.findAllFilterDateBetween(
                         dateFormat().parse(startFrom), dateFormat().parse(startTo),
                         "%", "%",
-                        pager);
+                        pager));
             } else if (startFrom != null) {
                 count = batchRepository.countTransactionDateFrom(
                         dateFormat().parse(startFrom),
                         "%", "%");
-                return batchRepository.findAllFilterDateFrom(
+                batchPaginatedResponse.setData(batchRepository.findAllFilterDateFrom(
                         dateFormat().parse(startFrom),
-                        "%", "%", pager);
+                        "%", "%", pager));
             } else if (startTo != null) {
                 count = batchRepository.countTransactionDateTo(
                         dateFormat().parse(startTo),
                         "%", "%");
-                return batchRepository.findAllFilterDateTo(
+                batchPaginatedResponse.setData(batchRepository.findAllFilterDateTo(
                         dateFormat().parse(startTo),
-                        "%", "%", pager);
+                        "%", "%", pager));
             }
         } catch (Exception e) {
             log.warn("failed to parse dates {} / {}", startFrom, startTo);
-            return new ArrayList<>();
         }
         count = batchRepository.countTransaction("%", "%");
-        log.info("Count data: {}", count);
-        return batchRepository.findAllPaged("%", "%", pager);
+        batchPaginatedResponse.setData(batchRepository.findAllPaged("%", "%", pager));
+        batchPaginatedResponse.setTotalBatches(count);
+        return batchPaginatedResponse;
     }
 
     @GetMapping("/batch")
