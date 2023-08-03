@@ -6,7 +6,7 @@ import org.springframework.data.jpa.repository.Query;
 
 import java.util.List;
 
-public interface BatchRepository extends JpaRepository<Batch, Long>, JpaSpecificationExecutor {
+public interface BatchRepository extends JpaRepository<Batch, Long>, JpaSpecificationExecutor<Batch> {
 
     Batch findByWorkflowInstanceKey(Long workflowInstanceKey);
 

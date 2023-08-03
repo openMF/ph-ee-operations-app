@@ -1,5 +1,7 @@
 package org.apache.fineract.api;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.fineract.config.PaymentModeConfiguration;
@@ -52,6 +54,9 @@ public class BatchApi {
     @Autowired
     private DateUtil dateUtil;
 
+    @Autowired
+    private ObjectMapper objectMapper;
+
     @Value("${application.bucket-name}")
     private String bucketName;
 
@@ -74,7 +79,7 @@ public class BatchApi {
     }*/
 
     @GetMapping("/batches")
-    public Page<Batch> getBatch123(@RequestParam(value = "offset", required = false, defaultValue = "0") Integer offset,
+    public String getBatch123(@RequestParam(value = "offset", required = false, defaultValue = "0") Integer offset,
                                    @RequestParam(value = "limit", required = false, defaultValue = "10") Integer limit,
                                    @RequestParam(value = "sort", required = false, defaultValue = "+completedAt")
                                        String sort,
@@ -82,6 +87,8 @@ public class BatchApi {
                                 @RequestParam(value = "dateTo", required = false) String startTo) {
 
         List<Specification<Batch>> specifications = new ArrayList<>();
+
+        specifications.add(BatchSpecs.match(Batch_.subBatchId, null));
 
         if (startFrom != null) {
             startFrom = dateUtil.getUTCFormat(startFrom);
@@ -106,7 +113,7 @@ public class BatchApi {
         String sortedBy = null;
         if (sort.contains("+") && sort.split("\\+").length == 2) {
             sortDirection = Sort.Direction.ASC;
-            sortedBy = sort.split("/+")[1];
+            sortedBy = sort.split("\\+")[1];
         } else if (sort.contains("-") && sort.split("-").length == 2) {
 			sortDirection = Sort.Direction.DESC;
             sortedBy = sort.split("-")[1];
@@ -131,7 +138,14 @@ public class BatchApi {
             batchPage = batchRepository.findAll(pager);
         }
 
-        return batchPage;
+
+        try {
+            System.out.println(objectMapper.writeValueAsString(page));
+            return objectMapper.writeValueAsString(page);
+        } catch (JsonProcessingException e) {
+            e.printStackTrace();
+            return e.getMessage();
+        }
     }
 
     @GetMapping("/batch")
