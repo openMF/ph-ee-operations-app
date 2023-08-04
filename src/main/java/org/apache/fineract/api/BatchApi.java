@@ -101,10 +101,8 @@ public class BatchApi {
                                        String sort,
                                 @RequestParam(value = "dateFrom", required = false) String startFrom,
                                 @RequestParam(value = "dateTo", required = false) String startTo,
-                                @RequestParam(value = "registeringInstitutionId", required = false, defaultValue = "") String registeringInstituteId,
-                                @RequestParam(value = "payerFsp", required = false, defaultValue = "") String payerFsp) {
-        registeringInstituteId = registeringInstituteId + "%";
-        payerFsp = payerFsp + "%";
+                                @RequestParam(value = "registeringInstitutionId", required = false, defaultValue = "%") String registeringInstituteId,
+                                @RequestParam(value = "payerFsp", required = false, defaultValue = "%") String payerFsp) {
         log.info("Registering Id: {}, PyaerFsp: {}", registeringInstituteId, payerFsp);
         Sort sortObject = getSortObject(sort);
         int page = Math.floorDiv(offset, limit);
