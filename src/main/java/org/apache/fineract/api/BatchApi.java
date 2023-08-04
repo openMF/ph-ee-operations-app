@@ -100,7 +100,7 @@ public class BatchApi {
                                    @RequestParam(value = "sort", required = false, defaultValue = "+completedAt")
                                        String sort,
                                 @RequestParam(value = "dateFrom", required = false) String startFrom,
-                                @RequestParam(value = "dateTo", required = false) String startTo) throws JsonProcessingException {
+                                @RequestParam(value = "dateTo", required = false) String startTo) {
         Sort sortObject = getSortObject(sort);
         int page = Math.floorDiv(offset, limit);
         PageRequest pager = PageRequest.of(page, limit, sortObject);
