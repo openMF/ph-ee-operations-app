@@ -34,4 +34,20 @@ public class BatchPaginatedResponse {
             this.totalAmount = 0;
         }
     }
+
+    public void setTotalApprovedCount(Long totalApprovedCount) {
+        if (totalApprovedCount != null) {
+            this.totalApprovedCount = totalApprovedCount;
+        } else {
+            this.totalApprovedCount = 0;
+        }
+    }
+
+    public void setTotalApprovedAmount(Long totalApprovedAmount) {
+        if (totalApprovedAmount != null) {
+            this.totalApprovedAmount = totalApprovedAmount;
+        } else {
+            this.totalApprovedAmount = 0;
+        }
+    }
 }
