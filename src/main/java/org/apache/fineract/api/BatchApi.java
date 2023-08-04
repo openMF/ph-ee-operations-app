@@ -168,6 +168,7 @@ public class BatchApi {
             log.warn("failed to parse dates {} / {}", startFrom, startTo);
             return null;
         }
+        log.info("TotalBatch: {}, TotalTransactions: {}, Total Amount: {}", totalBatches, totalTransactions, totalAmount);
         batchPaginatedResponse.setData(batches);
         batchPaginatedResponse.setTotalBatches(totalBatches);
         batchPaginatedResponse.setTotalTransactions(totalTransactions);
