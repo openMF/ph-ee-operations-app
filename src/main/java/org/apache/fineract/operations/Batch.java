@@ -89,6 +89,12 @@ public class Batch extends AbstractPersistableCustom<Long> {
     @Column(name = "CLIENT_CORRELATION_ID")
     private String correlationId;
 
+    @Column(name = "APPROVED_AMOUNT")
+    private Long approvedAmount;
+
+    @Column(name = "APPROVED_COUNT")
+    private Long approvedCount;
+
     public Batch(Long workflowInstanceKey) {
         this.workflowInstanceKey = workflowInstanceKey;
     }
