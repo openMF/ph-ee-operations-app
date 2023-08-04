@@ -18,8 +18,8 @@ public interface BatchRepository extends JpaRepository<Batch, Long>, JpaSpecific
     List<Batch> findAllByBatchId(String batchId);
 
 	@Query(value = "SELECT bt FROM Batch bt " +
-            "WHERE (bt.registeringInstitutionId LIKE :registeringInstitutionId or bt.registeringInstitutionId IS NULL) AND " +
-            "(bt.payerFsp LIKE :payerFsp or bt.payerFsp IS NULL)")
+            "WHERE (bt.registeringInstitutionId = :registeringInstitutionId) AND " +
+            "(bt.payerFsp = :payerFsp)")
 	List<Batch> findAllPaged(String registeringInstitutionId, String payerFsp, Pageable pageable);
 
     @Query(value = "SELECT bt FROM Batch bt WHERE bt.startedAt >= :dateFrom AND " +
