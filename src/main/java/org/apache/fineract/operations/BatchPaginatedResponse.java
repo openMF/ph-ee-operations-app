@@ -1,10 +1,7 @@
 package org.apache.fineract.operations;
 
-import lombok.AllArgsConstructor;
 import lombok.Getter;
-import lombok.NoArgsConstructor;
 import lombok.Setter;
-
 import java.util.List;
 
 @Getter
@@ -12,6 +9,7 @@ import java.util.List;
 public class BatchPaginatedResponse {
 
     long totalBatches;
+    long totalAmount;
     List<Batch> data;
 
 }

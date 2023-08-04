@@ -115,9 +115,13 @@ public class BatchApi {
         }
         BatchPaginatedResponse batchPaginatedResponse = new BatchPaginatedResponse();
         Long count;
+        Long totalAmount;
         List<Batch> batches;
         try {
             if (startFrom != null && startTo != null) {
+                totalAmount = batchRepository.getTotalAmountDateBetween(
+                        dateFormat().parse(startFrom), dateFormat().parse(startTo),
+                        "%", "%");
                 count = batchRepository.countTransactionDateBetween(
                         dateFormat().parse(startFrom), dateFormat().parse(startTo),
                         "%", "%");
@@ -127,6 +131,9 @@ public class BatchApi {
                         pager);
             } else if (startFrom != null) {
                 log.info("Date: {}", startFrom);
+                totalAmount = batchRepository.getTotalAmountDateFrom(
+                        dateFormat().parse(startFrom),
+                        "%", "%");
                 count = batchRepository.countTransactionDateFrom(
                         dateFormat().parse(startFrom),
                         "%", "%");
@@ -134,6 +141,9 @@ public class BatchApi {
                         dateFormat().parse(startFrom),
                         "%", "%", pager);
             } else if (startTo != null) {
+                totalAmount = batchRepository.getTotalAmountDateTo(
+                        dateFormat().parse(startTo),
+                        "%", "%");
                 count = batchRepository.countTransactionDateTo(
                         dateFormat().parse(startTo),
                         "%", "%");
@@ -141,6 +151,7 @@ public class BatchApi {
                         dateFormat().parse(startTo),
                         "%", "%", pager);
             } else {
+                totalAmount = batchRepository.getTotalAmount("%", "%");
                 count = batchRepository.countTransaction("%", "%");
                 batches = batchRepository.findAllPaged("%", "%", pager);
             }
@@ -150,6 +161,7 @@ public class BatchApi {
         }
         batchPaginatedResponse.setData(batches);
         batchPaginatedResponse.setTotalBatches(count);
+        batchPaginatedResponse.setTotalAmount(totalAmount);
         return batchPaginatedResponse;
     }
 
