@@ -124,7 +124,7 @@ public class BatchApi {
                 totalAmount = batchRepository.getTotalAmountDateBetween(
                         dateFormat().parse(startFrom), dateFormat().parse(startTo),
                         "%", "%");
-                totalBatches = batchRepository.countTransactionDateBetween(
+                totalBatches = batchRepository.getTotalBatchesDateBetween(
                         dateFormat().parse(startFrom), dateFormat().parse(startTo),
                         "%", "%");
                batches = batchRepository.findAllFilterDateBetween(
@@ -139,7 +139,7 @@ public class BatchApi {
                 totalAmount = batchRepository.getTotalAmountDateFrom(
                         dateFormat().parse(startFrom),
                         "%", "%");
-                totalBatches = batchRepository.countTransactionDateFrom(
+                totalBatches = batchRepository.getTotalBatchesDateFrom(
                         dateFormat().parse(startFrom),
                         "%", "%");
                 batches = batchRepository.findAllFilterDateFrom(
@@ -152,7 +152,7 @@ public class BatchApi {
                 totalAmount = batchRepository.getTotalAmountDateTo(
                         dateFormat().parse(startTo),
                         "%", "%");
-                totalBatches = batchRepository.countTransactionDateTo(
+                totalBatches = batchRepository.getTotalBatchesDateTo(
                         dateFormat().parse(startTo),
                         "%", "%");
                 batches = batchRepository.findAllFilterDateTo(
@@ -161,7 +161,7 @@ public class BatchApi {
             } else {
                 totalTransactions = batchRepository.getTotalTransactions("%", "%");
                 totalAmount = batchRepository.getTotalAmount("%", "%");
-                totalBatches = batchRepository.countTransaction("%", "%");
+                totalBatches = batchRepository.getTotalBatches("%", "%");
                 batches = batchRepository.findAllPaged("%", "%", pager);
             }
         } catch (Exception e) {
