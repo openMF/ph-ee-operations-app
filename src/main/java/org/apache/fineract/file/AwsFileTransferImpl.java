@@ -19,7 +19,7 @@ import org.springframework.web.multipart.MultipartFile;
 @Qualifier("awsStorage")
 public class AwsFileTransferImpl implements FileTransferService {
 
-    private Logger logger = LoggerFactory.getLogger(this.getClass());
+    private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
     @Autowired
     private AmazonS3 s3Client;

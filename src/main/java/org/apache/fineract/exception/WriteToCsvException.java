@@ -21,6 +21,7 @@ public class WriteToCsvException extends Exception {
         this.errorDescription = errorDescription;
         this.developerMessage = errorDescription;
     }
+
     public WriteToCsvException(ErrorCode errorCode, String errorDescription, Throwable e) {
         super(errorDescription);
         this.errorCode = errorCode;

@@ -108,7 +108,8 @@ public final class CsvWriter<T> {
      * @throws WriteToCsvException
      *             if callbacks throws and exception
      */
-    public static <T> T performErrorProneTask(ErrorCode errorCode,String errorDescription, Callback<T> callback) throws WriteToCsvException {
+    public static <T> T performErrorProneTask(ErrorCode errorCode, String errorDescription, Callback<T> callback)
+            throws WriteToCsvException {
         try {
             return callback.call();
         } catch (Exception e) {
