@@ -115,6 +115,8 @@ public class BatchApi {
         Long totalBatches;
         Long totalTransactions;
         Long totalAmount;
+        Long totalApprovedCount;
+        Long totalApprovedAmount;
         List<Batch> batches;
         try {
             if (startFrom != null && startTo != null) {
@@ -125,6 +127,12 @@ public class BatchApi {
                         dateFormat().parse(startFrom), dateFormat().parse(startTo),
                         "%", "%");
                 totalBatches = batchRepository.getTotalBatchesDateBetween(
+                        dateFormat().parse(startFrom), dateFormat().parse(startTo),
+                        "%", "%");
+                totalApprovedCount = batchRepository.getTotalApprovedCountDateBetween(
+                        dateFormat().parse(startFrom), dateFormat().parse(startTo),
+                        "%", "%");
+                totalApprovedAmount = batchRepository.getTotalApprovedAmountDateBetween(
                         dateFormat().parse(startFrom), dateFormat().parse(startTo),
                         "%", "%");
                batches = batchRepository.findAllFilterDateBetween(
@@ -142,6 +150,12 @@ public class BatchApi {
                 totalBatches = batchRepository.getTotalBatchesDateFrom(
                         dateFormat().parse(startFrom),
                         "%", "%");
+                totalApprovedCount = batchRepository.getTotalApprovedCountDateFrom(
+                        dateFormat().parse(startFrom),
+                        "%", "%");
+                totalApprovedAmount = batchRepository.getTotalApprovedAmountDateFrom(
+                        dateFormat().parse(startFrom),
+                        "%", "%");
                 batches = batchRepository.findAllFilterDateFrom(
                         dateFormat().parse(startFrom),
                         "%", "%", pager);
@@ -155,6 +169,12 @@ public class BatchApi {
                 totalBatches = batchRepository.getTotalBatchesDateTo(
                         dateFormat().parse(startTo),
                         "%", "%");
+                totalApprovedCount = batchRepository.getTotalApprovedCountDateTo(
+                        dateFormat().parse(startTo),
+                        "%", "%");
+                totalApprovedAmount= batchRepository.getTotalApprovedAmountDateTo(
+                        dateFormat().parse(startTo),
+                        "%", "%");
                 batches = batchRepository.findAllFilterDateTo(
                         dateFormat().parse(startTo),
                         "%", "%", pager);
@@ -162,6 +182,8 @@ public class BatchApi {
                 totalTransactions = batchRepository.getTotalTransactions("%", "%");
                 totalAmount = batchRepository.getTotalAmount("%", "%");
                 totalBatches = batchRepository.getTotalBatches("%", "%");
+                totalApprovedCount = batchRepository.getTotalApprovedCount("%", "%");
+                totalApprovedAmount = batchRepository.getTotalApprovedAmount("%", "%");
                 batches = batchRepository.findAllPaged("%", "%", pager);
             }
         } catch (Exception e) {
@@ -173,6 +195,8 @@ public class BatchApi {
         batchPaginatedResponse.setTotalBatches(totalBatches);
         batchPaginatedResponse.setTotalTransactions(totalTransactions);
         batchPaginatedResponse.setTotalAmount(totalAmount);
+        batchPaginatedResponse.setTotalApprovedCount(totalApprovedCount);
+        batchPaginatedResponse.setTotalApprovedAmount(totalApprovedAmount);
         return batchPaginatedResponse;
     }
 

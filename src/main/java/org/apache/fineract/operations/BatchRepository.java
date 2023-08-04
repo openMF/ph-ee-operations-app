@@ -107,4 +107,50 @@ public interface BatchRepository extends JpaRepository<Batch, Long>, JpaSpecific
             "(bt.payerFsp LIKE :payerFsp or bt.payerFsp IS NULL)")
     Long getTotalAmountDateBetween(Date dateFrom, Date dateTo, String registeringInstitutionId, String payerFsp);
 
+    @Query(value = "SELECT SUM(bt.approvedAmount) FROM Batch bt " +
+            "WHERE (bt.registeringInstitutionId LIKE :registeringInstitutionId or bt.registeringInstitutionId IS NULL) AND " +
+            "(bt.payerFsp LIKE :payerFsp OR bt.payerFsp IS NULL)")
+    Long getTotalApprovedAmount(String registeringInstitutionId, String payerFsp);
+
+    @Query(value = "SELECT SUM(bt.approvedAmount) FROM Batch bt " +
+            "WHERE bt.startedAt >= :dateFrom AND " +
+            "(bt.registeringInstitutionId LIKE :registeringInstitutionId or bt.registeringInstitutionId IS NULL) AND " +
+            "(bt.payerFsp LIKE :payerFsp or bt.payerFsp IS NULL)")
+    Long getTotalApprovedAmountDateFrom(Date dateFrom, String registeringInstitutionId, String payerFsp);
+
+    @Query(value = "SELECT SUM(bt.approvedAmount) FROM Batch bt " +
+            "WHERE bt.startedAt <= :dateTo AND " +
+            "(bt.registeringInstitutionId LIKE :registeringInstitutionId or bt.registeringInstitutionId IS NULL) AND " +
+            "(bt.payerFsp LIKE :payerFsp or bt.payerFsp IS NULL)")
+    Long getTotalApprovedAmountDateTo(Date dateTo, String registeringInstitutionId, String payerFsp);
+
+    @Query(value = "SELECT SUM(bt.approvedAmount) FROM Batch bt " +
+            "WHERE bt.startedAt BETWEEN :dateFrom AND :dateTo AND " +
+            "(bt.registeringInstitutionId LIKE :registeringInstitutionId or bt.registeringInstitutionId IS NULL) AND " +
+            "(bt.payerFsp LIKE :payerFsp or bt.payerFsp IS NULL)")
+    Long getTotalApprovedAmountDateBetween(Date dateFrom, Date dateTo, String registeringInstitutionId, String payerFsp);
+
+    @Query(value = "SELECT SUM(bt.approvedCount) FROM Batch bt " +
+            "WHERE (bt.registeringInstitutionId LIKE :registeringInstitutionId or bt.registeringInstitutionId IS NULL) AND " +
+            "(bt.payerFsp LIKE :payerFsp OR bt.payerFsp IS NULL)")
+    Long getTotalApprovedCount(String registeringInstitutionId, String payerFsp);
+
+    @Query(value = "SELECT SUM(bt.approvedCount) FROM Batch bt " +
+            "WHERE bt.startedAt >= :dateFrom AND " +
+            "(bt.registeringInstitutionId LIKE :registeringInstitutionId or bt.registeringInstitutionId IS NULL) AND " +
+            "(bt.payerFsp LIKE :payerFsp or bt.payerFsp IS NULL)")
+    Long getTotalApprovedCountDateFrom(Date dateFrom, String registeringInstitutionId, String payerFsp);
+
+    @Query(value = "SELECT SUM(bt.approvedCount) FROM Batch bt " +
+            "WHERE bt.startedAt <= :dateTo AND " +
+            "(bt.registeringInstitutionId LIKE :registeringInstitutionId or bt.registeringInstitutionId IS NULL) AND " +
+            "(bt.payerFsp LIKE :payerFsp or bt.payerFsp IS NULL)")
+    Long getTotalApprovedCountDateTo(Date dateTo, String registeringInstitutionId, String payerFsp);
+
+    @Query(value = "SELECT SUM(bt.approvedCount) FROM Batch bt " +
+            "WHERE bt.startedAt BETWEEN :dateFrom AND :dateTo AND " +
+            "(bt.registeringInstitutionId LIKE :registeringInstitutionId or bt.registeringInstitutionId IS NULL) AND " +
+            "(bt.payerFsp LIKE :payerFsp or bt.payerFsp IS NULL)")
+    Long getTotalApprovedCountDateBetween(Date dateFrom, Date dateTo, String registeringInstitutionId, String payerFsp);
+
 }
