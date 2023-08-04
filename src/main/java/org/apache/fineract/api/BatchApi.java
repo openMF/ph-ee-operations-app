@@ -14,8 +14,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
-import org.springframework.data.jpa.domain.Specification;
-import org.springframework.data.jpa.domain.Specifications;
 import org.springframework.web.bind.annotation.*;
 import java.io.BufferedWriter;
 import java.io.File;
@@ -26,7 +24,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Optional;
-import java.util.ArrayList;
+
 import static org.apache.fineract.core.service.OperatorUtils.dateFormat;
 import static org.apache.fineract.core.service.OperatorUtils.strip;
 
@@ -114,15 +112,19 @@ public class BatchApi {
             startTo = dateUtil.getUTCFormat(startTo);
         }
         BatchPaginatedResponse batchPaginatedResponse = new BatchPaginatedResponse();
-        Long count;
+        Long totalBatches;
+        Long totalTransactions;
         Long totalAmount;
         List<Batch> batches;
         try {
             if (startFrom != null && startTo != null) {
+                totalTransactions = batchRepository.getTotalTransactionsDateBetween(
+                        dateFormat().parse(startFrom), dateFormat().parse(startTo),
+                        "%", "%");
                 totalAmount = batchRepository.getTotalAmountDateBetween(
                         dateFormat().parse(startFrom), dateFormat().parse(startTo),
                         "%", "%");
-                count = batchRepository.countTransactionDateBetween(
+                totalBatches = batchRepository.countTransactionDateBetween(
                         dateFormat().parse(startFrom), dateFormat().parse(startTo),
                         "%", "%");
                batches = batchRepository.findAllFilterDateBetween(
@@ -131,28 +133,35 @@ public class BatchApi {
                         pager);
             } else if (startFrom != null) {
                 log.info("Date: {}", startFrom);
+                totalTransactions = batchRepository.getTotalTransactionsDateFrom(
+                        dateFormat().parse(startFrom),
+                        "%", "%");
                 totalAmount = batchRepository.getTotalAmountDateFrom(
                         dateFormat().parse(startFrom),
                         "%", "%");
-                count = batchRepository.countTransactionDateFrom(
+                totalBatches = batchRepository.countTransactionDateFrom(
                         dateFormat().parse(startFrom),
                         "%", "%");
                 batches = batchRepository.findAllFilterDateFrom(
                         dateFormat().parse(startFrom),
                         "%", "%", pager);
             } else if (startTo != null) {
+                totalTransactions = batchRepository.getTotalTransactionsDateTo(
+                        dateFormat().parse(startTo),
+                        "%", "%");
                 totalAmount = batchRepository.getTotalAmountDateTo(
                         dateFormat().parse(startTo),
                         "%", "%");
-                count = batchRepository.countTransactionDateTo(
+                totalBatches = batchRepository.countTransactionDateTo(
                         dateFormat().parse(startTo),
                         "%", "%");
                 batches = batchRepository.findAllFilterDateTo(
                         dateFormat().parse(startTo),
                         "%", "%", pager);
             } else {
+                totalTransactions = batchRepository.getTotalTransactions("%", "%");
                 totalAmount = batchRepository.getTotalAmount("%", "%");
-                count = batchRepository.countTransaction("%", "%");
+                totalBatches = batchRepository.countTransaction("%", "%");
                 batches = batchRepository.findAllPaged("%", "%", pager);
             }
         } catch (Exception e) {
@@ -160,7 +169,8 @@ public class BatchApi {
             return null;
         }
         batchPaginatedResponse.setData(batches);
-        batchPaginatedResponse.setTotalBatches(count);
+        batchPaginatedResponse.setTotalBatches(totalBatches);
+        batchPaginatedResponse.setTotalTransactions(totalTransactions);
         batchPaginatedResponse.setTotalAmount(totalAmount);
         return batchPaginatedResponse;
     }

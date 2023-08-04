@@ -1,15 +1,11 @@
 package org.apache.fineract.operations;
 
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.jpa.domain.Specification;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Query;
-import org.springframework.lang.Nullable;
 
 import java.util.Date;
-import java.util.HashMap;
 import java.util.List;
 
 public interface BatchRepository extends JpaRepository<Batch, Long>, JpaSpecificationExecutor<Batch> {
@@ -64,6 +60,29 @@ public interface BatchRepository extends JpaRepository<Batch, Long>, JpaSpecific
             "(bt.registeringInstitutionId LIKE :registeringInstitutionId or bt.registeringInstitutionId IS NULL) AND " +
             "(bt.payerFsp LIKE :payerFsp or bt.payerFsp IS NULL)")
     Long countTransactionDateBetween(Date dateFrom, Date dateTo, String registeringInstitutionId, String payerFsp);
+
+    @Query(value = "SELECT SUM(bt.totalTransactions) as totalTransactions FROM Batch bt " +
+            "WHERE (bt.registeringInstitutionId LIKE :registeringInstitutionId or bt.registeringInstitutionId IS NULL) AND " +
+            "(bt.payerFsp LIKE :payerFsp OR bt.payerFsp IS NULL)")
+    Long getTotalTransactions(String registeringInstitutionId, String payerFsp);
+
+    @Query(value = "SELECT SUM(bt.totalTransactions) as totalTransactions FROM Batch bt " +
+            "WHERE bt.startedAt >= :dateFrom AND " +
+            "(bt.registeringInstitutionId LIKE :registeringInstitutionId or bt.registeringInstitutionId IS NULL) AND " +
+            "(bt.payerFsp LIKE :payerFsp or bt.payerFsp IS NULL)")
+    Long getTotalTransactionsDateFrom(Date dateFrom, String registeringInstitutionId, String payerFsp);
+
+    @Query(value = "SELECT SUM(bt.totalTransactions) as totalTransactions FROM Batch bt " +
+            "WHERE bt.startedAt <= :dateTo AND " +
+            "(bt.registeringInstitutionId LIKE :registeringInstitutionId or bt.registeringInstitutionId IS NULL) AND " +
+            "(bt.payerFsp LIKE :payerFsp or bt.payerFsp IS NULL)")
+    Long getTotalTransactionsDateTo(Date dateTo, String registeringInstitutionId, String payerFsp);
+
+    @Query(value = "SELECT SUM(bt.totalTransactions) as totalTransactions FROM Batch bt " +
+            "WHERE bt.startedAt BETWEEN :dateFrom AND :dateTo AND " +
+            "(bt.registeringInstitutionId LIKE :registeringInstitutionId or bt.registeringInstitutionId IS NULL) AND " +
+            "(bt.payerFsp LIKE :payerFsp or bt.payerFsp IS NULL)")
+    Long getTotalTransactionsDateBetween(Date dateFrom, Date dateTo, String registeringInstitutionId, String payerFsp);
 
     @Query(value = "SELECT SUM(bt.totalTransactions) as totalTransactions FROM Batch bt " +
             "WHERE (bt.registeringInstitutionId LIKE :registeringInstitutionId or bt.registeringInstitutionId IS NULL) AND " +
