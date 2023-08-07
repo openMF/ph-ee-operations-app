@@ -50,4 +50,12 @@ public class BatchPaginatedResponse {
             this.totalApprovedAmount = 0;
         }
     }
+
+    public void setTotalSubBatchesCreated(Long totalSubBatchesCreated) {
+        if (totalSubBatchesCreated != null) {
+            this.totalSubBatchesCreated = totalSubBatchesCreated;
+        } else {
+            this.totalSubBatchesCreated = 0;
+        }
+    }
 }
