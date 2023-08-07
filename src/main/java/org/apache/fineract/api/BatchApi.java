@@ -180,6 +180,7 @@ public class BatchApi {
         batchPaginatedResponse.setTotalAmount(totalAmount);
         batchPaginatedResponse.setTotalApprovedCount(totalApprovedCount);
         batchPaginatedResponse.setTotalApprovedAmount(totalApprovedAmount);
+        batchPaginatedResponse.setTotalSubBatchesCreated(3);
         return batchPaginatedResponse;
     }
 

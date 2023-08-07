@@ -8,7 +8,7 @@ import java.util.List;
 @Setter
 public class BatchPaginatedResponse {
 
-    long totalBatches, totalTransactions, totalAmount, totalApprovedCount, totalApprovedAmount;
+    long totalBatches, totalTransactions, totalAmount, totalApprovedCount, totalApprovedAmount, totalSubBatchesCreated;
     List<Batch> data;
 
     public void setTotalBatches(Long totalBatches) {
