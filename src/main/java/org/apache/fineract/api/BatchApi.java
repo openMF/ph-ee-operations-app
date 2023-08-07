@@ -93,7 +93,8 @@ public class BatchApi {
                                            @RequestParam(value = "payerFsp", required = false, defaultValue = "%")
                                                String payerFsp,
                                            @RequestParam(value = "batchId", required = false, defaultValue = "%")
-                                               String batchId) {
+                                               String batchId,
+                                           HttpServletResponse httpServletResponse) {
         log.info("Registering Id: {}, PayerFsp: {}, batchId: {}", registeringInstituteId, payerFsp, batchId);
         Sort sortObject = getSortObject(sort);
         int page = Math.floorDiv(offset, limit);
@@ -105,19 +106,24 @@ public class BatchApi {
         if (startTo != null) {
             startTo = dateUtil.getUTCFormat(startTo);
         }
-        BatchPaginatedResponse batchPaginatedResponse;
+        try {
+            BatchPaginatedResponse batchPaginatedResponse;
 
-        if (startFrom != null && startTo != null) {
-            batchPaginatedResponse = batchDbService.getBatch(startFrom, startTo, registeringInstituteId, payerFsp, batchId, pager);
-        } else if (startFrom != null) {
-            batchPaginatedResponse = batchDbService.getBatchDateFrom(startFrom, registeringInstituteId, payerFsp, batchId, pager);
-        } else if (startTo != null) {
-            batchPaginatedResponse = batchDbService.getBatchDateTo(startTo, registeringInstituteId, payerFsp, batchId, pager);
-        } else {
-            batchPaginatedResponse = batchDbService.getBatch(registeringInstituteId, payerFsp, batchId, pager);
+            if (startFrom != null && startTo != null) {
+                batchPaginatedResponse = batchDbService.getBatch(startFrom, startTo, registeringInstituteId, payerFsp, batchId, pager);
+            } else if (startFrom != null) {
+                batchPaginatedResponse = batchDbService.getBatchDateFrom(startFrom, registeringInstituteId, payerFsp, batchId, pager);
+            } else if (startTo != null) {
+                batchPaginatedResponse = batchDbService.getBatchDateTo(startTo, registeringInstituteId, payerFsp, batchId, pager);
+            } else {
+                batchPaginatedResponse = batchDbService.getBatch(registeringInstituteId, payerFsp, batchId, pager);
+            }
+            httpServletResponse.setStatus(200);
+            return batchPaginatedResponse;
+        } catch (Exception e) {
+            httpServletResponse.setStatus(400);
+            return null;
         }
-
-        return batchPaginatedResponse;
     }
 
     @GetMapping("/batch")
