@@ -15,6 +15,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.web.bind.annotation.*;
+
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
@@ -79,15 +80,21 @@ public class BatchApi {
     }
 
     @GetMapping("/batches")
-    public BatchPaginatedResponse getBatch(@RequestParam(value = "offset", required = false, defaultValue = "0") Integer offset,
-                                   @RequestParam(value = "limit", required = false, defaultValue = "10") Integer limit,
-                                   @RequestParam(value = "sort", required = false, defaultValue = "+completedAt")
-                                       String sort,
-                                @RequestParam(value = "dateFrom", required = false) String startFrom,
-                                @RequestParam(value = "dateTo", required = false) String startTo,
-                                @RequestParam(value = "registeringInstitutionId", required = false, defaultValue = "%") String registeringInstituteId,
-                                @RequestParam(value = "payerFsp", required = false, defaultValue = "%") String payerFsp) {
-        log.info("Registering Id: {}, PyaerFsp: {}", registeringInstituteId, payerFsp);
+    public BatchPaginatedResponse getBatch(@RequestParam(value = "offset", required = false, defaultValue = "0")
+                                           Integer offset,
+                                           @RequestParam(value = "limit", required = false, defaultValue = "10")
+                                           Integer limit,
+                                           @RequestParam(value = "sort", required = false,
+                                                   defaultValue = "+completedAt") String sort,
+                                           @RequestParam(value = "dateFrom", required = false) String startFrom,
+                                           @RequestParam(value = "dateTo", required = false) String startTo,
+                                           @RequestParam(value = "registeringInstitutionId", required = false,
+                                                   defaultValue = "%") String registeringInstituteId,
+                                           @RequestParam(value = "payerFsp", required = false, defaultValue = "%")
+                                               String payerFsp,
+                                           @RequestParam(value = "batchId", required = false, defaultValue = "%")
+                                               String batchId) {
+        log.info("Registering Id: {}, PayerFsp: {}, batchId: {}", registeringInstituteId, payerFsp, batchId);
         Sort sortObject = getSortObject(sort);
         int page = Math.floorDiv(offset, limit);
         PageRequest pager = PageRequest.of(page, limit, sortObject);
@@ -101,13 +108,13 @@ public class BatchApi {
         BatchPaginatedResponse batchPaginatedResponse;
 
         if (startFrom != null && startTo != null) {
-            batchPaginatedResponse = batchDbService.getBatch(startFrom, startTo, registeringInstituteId, payerFsp, pager);
+            batchPaginatedResponse = batchDbService.getBatch(startFrom, startTo, registeringInstituteId, payerFsp, batchId, pager);
         } else if (startFrom != null) {
-            batchPaginatedResponse = batchDbService.getBatchDateFrom(startFrom, registeringInstituteId, payerFsp, pager);
+            batchPaginatedResponse = batchDbService.getBatchDateFrom(startFrom, registeringInstituteId, payerFsp, batchId, pager);
         } else if (startTo != null) {
-            batchPaginatedResponse = batchDbService.getBatchDateTo(startTo, registeringInstituteId, payerFsp, pager);
+            batchPaginatedResponse = batchDbService.getBatchDateTo(startTo, registeringInstituteId, payerFsp, batchId, pager);
         } else {
-            batchPaginatedResponse = batchDbService.getBatch(registeringInstituteId, payerFsp, pager);
+            batchPaginatedResponse = batchDbService.getBatch(registeringInstituteId, payerFsp, batchId, pager);
         }
 
         return batchPaginatedResponse;
@@ -129,21 +136,21 @@ public class BatchApi {
                 return generateDetails(batch);
             }
         } else {
-           Batch batch1 = new Batch();
-           batch1.setBatchId(batchId);
-           batch1.setRequestId(requestId);
-           return generateDetails(batch1);
+            Batch batch1 = new Batch();
+            batch1.setBatchId(batchId);
+            batch1.setRequestId(requestId);
+            return generateDetails(batch1);
         }
 
     }
 
     @GetMapping("/batch/detail")
     public Page<Transfer> batchDetails(HttpServletResponse httpServletResponse,
-                                                       @RequestParam(value = "batchId") String batchId,
-                                                       @RequestParam(value = "status", defaultValue = "ALL") String status,
-                                                       @RequestParam(value = "pageNo", defaultValue = "0") Integer pageNo,
-                                                       @RequestParam(value = "pageSize", defaultValue = "10") Integer pageSize,
-                                                       @RequestParam(value = "command", required = false, defaultValue = "json") String command) {
+                                       @RequestParam(value = "batchId") String batchId,
+                                       @RequestParam(value = "status", defaultValue = "ALL") String status,
+                                       @RequestParam(value = "pageNo", defaultValue = "0") Integer pageNo,
+                                       @RequestParam(value = "pageSize", defaultValue = "10") Integer pageSize,
+                                       @RequestParam(value = "command", required = false, defaultValue = "json") String command) {
 
         if (command.equalsIgnoreCase("download")) {
             Batch batch = batchRepository.findByBatchId(batchId);
@@ -175,7 +182,7 @@ public class BatchApi {
         if (batch != null) {
             List<Transfer> transfers = transferRepository.findAllByBatchId(batch.getBatchId());
             HashMap<String, String> status = new HashMap<>();
-            for(Transfer transfer: transfers){
+            for (Transfer transfer : transfers) {
                 status.put(transfer.getTransactionId(), transfer.getStatus().name());
             }
             return status;
@@ -184,7 +191,7 @@ public class BatchApi {
         }
     }
 
-    private BatchDTO generateDetails (Batch batch) {
+    private BatchDTO generateDetails(Batch batch) {
 
         StringBuilder modes = new StringBuilder();
 
@@ -235,7 +242,7 @@ public class BatchApi {
         Long subBatchTotal = 0L;
 
 
-        for (Batch bt: allBatches) {
+        for (Batch bt : allBatches) {
             if (bt.getPaymentMode() != null && !modes.toString().contains(bt.getPaymentMode())) {
                 if (!modes.toString().equals("")) {
                     modes.append(",");
@@ -290,10 +297,10 @@ public class BatchApi {
                 batchCompletedPercent.toString(), batchFailedPercent.toString(), batch.getRegisteringInstitutionId(),
                 batch.getPayerFsp(), batch.getCorrelationId());
 
-        response.setCreated_at(""+batch.getStartedAt());
+        response.setCreated_at("" + batch.getStartedAt());
         response.setModes(modes.toString());
         response.setPurpose("Unknown purpose");
-       System.out.println("Batch details generated for batchId: " + response.getSuccessPercentage());
+        System.out.println("Batch details generated for batchId: " + response.getSuccessPercentage());
 
         if (batch.getCompleted().longValue() == batch.getTotalTransactions().longValue()) {
             response.setStatus("COMPLETED");
@@ -314,8 +321,7 @@ public class BatchApi {
         try (
                 FileWriter writer = new FileWriter(tempFile.getName());
                 BufferedWriter bw = new BufferedWriter(writer)) {
-            for (Transfer transfer : transfers)
-            {
+            for (Transfer transfer : transfers) {
                 StringBuffer oneLine = new StringBuffer();
                 oneLine.append(transfer.getTransactionId());
                 oneLine.append(CSV_SEPARATOR);
