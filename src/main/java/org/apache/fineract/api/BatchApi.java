@@ -1,6 +1,5 @@
 package org.apache.fineract.api;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import lombok.extern.slf4j.Slf4j;
@@ -14,7 +13,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
-import org.springframework.data.jpa.domain.Specification;
 import org.springframework.web.bind.annotation.*;
 import java.io.BufferedWriter;
 import java.io.File;
@@ -25,7 +23,6 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Optional;
-
 import static org.apache.fineract.core.service.OperatorUtils.dateFormat;
 import static org.apache.fineract.core.service.OperatorUtils.strip;
 
@@ -59,24 +56,6 @@ public class BatchApi {
     @Value("${application.bucket-name}")
     private String bucketName;
 
-    /*@GetMapping("/batches")
-    public Page<Batch> getBatches(@RequestParam(value = "page", required = false, defaultValue = "1") Integer page,
-                                  @RequestParam(value = "size", required = false, defaultValue = "10") Integer size,
-                                  @RequestParam(value = "sortedBy", required = false) String sortedBy,
-                                  @RequestParam(value = "sortedOrder", required = false, defaultValue = "DESC") String sortedOrder
-    ) {
-        Specifications<Batch> specifications = BatchSpecs.match(Batch_.subBatchId, null);
-
-        PageRequest pager;
-        if (sortedBy == null || "startedAt".equals(sortedBy)) {
-            pager = new PageRequest(page, size, new Sort(Sort.Direction.fromString(sortedOrder), "startedAt"));
-        } else {
-            pager = new PageRequest(page, size, new Sort(Sort.Direction.fromString(sortedOrder), sortedBy));
-        }
-
-        return batchRepository.findAll(specifications, pager);
-    }*/
-
     private Sort getSortObject(String sort) {
         Sort.Direction sortDirection;
         String sortedBy;
@@ -96,7 +75,7 @@ public class BatchApi {
     }
 
     @GetMapping("/batches")
-    public BatchPaginatedResponse getBatch123(@RequestParam(value = "offset", required = false, defaultValue = "0") Integer offset,
+    public BatchPaginatedResponse getBatch(@RequestParam(value = "offset", required = false, defaultValue = "0") Integer offset,
                                    @RequestParam(value = "limit", required = false, defaultValue = "10") Integer limit,
                                    @RequestParam(value = "sort", required = false, defaultValue = "+completedAt")
                                        String sort,
