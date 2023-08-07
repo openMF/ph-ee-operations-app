@@ -1,12 +1,9 @@
 package org.apache.fineract.operations;
 
-import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.jpa.domain.Specification;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Query;
-
 import java.util.Date;
 import java.util.List;
 
@@ -21,7 +18,7 @@ public interface BatchRepository extends JpaRepository<Batch, Long>, JpaSpecific
 
     @Query("SELECT bt FROM Batch bt " +
             "WHERE bt.registeringInstitutionId LIKE :registeringInstituteId AND bt.payerFsp LIKE :payerFsp")
-    List<Batch> findAllBatch(String registeringInstituteId, String payerFsp, PageRequest pager);
+    List<Batch> findAllBatch(String registeringInstituteId, String payerFsp, Pageable pageable);
 
     @Query(value = "SELECT bt FROM Batch bt WHERE bt.startedAt >= :dateFrom AND " +
             "(bt.registeringInstitutionId LIKE :registeringInstitutionId) AND (bt.payerFsp LIKE :payerFsp)")
