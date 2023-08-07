@@ -14,6 +14,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.web.bind.annotation.*;
 import java.io.BufferedWriter;
 import java.io.File;
@@ -187,7 +188,7 @@ public class BatchApi {
                 totalBatches = batchRepository.getTotalBatches(registeringInstituteId, payerFsp);
                 totalApprovedCount = batchRepository.getTotalApprovedCount(registeringInstituteId, payerFsp);
                 totalApprovedAmount = batchRepository.getTotalApprovedAmount(registeringInstituteId, payerFsp);
-                batches = batchRepository.findAllPaged(registeringInstituteId, payerFsp, pager);
+                batches = batchRepository.findAllPaged(BatchSpecs.match(Batch_.registeringInstitutionId, registeringInstituteId), pager);
             }
         } catch (Exception e) {
             log.warn("failed to parse dates {} / {}", startFrom, startTo);
