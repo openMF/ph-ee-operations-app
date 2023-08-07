@@ -1,5 +1,6 @@
 package org.apache.fineract.operations;
 
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -18,9 +19,9 @@ public interface BatchRepository extends JpaRepository<Batch, Long>, JpaSpecific
 
     List<Batch> findAllByBatchId(String batchId);
 
-    @Query(value = "SELECT bt FROM Batch bt " +
-            "WHERE (bt.registeringInstitutionId LIKE :registeringInstitutionId) AND (bt.payerFsp LIKE :payerFsp)")
-    List<Batch> findAllPaged(String registeringInstitutionId, String payerFsp, Pageable pageable);
+    @Query("SELECT bt FROM Batch bt " +
+            "WHERE bt.registeringInstitutionId LIKE :registeringInstituteId AND bt.payerFsp LIKE :payerFsp")
+    List<Batch> findAllPaged(String registeringInstituteId, String payerFsp, PageRequest pager);
 
     @Query(value = "SELECT bt FROM Batch bt WHERE bt.startedAt >= :dateFrom AND " +
             "(bt.registeringInstitutionId LIKE :registeringInstitutionId) AND (bt.payerFsp LIKE :payerFsp)")
@@ -129,5 +130,4 @@ public interface BatchRepository extends JpaRepository<Batch, Long>, JpaSpecific
             "WHERE bt.startedAt BETWEEN :dateFrom AND :dateTo AND " +
             "(bt.registeringInstitutionId LIKE :registeringInstitutionId) AND (bt.payerFsp LIKE :payerFsp)")
     Long getTotalApprovedCountDateBetween(Date dateFrom, Date dateTo, String registeringInstitutionId, String payerFsp);
-
 }
