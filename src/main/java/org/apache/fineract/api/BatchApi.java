@@ -188,7 +188,7 @@ public class BatchApi {
                 totalBatches = batchRepository.getTotalBatches(registeringInstituteId, payerFsp);
                 totalApprovedCount = batchRepository.getTotalApprovedCount(registeringInstituteId, payerFsp);
                 totalApprovedAmount = batchRepository.getTotalApprovedAmount(registeringInstituteId, payerFsp);
-                batches = batchRepository.findAllPaged(registeringInstituteId, payerFsp, pager);
+                batches = batchRepository.findAllPagedCase(BatchSpecs.match(Batch_.registeringInstitutionId, registeringInstituteId), pager);
             }
         } catch (Exception e) {
             log.warn("failed to parse dates {} / {}", startFrom, startTo);
