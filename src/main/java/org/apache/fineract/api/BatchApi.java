@@ -6,6 +6,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.fineract.config.PaymentModeConfiguration;
 import org.apache.fineract.file.FileTransferService;
 import org.apache.fineract.operations.*;
+import org.apache.fineract.service.BatchDbService;
 import org.apache.fineract.utils.DateUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -23,7 +24,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Optional;
-import static org.apache.fineract.core.service.OperatorUtils.dateFormat;
+
 import static org.apache.fineract.core.service.OperatorUtils.strip;
 
 @Slf4j
@@ -52,6 +53,9 @@ public class BatchApi {
 
     @Autowired
     private ObjectMapper objectMapper;
+
+    @Autowired
+    private BatchDbService batchDbService;
 
     @Value("${application.bucket-name}")
     private String bucketName;
@@ -94,93 +98,18 @@ public class BatchApi {
         if (startTo != null) {
             startTo = dateUtil.getUTCFormat(startTo);
         }
-        BatchPaginatedResponse batchPaginatedResponse = new BatchPaginatedResponse();
-        Long totalBatches;
-        Long totalTransactions;
-        Long totalAmount;
-        Long totalApprovedCount;
-        Long totalApprovedAmount;
-        List<Batch> batches;
-        try {
-            if (startFrom != null && startTo != null) {
-                totalTransactions = batchRepository.getTotalTransactionsDateBetween(
-                        dateFormat().parse(startFrom), dateFormat().parse(startTo),
-                        registeringInstituteId, payerFsp);
-                totalAmount = batchRepository.getTotalAmountDateBetween(
-                        dateFormat().parse(startFrom), dateFormat().parse(startTo),
-                        registeringInstituteId, payerFsp);
-                totalBatches = batchRepository.getTotalBatchesDateBetween(
-                        dateFormat().parse(startFrom), dateFormat().parse(startTo),
-                        registeringInstituteId, payerFsp);
-                totalApprovedCount = batchRepository.getTotalApprovedCountDateBetween(
-                        dateFormat().parse(startFrom), dateFormat().parse(startTo),
-                        registeringInstituteId, payerFsp);
-                totalApprovedAmount = batchRepository.getTotalApprovedAmountDateBetween(
-                        dateFormat().parse(startFrom), dateFormat().parse(startTo),
-                        registeringInstituteId, payerFsp);
-               batches = batchRepository.findAllFilterDateBetween(
-                        dateFormat().parse(startFrom), dateFormat().parse(startTo),
-                       registeringInstituteId, payerFsp,
-                        pager);
-            } else if (startFrom != null) {
-                log.info("Date: {}", startFrom);
-                totalTransactions = batchRepository.getTotalTransactionsDateFrom(
-                        dateFormat().parse(startFrom),
-                        registeringInstituteId, payerFsp);
-                totalAmount = batchRepository.getTotalAmountDateFrom(
-                        dateFormat().parse(startFrom),
-                        registeringInstituteId, payerFsp);
-                totalBatches = batchRepository.getTotalBatchesDateFrom(
-                        dateFormat().parse(startFrom),
-                        registeringInstituteId, payerFsp);
-                totalApprovedCount = batchRepository.getTotalApprovedCountDateFrom(
-                        dateFormat().parse(startFrom),
-                        registeringInstituteId, payerFsp);
-                totalApprovedAmount = batchRepository.getTotalApprovedAmountDateFrom(
-                        dateFormat().parse(startFrom),
-                        registeringInstituteId, payerFsp);
-                batches = batchRepository.findAllFilterDateFrom(
-                        dateFormat().parse(startFrom),
-                        registeringInstituteId, payerFsp, pager);
-            } else if (startTo != null) {
-                totalTransactions = batchRepository.getTotalTransactionsDateTo(
-                        dateFormat().parse(startTo),
-                        registeringInstituteId, payerFsp);
-                totalAmount = batchRepository.getTotalAmountDateTo(
-                        dateFormat().parse(startTo),
-                        registeringInstituteId, payerFsp);
-                totalBatches = batchRepository.getTotalBatchesDateTo(
-                        dateFormat().parse(startTo),
-                        registeringInstituteId, payerFsp);
-                totalApprovedCount = batchRepository.getTotalApprovedCountDateTo(
-                        dateFormat().parse(startTo),
-                        registeringInstituteId, payerFsp);
-                totalApprovedAmount= batchRepository.getTotalApprovedAmountDateTo(
-                        dateFormat().parse(startTo),
-                        registeringInstituteId, payerFsp);
-                batches = batchRepository.findAllFilterDateTo(
-                        dateFormat().parse(startTo),
-                        registeringInstituteId, payerFsp, pager);
-            } else {
-                totalTransactions = batchRepository.getTotalTransactions(registeringInstituteId, payerFsp);
-                totalAmount = batchRepository.getTotalAmount(registeringInstituteId, payerFsp);
-                totalBatches = batchRepository.getTotalBatches(registeringInstituteId, payerFsp);
-                totalApprovedCount = batchRepository.getTotalApprovedCount(registeringInstituteId, payerFsp);
-                totalApprovedAmount = batchRepository.getTotalApprovedAmount(registeringInstituteId, payerFsp);
-                batches = batchRepository.findAllBatch(registeringInstituteId, payerFsp, pager);
-            }
-        } catch (Exception e) {
-            log.warn("failed to parse dates {} / {}", startFrom, startTo);
-            return null;
+        BatchPaginatedResponse batchPaginatedResponse;
+
+        if (startFrom != null && startTo != null) {
+            batchPaginatedResponse = batchDbService.getBatch(startFrom, startTo, registeringInstituteId, payerFsp, pager);
+        } else if (startFrom != null) {
+            batchPaginatedResponse = batchDbService.getBatchDateFrom(startFrom, registeringInstituteId, payerFsp, pager);
+        } else if (startTo != null) {
+            batchPaginatedResponse = batchDbService.getBatchDateTo(startTo, registeringInstituteId, payerFsp, pager);
+        } else {
+            batchPaginatedResponse = batchDbService.getBatch(registeringInstituteId, payerFsp, pager);
         }
-        log.info("TotalBatch: {}, TotalTransactions: {}, Total Amount: {}", totalBatches, totalTransactions, totalAmount);
-        batchPaginatedResponse.setData(batches);
-        batchPaginatedResponse.setTotalBatches(totalBatches);
-        batchPaginatedResponse.setTotalTransactions(totalTransactions);
-        batchPaginatedResponse.setTotalAmount(totalAmount);
-        batchPaginatedResponse.setTotalApprovedCount(totalApprovedCount);
-        batchPaginatedResponse.setTotalApprovedAmount(totalApprovedAmount);
-        batchPaginatedResponse.setTotalSubBatchesCreated(3);
+
         return batchPaginatedResponse;
     }
 
