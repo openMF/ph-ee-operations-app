@@ -102,8 +102,8 @@ public class BatchApi {
                                        String sort,
                                 @RequestParam(value = "dateFrom", required = false) String startFrom,
                                 @RequestParam(value = "dateTo", required = false) String startTo,
-                                @RequestParam(value = "registeringInstitutionId", required = false) String registeringInstituteId,
-                                @RequestParam(value = "payerFsp", required = false) String payerFsp) {
+                                @RequestParam(value = "registeringInstitutionId", required = false, defaultValue = "%") String registeringInstituteId,
+                                @RequestParam(value = "payerFsp", required = false, defaultValue = "%") String payerFsp) {
         log.info("Registering Id: {}, PyaerFsp: {}", registeringInstituteId, payerFsp);
         Sort sortObject = getSortObject(sort);
         int page = Math.floorDiv(offset, limit);
@@ -188,7 +188,7 @@ public class BatchApi {
                 totalBatches = batchRepository.getTotalBatches(registeringInstituteId, payerFsp);
                 totalApprovedCount = batchRepository.getTotalApprovedCount(registeringInstituteId, payerFsp);
                 totalApprovedAmount = batchRepository.getTotalApprovedAmount(registeringInstituteId, payerFsp);
-                batches = batchRepository.findAllPagedCase(BatchSpecs.match(Batch_.registeringInstitutionId, registeringInstituteId), pager);
+                batches = batchRepository.findAllPaged(registeringInstituteId, payerFsp, pager);
             }
         } catch (Exception e) {
             log.warn("failed to parse dates {} / {}", startFrom, startTo);
