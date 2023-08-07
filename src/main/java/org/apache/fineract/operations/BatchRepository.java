@@ -21,7 +21,7 @@ public interface BatchRepository extends JpaRepository<Batch, Long>, JpaSpecific
 
     @Query("SELECT bt FROM Batch bt " +
             "WHERE bt.registeringInstitutionId LIKE :registeringInstituteId AND bt.payerFsp LIKE :payerFsp")
-    List<Batch> findAllPaged(String registeringInstituteId, String payerFsp, PageRequest pager);
+    List<Batch> findAllBatch(String registeringInstituteId, String payerFsp, PageRequest pager);
 
     @Query(value = "SELECT bt FROM Batch bt WHERE bt.startedAt >= :dateFrom AND " +
             "(bt.registeringInstitutionId LIKE :registeringInstitutionId) AND (bt.payerFsp LIKE :payerFsp)")
