@@ -80,10 +80,10 @@ public class Batch extends AbstractPersistableCustom<Long> {
     @Column(name = "PAYMENT_MODE")
     private String paymentMode;
 
-    @Column(name = "PAYER_FSP")
+    @Column(name = "REGISTERING_INSTITUTION_ID")
     private String registeringInstitutionId;
 
-    @Column(name = "REGISTERING_INSTITUTION_ID")
+    @Column(name = "PAYER_FSP")
     private String payerFsp;
 
     @Column(name = "CLIENT_CORRELATION_ID")
