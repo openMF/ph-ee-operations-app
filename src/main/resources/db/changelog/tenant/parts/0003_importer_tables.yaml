@@ -333,6 +333,9 @@ databaseChangeLog:
               - column:
                   name: workflow_key
                   type: BIGINT
+              - column:
+                  name: transactionrequest_id
+                  type: INTEGER
             tableName: variables
   - changeSet:
       id: 1670941730813-8
