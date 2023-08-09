@@ -4,6 +4,7 @@ import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import org.apache.fineract.config.PaymentModeConfiguration;
 import org.apache.fineract.file.FileTransferService;
 import org.apache.fineract.operations.*;
+import org.apache.fineract.service.BatchService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
@@ -11,6 +12,8 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specifications;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import java.io.BufferedWriter;
 import java.io.File;
@@ -43,6 +46,9 @@ public class BatchApi {
 
     @Autowired
     private PaymentModeConfiguration paymentModeConfig;
+
+    @Autowired
+    private BatchService batchService;
 
     @Value("${application.bucket-name}")
     private String bucketName;
@@ -134,6 +140,20 @@ public class BatchApi {
         } else {
             return null;
         }
+    }
+
+    @GetMapping("/batches/{batchId}/subBatches/{subBatchId}")
+    public ResponseEntity<Object> getSubBatchDetails(@PathVariable String batchId,
+                                                     @PathVariable String subBatchId,
+                                                     @RequestParam Integer pageNo,
+                                                     @RequestParam Integer pageSize){
+        Batch batch = batchService.getSubBatchDetails(batchId, subBatchId);
+
+        if (batch == null) {
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        }
+        Page<Transfer> transfers = transferRepository.findAllBySubBatchId(batch.getSubBatchId(), PageRequest.of(pageNo, pageSize));
+        return new ResponseEntity<>(transfers, HttpStatus.OK);
     }
 
     private BatchDTO generateDetails (Batch batch) {
