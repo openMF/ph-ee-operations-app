@@ -61,7 +61,8 @@ jobs:
       # Install Docker to build and push the image
       - setup_remote_docker:
           version: 20.10.14
-
+      - kubernetes/install-kubectl
+      - checkout
       # Build the Docker image
       - run:
           name: Build Docker image
@@ -79,6 +80,15 @@ jobs:
       - run:
           name: Push Docker image to DockerHub
           command: docker push openmf/ph-ee-operations-app:latest
+
+      - run: |
+          kubectl config use-context arn:aws:eks:$REGION:419830066942:cluster/sit
+          kubectl config get-contexts
+
+      - run:
+          name: Restart Pod
+          command: |
+            kubectl delete pod ph-ee-operations-app -n paymenthub
 
   upgrade-helm-chart:
     docker:
