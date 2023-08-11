@@ -91,8 +91,7 @@ jobs:
       - run:
           name: Restart Pod
           command: |
-            kubectl delete pod ph-ee-operations-app -n paymenthub
-
+           kubectl delete pods -n paymenthub `kubectl get pods -n paymenthub | grep ph-ee-operations-app| cut -d ” ” -f1`
   upgrade-helm-chart:
     docker:
       - image: cimg/python:3.10
