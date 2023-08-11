@@ -4,6 +4,7 @@ import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import org.apache.fineract.config.PaymentModeConfiguration;
 import org.apache.fineract.file.FileTransferService;
 import org.apache.fineract.operations.*;
+import org.apache.fineract.response.SubBatchDetailResponse;
 import org.apache.fineract.service.BatchService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -20,10 +21,7 @@ import java.io.File;
 import java.io.FileWriter;
 import java.math.BigDecimal;
 import javax.servlet.http.HttpServletResponse;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 import static org.apache.fineract.core.service.OperatorUtils.strip;
 
@@ -145,15 +143,30 @@ public class BatchApi {
     @GetMapping("/batches/{batchId}/subBatches/{subBatchId}")
     public ResponseEntity<Object> getSubBatchDetails(@PathVariable String batchId,
                                                      @PathVariable String subBatchId,
-                                                     @RequestParam Integer pageNo,
-                                                     @RequestParam Integer pageSize){
-        Batch batch = batchService.getSubBatchDetails(batchId, subBatchId);
+                                                     @RequestParam(defaultValue = "1") Integer pageNo,
+                                                     @RequestParam(defaultValue = "10") Integer pageSize,
+                                                     @RequestParam(required = false, defaultValue = "startedAt") String sortBy) {
+        Batch batch = batchService.findBatchUsingSubBatchId(batchId, subBatchId);
 
         if (batch == null) {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         }
-        Page<Transfer> transfers = transferRepository.findAllBySubBatchId(batch.getSubBatchId(), PageRequest.of(pageNo, pageSize));
-        return new ResponseEntity<>(transfers, HttpStatus.OK);
+        Sort sortOrder = Sort.by(Sort.Order.asc("startedAt"));
+
+        Page<Transfer> transfers = transferRepository.findAllBySubBatchId(batch.getSubBatchId(),
+                PageRequest.of(pageNo, pageSize, sortOrder));
+        Transfer transfer = transfers.getContent().get(0);
+        SubBatchDetailResponse response = new SubBatchDetailResponse();
+        response.setSubBatchId(subBatchId);
+        response.setTotalAmount(batch.getTotalAmount());
+        response.setContent(transfers.getContent());
+        response.setTotalTransactionCount(batch.getTotalTransactions());
+
+//        response.setPayerFsp();       => not sure how to fetch payer FSP
+//        response.setGeneratedAt();    => does it mean the response generation time / batch startedAt
+//        response.setGeneratedBy();    => what should generatedBy value be?
+
+        return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
     private BatchDTO generateDetails (Batch batch) {
