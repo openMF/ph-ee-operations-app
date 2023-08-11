@@ -149,6 +149,7 @@ workflows:
       - build_and_push_latest_image:
           context:
               - DOCKER
+              - AWS
       - upgrade-helm-chart:
           cluster-name: sit
           requires:
