@@ -63,6 +63,9 @@ jobs:
           version: 20.10.14
       - kubernetes/install-kubectl
       - checkout
+      - aws-eks/update-kubeconfig-with-authenticator:
+          cluster-name: "sit"
+          aws-region: "$REGION"
       # Build the Docker image
       - run:
           name: Build Docker image
@@ -150,6 +153,7 @@ workflows:
           context:
               - DOCKER
               - AWS
+              - Helm
       - upgrade-helm-chart:
           cluster-name: sit
           requires:
