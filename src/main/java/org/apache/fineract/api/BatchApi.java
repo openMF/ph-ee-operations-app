@@ -4,6 +4,8 @@ import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import org.apache.fineract.config.PaymentModeConfiguration;
 import org.apache.fineract.file.FileTransferService;
 import org.apache.fineract.operations.*;
+import org.apache.fineract.response.BatchAndSubBatchSummaryResponse;
+import org.apache.fineract.service.BatchService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
@@ -11,6 +13,9 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specifications;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.util.ObjectUtils;
 import org.springframework.web.bind.annotation.*;
 import java.io.BufferedWriter;
 import java.io.File;
@@ -46,6 +51,9 @@ public class BatchApi {
 
     @Value("${application.bucket-name}")
     private String bucketName;
+
+    @Autowired
+    private BatchService batchService;
 
     @GetMapping("/batches")
     public Page<Batch> getBatches(@RequestParam(value = "page", required = false, defaultValue = "1") Integer page,
@@ -134,6 +142,18 @@ public class BatchApi {
         } else {
             return null;
         }
+    }
+
+    @GetMapping("/batch/{batchId}")
+    public ResponseEntity<BatchAndSubBatchSummaryResponse> getBatchAndSubBatchSummary(@PathVariable String batchId,
+                                                                                      @RequestHeader(name = "X-Correlation-ID") String clientCorrelationId){
+        BatchAndSubBatchSummaryResponse response = batchService.getBatchAndSubBatchSummary(batchId, clientCorrelationId);
+
+        if(ObjectUtils.isEmpty(response)){
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        }
+
+        return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
     private BatchDTO generateDetails (Batch batch) {
