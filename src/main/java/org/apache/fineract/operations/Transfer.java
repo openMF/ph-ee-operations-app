@@ -81,6 +81,9 @@ public class Transfer extends AbstractPersistableCustom<Long> {
     @Column(name = "CLIENTCORRELATIONID")
     private String clientCorrelationId;
 
+    @Column(name = "SUB_BATCH_ID")
+    private String subBatchId;
+
     public Transfer() {
     }
 
@@ -279,5 +282,13 @@ public class Transfer extends AbstractPersistableCustom<Long> {
 
     public void setClientCorrelationId(String clientCorrelationId) {
         this.clientCorrelationId = clientCorrelationId;
+    }
+
+    public String getSubBatchId() {
+        return subBatchId;
+    }
+
+    public void setSubBatchId(String subBatchId) {
+        this.subBatchId = subBatchId;
     }
 }

@@ -4,6 +4,7 @@ import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import org.apache.fineract.config.PaymentModeConfiguration;
 import org.apache.fineract.file.FileTransferService;
 import org.apache.fineract.operations.*;
+import org.apache.fineract.service.batch.BatchService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
@@ -43,6 +44,9 @@ public class BatchApi {
 
     @Autowired
     private PaymentModeConfiguration paymentModeConfig;
+
+    @Autowired
+    private BatchService batchService;
 
     @Value("${application.bucket-name}")
     private String bucketName;
@@ -134,6 +138,17 @@ public class BatchApi {
         } else {
             return null;
         }
+    }
+
+    @GetMapping("/batches/{batchId}")
+    public void getBatchWithSubBatchesAndTransactionsDetail(@PathVariable String batchId,
+                                                            @RequestHeader String clientCorrelationId,
+                                                            @RequestParam(required = false, defaultValue = "1") Integer pageNo,
+                                                            @RequestParam(required = false, defaultValue = "10") Integer pageSize,
+                                                            @RequestParam(required = false, defaultValue = "startedAt") String sortBy,
+                                                            @RequestParam(required = false, defaultValue = "ASC") String orderBy,
+                                                            @RequestParam(required = false, defaultValue = "ALL") String association){
+        batchService.getBatchWithSubBatchesAndTransactionsDetail(batchId, clientCorrelationId, pageNo, pageSize, sortBy, orderBy);
     }
 
     private BatchDTO generateDetails (Batch batch) {

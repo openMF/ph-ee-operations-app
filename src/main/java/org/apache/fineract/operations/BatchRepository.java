@@ -15,4 +15,7 @@ public interface BatchRepository extends JpaRepository<Batch, Long>, JpaSpecific
 
     List<Batch> findAllByBatchId(String batchId);
 
+    Batch findOneByBatchIdAndSubBatchIdIsNull(String batchId);
+
+    Batch findOneByBatchIdAndSubBatchId(String batchId, String subBatchId);
 }
