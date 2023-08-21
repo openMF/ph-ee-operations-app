@@ -1,49 +1,61 @@
 tenants: binx
 
 token:
-  client:
-    channel:
-      secret: "p3456"
+    client:
+        channel:
+            secret: "p3456"
 
 channel-connector:
-  url: http://med-connector-channel.mifos.io
-  transfer-path: /channel/transfer
+    url: http://med-connector-channel.mifos.io
+    transfer-path: /channel/transfer
 
 fineract:
-  datasource:
-    core:
-      host: localhost
-      port: 5432
-      schema: ph_ee_operations
-      username: postgres
-      password: password
-    common:
-      protocol: jdbc
-      subprotocol: postgresql
-      driverclass_name: org.postgresql.Driver
+    datasource:
+        core:
+            host: localhost
+            port: 5432
+            schema: ph_ee_operations
+            username: postgres
+            password: password
+        common:
+            protocol: jdbc
+            subprotocol: postgresql
+            driverclass_name: org.postgresql.Driver
 
 spring:
-  liquibase:
-    contexts: postgresql,initial_switch,tenant_store_db
+    liquibase:
+        contexts: postgresql,initial_switch,tenant_store_db
 
 zeebe:
-  client:
-    connection-mode: ADDRESS
-    worker:
-      threads: 1
-    job:
-      timeout: 2592000000 # 30 days
-    broker:
-      gateway-address: 127.0.0.1:26500
-    security:
-      plaintext: true
+    client:
+        connection-mode: ADDRESS
+        worker:
+            threads: 1
+        job:
+            timeout: 2592000000 # 30 days
+        broker:
+            gateway-address: 127.0.0.1:26500
+        security:
+            plaintext: true
 
 management:
-  endpoint:
-    health:
-      show-details: always
-      probes:
-        enabled: true
+    endpoint:
+        health:
+            show-details: always
+            probes:
+                enabled: true
 
 tenant:
-  name: binx
+    name: binx
+
+baasflow:
+    commons:
+        events:
+            audit:
+                kafka:
+                    brokers: "localhost:9092"
+                    topic: auditlog
+            generic:
+                kafka:
+                    brokers: "localhost:9092"
+                    topic: events

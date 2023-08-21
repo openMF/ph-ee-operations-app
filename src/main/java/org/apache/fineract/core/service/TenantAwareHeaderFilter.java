@@ -30,19 +30,18 @@ import org.slf4j.LoggerFactory;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.filter.GenericFilterBean;
 
-
 import java.io.IOException;
 
 
 public class TenantAwareHeaderFilter extends GenericFilterBean {
-
     private static final String TENANT_IDENTIFIER_REQUEST_HEADER = "Platform-TenantId";
     private static final String TENANT_IDENTIFIER_REQUEST_PARAM = "tenantIdentifier";
     private static final String EXCLUDED_URL = "/oauth/token_key";
     private static final String EXCLUDED_ACTUATOR_PREFIX = "/actuator";
-    private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
+    private final Logger logger = LoggerFactory.getLogger(this.getClass());
     private final TenantsService tenantService;
+    public static ThreadLocal<String> tenant = new ThreadLocal<>();
 
     public TenantAwareHeaderFilter(TenantsService tenantService) {
         this.tenantService = tenantService;
@@ -56,8 +55,8 @@ public class TenantAwareHeaderFilter extends GenericFilterBean {
         task.start();
 
         try {
-            if(!EXCLUDED_URL.equals(request.getServletPath()) && !request.getServletPath().startsWith(EXCLUDED_ACTUATOR_PREFIX) &&
-                    !request.getServletPath().contains("swagger") && !request.getServletPath().contains("api-docs") && !"OPTIONS".equalsIgnoreCase(request.getMethod()) ) {
+            if (!EXCLUDED_URL.equals(request.getServletPath()) && !request.getServletPath().startsWith(EXCLUDED_ACTUATOR_PREFIX) &&
+                    !request.getServletPath().contains("swagger") && !request.getServletPath().contains("api-docs") && !"OPTIONS".equalsIgnoreCase(request.getMethod())) {
                 String tenantIdentifier = request.getHeader(TENANT_IDENTIFIER_REQUEST_HEADER);
                 if (tenantIdentifier == null || tenantIdentifier.length() < 1) {
                     tenantIdentifier = request.getParameter(TENANT_IDENTIFIER_REQUEST_PARAM);
@@ -67,6 +66,7 @@ public class TenantAwareHeaderFilter extends GenericFilterBean {
                     throw new RuntimeException(
                             String.format("No tenant identifier found! Add request header: %s or request param: %s", TENANT_IDENTIFIER_REQUEST_HEADER, TENANT_IDENTIFIER_REQUEST_PARAM));
                 }
+                tenant.set(tenantIdentifier);
                 ThreadLocalContextUtil.setTenantDataSource(tenantService.getTenantDataSource(tenantIdentifier));
             }
             chain.doFilter(request, res);

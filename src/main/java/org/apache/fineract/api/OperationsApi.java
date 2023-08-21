@@ -1,24 +1,14 @@
 package org.apache.fineract.api;
 
 
+import com.baasflow.commons.events.EventLogLevel;
+import com.baasflow.commons.events.EventService;
+import com.baasflow.commons.events.EventType;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import jakarta.servlet.http.HttpServletResponse;
-import org.apache.fineract.operations.BatchRepository;
-import org.apache.fineract.operations.BusinessKey;
-import org.apache.fineract.operations.BusinessKeyRepository;
-import org.apache.fineract.operations.Task;
-import org.apache.fineract.operations.TaskRepository;
-import org.apache.fineract.operations.TransactionRequest;
-import org.apache.fineract.operations.TransactionRequestDetail;
-import org.apache.fineract.operations.TransactionRequestRepository;
-import org.apache.fineract.operations.Transfer;
-import org.apache.fineract.operations.TransferDetail;
-import org.apache.fineract.operations.TransferRepository;
-import org.apache.fineract.operations.TransferStatus;
-import org.apache.fineract.operations.Variable;
-import org.apache.fineract.operations.VariableRepository;
 import org.apache.commons.text.StringEscapeUtils;
 import org.apache.fineract.core.service.CamundaService;
+import org.apache.fineract.core.service.TenantAwareHeaderFilter;
 import org.apache.fineract.operations.*;
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -33,7 +23,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.client.RestTemplate;
 
-import jakarta.servlet.http.HttpServletResponse;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -74,33 +63,45 @@ public class OperationsApi {
     @Value("${channel-connector.transfer-path}")
     private String channelConnectorTransferPath;
 
+    @Autowired
+    private EventService eventService;
+
 
     @PostMapping("/transfer/{transactionId}/refund")
     public String refundTransfer(@RequestHeader("Platform-TenantId") String tenantId,
                                  @PathVariable("transactionId") String transactionId,
                                  @RequestBody String requestBody,
                                  HttpServletResponse response) {
-        Transfer existingIncomingTransfer = transferRepository.findFirstByTransactionIdAndDirection(transactionId, "INCOMING");
-        if (existingIncomingTransfer == null || !TransferStatus.COMPLETED.equals(existingIncomingTransfer.getStatus())) {
-            response.setStatus(HttpServletResponse.SC_NOT_FOUND);
-            JSONObject failResponse = new JSONObject();
-            failResponse.put("response", "Requested incoming transfer does not exist or not yet completed!");
-            return failResponse.toString();
-        }
+        return eventService.auditedEvent(event -> event
+                .setEvent("initiating refund for transfer")
+                .setEventLogLevel(EventLogLevel.INFO)
+                .setSourceModule("operations-app")
+                .setPayload(transactionId)
+                .setPayloadType("string")
+                .setTenantId(tenantId), event -> {
 
-        HttpHeaders httpHeaders = new HttpHeaders();
-        httpHeaders.add("Platform-TenantId", tenantId);
-        httpHeaders.add("Content-Type", "application/json");
-        // httpHeaders.add("Authorization", "Bearer token"); TODO auth needed?
+            Transfer existingIncomingTransfer = transferRepository.findFirstByTransactionIdAndDirection(transactionId, "INCOMING");
+            if (existingIncomingTransfer == null || !TransferStatus.COMPLETED.equals(existingIncomingTransfer.getStatus())) {
+                response.setStatus(HttpServletResponse.SC_NOT_FOUND);
+                JSONObject failResponse = new JSONObject();
+                failResponse.put("response", "Requested incoming transfer does not exist or not yet completed!");
+                return failResponse.toString();
+            }
 
-        JSONObject channelRequest = prepareRefundRequest(requestBody, existingIncomingTransfer);
+            HttpHeaders httpHeaders = new HttpHeaders();
+            httpHeaders.add("Platform-TenantId", tenantId);
+            httpHeaders.add("Content-Type", "application/json");
+            // httpHeaders.add("Authorization", "Bearer token"); TODO auth needed?
 
-        ResponseEntity<String> channelResponse = restTemplate.exchange(channelConnectorUrl + channelConnectorTransferPath,
-                HttpMethod.POST,
-                new HttpEntity<String>(channelRequest.toString(), httpHeaders),
-                String.class);
-        response.setStatus(channelResponse.getStatusCodeValue());
-        return channelResponse.getBody();
+            JSONObject channelRequest = prepareRefundRequest(requestBody, existingIncomingTransfer);
+
+            ResponseEntity<String> channelResponse = restTemplate.exchange(channelConnectorUrl + channelConnectorTransferPath,
+                    HttpMethod.POST,
+                    new HttpEntity<String>(channelRequest.toString(), httpHeaders),
+                    String.class);
+            response.setStatus(channelResponse.getStatusCodeValue());
+            return channelResponse.getBody();
+        });
     }
 
     @PostMapping("/transfer/{transactionId}/recall")
@@ -108,14 +109,23 @@ public class OperationsApi {
                                  @PathVariable("transactionId") String transactionId,
                                  @RequestBody String requestBody,
                                  HttpServletResponse response) {
-        logger.info("Recall transfer request received for transactionId {}", transactionId);
-        Transfer transfer = transferRepository.findFirstByTransactionIdAndDirection(transactionId, "OUTGOING");
-        Optional<Variable> paymentSchemeOpt = variableRepository.findByWorkflowInstanceKeyAndVariableName("paymentScheme", transfer.getWorkflowInstanceKey());
-        String paymentScheme = paymentSchemeOpt.orElseThrow(() -> new RuntimeException("Payment scheme not found for transactionId " + transactionId)).getValue();
+        return eventService.auditedEvent(event -> event
+                .setEvent("initiating recall for transaction")
+                .setEventLogLevel(EventLogLevel.INFO)
+                .setSourceModule("operations-app")
+                .setPayload(transactionId)
+                .setPayloadType("string")
+                .setTenantId(tenantId), event -> {
 
-        camundaService.startRecallFlow(paymentScheme, transfer);
-        response.setStatus(200);
-        return "{}";
+            logger.info("Recall transfer request received for transactionId {}", transactionId);
+            Transfer transfer = transferRepository.findFirstByTransactionIdAndDirection(transactionId, "OUTGOING");
+            Optional<Variable> paymentSchemeOpt = variableRepository.findByWorkflowInstanceKeyAndVariableName("paymentScheme", transfer.getWorkflowInstanceKey());
+            String paymentScheme = paymentSchemeOpt.orElseThrow(() -> new RuntimeException("Payment scheme not found for transactionId " + transactionId)).getValue();
+
+            camundaService.startRecallFlow(paymentScheme, transfer);
+            response.setStatus(200);
+            return "{}";
+        });
     }
 
     private JSONObject prepareRefundRequest(String requestBody, Transfer existingIncomingTransfer) {
@@ -161,28 +171,46 @@ public class OperationsApi {
 
     @GetMapping("/transfer/{workflowInstanceKey}")
     public TransferDetail transferDetails(@PathVariable Long workflowInstanceKey) {
-        Transfer transfer = transferRepository.findFirstByWorkflowInstanceKey(workflowInstanceKey);
-        List<Task> tasks = taskRepository.findByWorkflowInstanceKeyOrderByTimestamp(workflowInstanceKey);
-        List<Variable> variables = variableRepository.findByWorkflowInstanceKeyOrderByTimestamp(workflowInstanceKey);
-        variables.forEach(it -> {
-            String value = StringEscapeUtils.unescapeJava(it.getValue());
-            value = StringEscapeUtils.unescapeJson(value);
-            value = value
-                    .replaceAll("^\"", "")
-                    .replaceAll("\"$", "")
-                    .replaceAll("\n$", "")
-            ;
-            it.setValue(value);
+        return eventService.auditedEvent(event -> event
+                .setEvent("transferDetails invoked")
+                .setEventLogLevel(EventLogLevel.INFO)
+                .setSourceModule("operations-app")
+                .setPayload(Long.toString(workflowInstanceKey))
+                .setPayloadType("string")
+                .setTenantId(TenantAwareHeaderFilter.tenant.get()), event -> {
+
+            Transfer transfer = transferRepository.findFirstByWorkflowInstanceKey(workflowInstanceKey);
+            List<Task> tasks = taskRepository.findByWorkflowInstanceKeyOrderByTimestamp(workflowInstanceKey);
+            List<Variable> variables = variableRepository.findByWorkflowInstanceKeyOrderByTimestamp(workflowInstanceKey);
+            variables.forEach(it -> {
+                String value = StringEscapeUtils.unescapeJava(it.getValue());
+                value = StringEscapeUtils.unescapeJson(value);
+                value = value
+                        .replaceAll("^\"", "")
+                        .replaceAll("\"$", "")
+                        .replaceAll("\n$", "")
+                ;
+                it.setValue(value);
+            });
+            return new TransferDetail(transfer, tasks, variables);
         });
-        return new TransferDetail(transfer, tasks, variables);
     }
 
     @GetMapping("/transactionRequest/{workflowInstanceKey}")
     public TransactionRequestDetail transactionRequestDetails(@PathVariable Long workflowInstanceKey) {
-        TransactionRequest transactionRequest = transactionRequestRepository.findFirstByWorkflowInstanceKey(workflowInstanceKey);
-        List<Task> tasks = taskRepository.findByWorkflowInstanceKeyOrderByTimestamp(workflowInstanceKey);
-        List<Variable> variables = variableRepository.findByWorkflowInstanceKeyOrderByTimestamp(workflowInstanceKey);
-        return new TransactionRequestDetail(transactionRequest, tasks, variables);
+        return eventService.auditedEvent(event -> event
+                .setEvent("transaction request details invoked")
+                .setEventLogLevel(EventLogLevel.INFO)
+                .setSourceModule("operations-app")
+                .setPayload(Long.toString(workflowInstanceKey))
+                .setPayloadType("string")
+                .setTenantId(TenantAwareHeaderFilter.tenant.get()), event -> {
+
+            TransactionRequest transactionRequest = transactionRequestRepository.findFirstByWorkflowInstanceKey(workflowInstanceKey);
+            List<Task> tasks = taskRepository.findByWorkflowInstanceKeyOrderByTimestamp(workflowInstanceKey);
+            List<Variable> variables = variableRepository.findByWorkflowInstanceKeyOrderByTimestamp(workflowInstanceKey);
+            return new TransactionRequestDetail(transactionRequest, tasks, variables);
+        });
     }
 
     @GetMapping("/variables")
@@ -190,9 +218,18 @@ public class OperationsApi {
             @RequestParam(value = "businessKey") String businessKey,
             @RequestParam(value = "businessKeyType") String businessKeyType
     ) {
-        return loadTransfers(businessKey, businessKeyType).stream()
-                .map(transfer -> variableRepository.findByWorkflowInstanceKeyOrderByTimestamp(transfer.getWorkflowInstanceKey()))
-                .collect(Collectors.toList());
+        return eventService.auditedEvent(event -> event
+                .setEvent("variables list loaded")
+                .setEventLogLevel(EventLogLevel.INFO)
+                .setSourceModule("operations-app")
+                .setPayload(businessKey)
+                .setPayloadType("string")
+                .setTenantId(TenantAwareHeaderFilter.tenant.get()), event -> {
+
+            return loadTransfers(businessKey, businessKeyType).stream()
+                    .map(transfer -> variableRepository.findByWorkflowInstanceKeyOrderByTimestamp(transfer.getWorkflowInstanceKey()))
+                    .collect(Collectors.toList());
+        });
     }
 
     @GetMapping("/tasks")
@@ -200,13 +237,21 @@ public class OperationsApi {
             @RequestParam(value = "businessKey") String businessKey,
             @RequestParam(value = "businessKeyType") String businessKeyType
     ) {
-        return loadTransfers(businessKey, businessKeyType).stream()
-                .map(transfer -> taskRepository.findByWorkflowInstanceKeyOrderByTimestamp(transfer.getWorkflowInstanceKey()))
-                .collect(Collectors.toList());
+        return eventService.auditedEvent(event -> event
+                .setEvent("tasks details invoked")
+                .setEventLogLevel(EventLogLevel.INFO)
+                .setSourceModule("operations-app")
+                .setPayload(businessKey)
+                .setPayloadType("string")
+                .setTenantId(TenantAwareHeaderFilter.tenant.get()), event -> {
+
+            return loadTransfers(businessKey, businessKeyType).stream()
+                    .map(transfer -> taskRepository.findByWorkflowInstanceKeyOrderByTimestamp(transfer.getWorkflowInstanceKey()))
+                    .collect(Collectors.toList());
+        });
     }
 
-    private List<BusinessKey> loadTransfers(@RequestParam("businessKey") String
-                                                    businessKey, @RequestParam("businessKeyType") String businessKeyType) {
+    private List<BusinessKey> loadTransfers(@RequestParam("businessKey") String businessKey, @RequestParam("businessKeyType") String businessKeyType) {
         List<BusinessKey> businessKeys = businessKeyRepository.findByBusinessKeyAndBusinessKeyType(businessKey, businessKeyType);
         logger.debug("loaded {} transfer(s) for business key {} of type {}", businessKeys.size(), businessKey, businessKeyType);
         return businessKeys;

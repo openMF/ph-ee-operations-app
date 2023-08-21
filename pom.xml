@@ -99,6 +99,11 @@
             <artifactId>spring-boot-configuration-processor</artifactId>
             <version>${spring-boot.version}</version>
         </dependency>
+        <dependency>
+            <groupId>com.baasflow.events</groupId>
+            <artifactId>baasflow-events-spring-boot-starter</artifactId>
+            <version>1.0.2</version>
+        </dependency>
 
         <dependency>
             <groupId>jakarta.xml.bind</groupId>

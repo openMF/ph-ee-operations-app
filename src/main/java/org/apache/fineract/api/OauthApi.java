@@ -18,6 +18,8 @@
  */
 package org.apache.fineract.api;
 
+import com.baasflow.commons.events.EventLogLevel;
+import com.baasflow.commons.events.EventService;
 import com.nimbusds.jose.JOSEException;
 import com.nimbusds.jose.JOSEObjectType;
 import com.nimbusds.jose.JWSAlgorithm;
@@ -29,6 +31,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.apache.commons.codec.binary.Base64;
+import org.apache.fineract.core.service.TenantAwareHeaderFilter;
 import org.apache.fineract.organisation.role.Role;
 import org.apache.fineract.organisation.user.AppUser;
 import org.apache.fineract.organisation.user.AppUserRepository;
@@ -73,44 +76,55 @@ public class OauthApi {
     @Autowired
     private PasswordEncoder passwordEncoder;
 
+    @Autowired
+    private EventService eventService;
+
+
     @PostMapping(path = "/token", consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE)
     public String oauthToken(HttpServletRequest request, HttpServletResponse response) {
+        return eventService.auditedEvent(event -> event
+                .setEvent("login")
+                .setEventLogLevel(EventLogLevel.INFO)
+                .setSourceModule("operations-app")
+                .setPayload(request.getParameter("username"))
+                .setPayloadType("string")
+                .setTenantId(TenantAwareHeaderFilter.tenant.get()), event -> {
 
+            String grantType = request.getParameter("grant_type");
+            String jti = UUID.randomUUID().toString();
 
-        String grantType = request.getParameter("grant_type");
-        String jti = UUID.randomUUID().toString();
-
-        try {
-            if (grantType.equals("password")) {
-                String userName = request.getParameter("username");
-                AppUser appUser = appUserRepository.findAppUserByName(userName);
-                checkUserExists(appUser);
-                List<String> userRoles = appUser.getRoles().stream().map(Role::getName).toList();
-                String password = request.getParameter("password");
-                if (!passwordEncoder.matches(password, appUser.getPassword())) {
-                    throw new RuntimeException("Login failed!");
+            try {
+                if (grantType.equals("password")) {
+                    String userName = request.getParameter("username");
+                    AppUser appUser = appUserRepository.findAppUserByName(userName);
+                    checkUserExists(appUser);
+                    List<String> userRoles = appUser.getRoles().stream().map(Role::getName).toList();
+                    String password = request.getParameter("password");
+                    if (!passwordEncoder.matches(password, appUser.getPassword())) {
+                        throw new RuntimeException("Login failed!");
+                    }
+                    String scopeParameter = request.getParameter("scope");
+                    List<String> scope = scopeParameter.contains(",") ? Arrays.asList(scopeParameter.split(",")) : List.of(scopeParameter);
+                    String clientId = request.getParameter("client_id");
+                    return generateResponse(userName, clientId, scope, jti, userRoles);
+                } else if (grantType.equals("refresh_token")) {
+                    String refreshToken = request.getParameter("refresh_token");
+                    SignedJWT signedJwt = JwtUtil.getSignedJwt(refreshToken);
+                    String userName = JwtUtil.getUsername(signedJwt);
+                    AppUser appUser = appUserRepository.findAppUserByName(userName);
+                    checkUserExists(appUser);
+                    List<String> userRoles = appUser.getRoles().stream().map(Role::getName).toList();
+                    String clientId = JwtUtil.getClientId(signedJwt);
+                    List<String> scope = JwtUtil.getScope(signedJwt);
+                    return generateResponse(userName, clientId, scope, jti, userRoles);
+                } else {
+                    throw new RuntimeException("Unsupported grant!");
                 }
-                String scopeParameter = request.getParameter("scope");
-                List<String> scope = scopeParameter.contains(",") ? Arrays.asList(scopeParameter.split(",")) : List.of(scopeParameter);
-                String clientId = request.getParameter("client_id");
-                return generateResponse(userName, clientId, scope, jti, userRoles);
-            } else if (grantType.equals("refresh_token")) {
-                String refreshToken = request.getParameter("refresh_token");
-                SignedJWT signedJwt = JwtUtil.getSignedJwt(refreshToken);
-                String userName = JwtUtil.getUsername(signedJwt);
-                AppUser appUser = appUserRepository.findAppUserByName(userName);
-                checkUserExists(appUser);
-                List<String> userRoles = appUser.getRoles().stream().map(Role::getName).toList();
-                String clientId = JwtUtil.getClientId(signedJwt);
-                List<String> scope = JwtUtil.getScope(signedJwt);
-                return generateResponse(userName, clientId, scope, jti, userRoles);
-            } else {
-                throw new RuntimeException("Unsupported grant!");
+            } catch (IOException | JOSEException | URISyntaxException | ParseException | InvalidKeySpecException |
+                     NoSuchAlgorithmException e) {
+                throw new RuntimeException(e);
             }
-        } catch (IOException | JOSEException | URISyntaxException | ParseException | InvalidKeySpecException |
-                 NoSuchAlgorithmException e) {
-            throw new RuntimeException(e);
-        }
+        });
     }
 
     private static void checkUserExists(AppUser appUser) {

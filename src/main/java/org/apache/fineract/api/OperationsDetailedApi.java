@@ -1,9 +1,13 @@
 package org.apache.fineract.api;
 
+import com.baasflow.commons.events.EventLogLevel;
+import com.baasflow.commons.events.EventService;
+import com.baasflow.commons.events.EventType;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletResponse;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.fineract.core.service.TenantAwareHeaderFilter;
 import org.apache.fineract.data.ErrorResponse;
 import org.apache.fineract.exception.WriteToCsvException;
 import org.apache.fineract.operations.*;
@@ -46,13 +50,17 @@ public class OperationsDetailedApi {
     @Autowired
     private TransactionRequestRepository transactionRequestRepository;
 
+    @Autowired
+    private EventService eventService;
+
+
     @GetMapping("/transfers")
     public Page<Transfer> transfers(
             @RequestParam(value = "page") Integer page,
             @RequestParam(value = "size") Integer size,
-            @RequestParam(value = "payerPartyId", required = false) String payerPartyId,
+            @RequestParam(value = "payerPartyId", required = false) String _payerPartyId,
             @RequestParam(value = "payerDfspId", required = false) String payerDfspId,
-            @RequestParam(value = "payeePartyId", required = false) String payeePartyId,
+            @RequestParam(value = "payeePartyId", required = false) String _payeePartyId,
             @RequestParam(value = "payeeDfspId", required = false) String payeeDfspId,
             @RequestParam(value = "transactionId", required = false) String transactionId,
             @RequestParam(value = "status", required = false) String status,
@@ -62,102 +70,113 @@ public class OperationsDetailedApi {
             @RequestParam(value = "startTo", required = false) String startTo,
             @RequestParam(value = "direction", required = false) String direction,
             @RequestParam(value = "sortedBy", required = false) String sortedBy,
-            @RequestParam(value = "partyId", required = false) String partyId,
+            @RequestParam(value = "partyId", required = false) String _partyId,
             @RequestParam(value = "partyIdType", required = false) String partyIdType,
             @RequestParam(value = "sortedOrder", required = false, defaultValue = "DESC") String sortedOrder,
             @RequestParam(value = "endToEndIdentification", required = false) String endToEndIdentification) {
-        List<Specification<Transfer>> specs = new ArrayList<>();
+        return eventService.auditedEvent(event -> event
+                .setEvent("transfers list invoked")
+                .setEventLogLevel(EventLogLevel.INFO)
+                .setSourceModule("operations-app")
+                .setTenantId(TenantAwareHeaderFilter.tenant.get()), event -> {
 
-        if (StringUtils.isNotBlank(payerPartyId)) {
-            payerPartyId = urlDecode(payerPartyId, "Decoded payerPartyId: ");
+            String payerPartyId = _payerPartyId;
+            String payeePartyId = _payeePartyId;
+            String partyId = _partyId;
 
-            if (payerPartyId.length() == 8) {
-                String likeTerm = "%" + payerPartyId;
-                if (StringUtils.isNotBlank(internalAccountIdPrefix)) {
-                    likeTerm = internalAccountIdPrefix + likeTerm;
+            List<Specification<Transfer>> specs = new ArrayList<>();
+
+            if (StringUtils.isNotBlank(payerPartyId)) {
+                payerPartyId = urlDecode(payerPartyId, "Decoded payerPartyId: ");
+
+                if (payerPartyId.length() == 8) {
+                    String likeTerm = "%" + payerPartyId;
+                    if (StringUtils.isNotBlank(internalAccountIdPrefix)) {
+                        likeTerm = internalAccountIdPrefix + likeTerm;
+                    }
+                    logger.info("PayerPartyId is 8 characters long, using LIKE search to match internalAccountId: {}", likeTerm);
+                    specs.add(TransferSpecs.like(Transfer_.payerPartyId, likeTerm));
+                } else {
+                    specs.add(TransferSpecs.match(Transfer_.payerPartyId, payerPartyId));
                 }
-                logger.info("PayerPartyId is 8 characters long, using LIKE search to match internalAccountId: {}", likeTerm);
-                specs.add(TransferSpecs.like(Transfer_.payerPartyId, likeTerm));
-            } else {
-                specs.add(TransferSpecs.match(Transfer_.payerPartyId, payerPartyId));
             }
-        }
-        if (StringUtils.isNotBlank(payeePartyId)) {
-            payeePartyId = urlDecode(payeePartyId, "Decoded payeePartyId: ");
+            if (StringUtils.isNotBlank(payeePartyId)) {
+                payeePartyId = urlDecode(payeePartyId, "Decoded payeePartyId: ");
 
-            if (payeePartyId.length() == 8) {
-                String likeTerm = "%" + payeePartyId;
-                if (StringUtils.isNotBlank(internalAccountIdPrefix)) {
-                    likeTerm = internalAccountIdPrefix + likeTerm;
+                if (payeePartyId.length() == 8) {
+                    String likeTerm = "%" + payeePartyId;
+                    if (StringUtils.isNotBlank(internalAccountIdPrefix)) {
+                        likeTerm = internalAccountIdPrefix + likeTerm;
+                    }
+                    logger.info("PayeePartyId is 8 characters long, using LIKE search to match internalAccountId: {}", likeTerm);
+                    specs.add(TransferSpecs.like(Transfer_.payeePartyId, likeTerm));
+                } else {
+                    specs.add(TransferSpecs.match(Transfer_.payeePartyId, payeePartyId));
                 }
-                logger.info("PayeePartyId is 8 characters long, using LIKE search to match internalAccountId: {}", likeTerm);
-                specs.add(TransferSpecs.like(Transfer_.payeePartyId, likeTerm));
+            }
+            if (StringUtils.isNotBlank(payeeDfspId)) {
+                specs.add(TransferSpecs.match(Transfer_.payeeDfspId, payeeDfspId));
+            }
+            if (StringUtils.isNotBlank(payerDfspId)) {
+                specs.add(TransferSpecs.match(Transfer_.payerDfspId, payerDfspId));
+            }
+            if (StringUtils.isNotBlank(transactionId)) {
+                specs.add(TransferSpecs.match(Transfer_.transactionId, transactionId));
+            }
+            if (status != null && parseStatus(status) != null) {
+                specs.add(TransferSpecs.match(Transfer_.status, parseStatus(status)));
+            }
+            if (amount != null) {
+                specs.add(TransferSpecs.match(Transfer_.amount, amount));
+            }
+            if (StringUtils.isNotBlank(currency)) {
+                specs.add(TransferSpecs.match(Transfer_.currency, currency));
+            }
+            if (StringUtils.isNotBlank(direction)) {
+                specs.add(TransferSpecs.match(Transfer_.direction, direction));
+            }
+            if (StringUtils.isNotBlank(partyIdType)) {
+                specs.add(TransferSpecs.multiMatch(Transfer_.payeePartyIdType, Transfer_.payerPartyIdType, partyIdType));
+            }
+            if (StringUtils.isNotBlank(partyId)) {
+                partyId = urlDecode(partyId, "Decoded PartyId: ");
+                specs.add(TransferSpecs.multiMatch(Transfer_.payerPartyId, Transfer_.payeePartyId, partyId));
+            }
+            try {
+                if (startFrom != null && startTo != null) {
+                    specs.add(TransferSpecs.between(Transfer_.startedAt, dateFormat().parse(startFrom), dateFormat().parse(startTo)));
+                } else if (startFrom != null) {
+                    specs.add(TransferSpecs.later(Transfer_.startedAt, dateFormat().parse(startFrom)));
+                } else if (startTo != null) {
+                    specs.add(TransferSpecs.earlier(Transfer_.startedAt, dateFormat().parse(startTo)));
+                }
+            } catch (Exception e) {
+                logger.warn("failed to parse dates {} / {}", startFrom, startTo);
+            }
+
+            if (StringUtils.isNotBlank(endToEndIdentification)) {
+                specs.add(TransferSpecs.match(Transfer_.endToEndIdentification, endToEndIdentification));
+            }
+
+            PageRequest pager;
+            if (sortedBy == null || "startedAt".equals(sortedBy)) {
+                pager = PageRequest.of(page, size, Sort.by(Sort.Direction.fromString(sortedOrder), "startedAt"));
             } else {
-                specs.add(TransferSpecs.match(Transfer_.payeePartyId, payeePartyId));
-            }
-        }
-        if (StringUtils.isNotBlank(payeeDfspId)) {
-            specs.add(TransferSpecs.match(Transfer_.payeeDfspId, payeeDfspId));
-        }
-        if (StringUtils.isNotBlank(payerDfspId)) {
-            specs.add(TransferSpecs.match(Transfer_.payerDfspId, payerDfspId));
-        }
-        if (StringUtils.isNotBlank(transactionId)) {
-            specs.add(TransferSpecs.match(Transfer_.transactionId, transactionId));
-        }
-        if (status != null && parseStatus(status) != null) {
-            specs.add(TransferSpecs.match(Transfer_.status, parseStatus(status)));
-        }
-        if (amount != null) {
-            specs.add(TransferSpecs.match(Transfer_.amount, amount));
-        }
-        if (StringUtils.isNotBlank(currency)) {
-            specs.add(TransferSpecs.match(Transfer_.currency, currency));
-        }
-        if (StringUtils.isNotBlank(direction)) {
-            specs.add(TransferSpecs.match(Transfer_.direction, direction));
-        }
-        if (StringUtils.isNotBlank(partyIdType)) {
-            specs.add(TransferSpecs.multiMatch(Transfer_.payeePartyIdType, Transfer_.payerPartyIdType, partyIdType));
-        }
-        if (StringUtils.isNotBlank(partyId)) {
-            partyId = urlDecode(partyId, "Decoded PartyId: ");
-            specs.add(TransferSpecs.multiMatch(Transfer_.payerPartyId, Transfer_.payeePartyId, partyId));
-        }
-        try {
-            if (startFrom != null && startTo != null) {
-                specs.add(TransferSpecs.between(Transfer_.startedAt, dateFormat().parse(startFrom), dateFormat().parse(startTo)));
-            } else if (startFrom != null) {
-                specs.add(TransferSpecs.later(Transfer_.startedAt, dateFormat().parse(startFrom)));
-            } else if (startTo != null) {
-                specs.add(TransferSpecs.earlier(Transfer_.startedAt, dateFormat().parse(startTo)));
-            }
-        } catch (Exception e) {
-            logger.warn("failed to parse dates {} / {}", startFrom, startTo);
-        }
-
-        if (StringUtils.isNotBlank(endToEndIdentification)) {
-            specs.add(TransferSpecs.match(Transfer_.endToEndIdentification, endToEndIdentification));
-        }
-
-        PageRequest pager;
-        if (sortedBy == null || "startedAt".equals(sortedBy)) {
-            pager = PageRequest.of(page, size, Sort.by(Sort.Direction.fromString(sortedOrder), "startedAt"));
-        } else {
-            pager = PageRequest.of(page, size, Sort.by(Sort.Direction.fromString(sortedOrder), sortedBy));
-        }
-
-        logger.info("finding transfers based on {} specs", specs.size());
-        if (!specs.isEmpty()) {
-            Specification<Transfer> compiledSpecs = specs.get(0);
-            for (int i = 1; i < specs.size(); i++) {
-                compiledSpecs = compiledSpecs.and(specs.get(i));
+                pager = PageRequest.of(page, size, Sort.by(Sort.Direction.fromString(sortedOrder), sortedBy));
             }
 
-            return transferRepository.findAll(compiledSpecs, pager);
-        } else {
-            return transferRepository.findAll(pager);
-        }
+            logger.info("finding transfers based on {} specs", specs.size());
+            if (!specs.isEmpty()) {
+                Specification<Transfer> compiledSpecs = specs.get(0);
+                for (int i = 1; i < specs.size(); i++) {
+                    compiledSpecs = compiledSpecs.and(specs.get(i));
+                }
+
+                return transferRepository.findAll(compiledSpecs, pager);
+            } else {
+                return transferRepository.findAll(pager);
+            }
+        });
     }
 
     private String urlDecode(String variable, String logPrefix) {
@@ -189,63 +208,71 @@ public class OperationsDetailedApi {
             @RequestParam(value = "direction", required = false) String direction,
             @RequestParam(value = "sortedBy", required = false) String sortedBy,
             @RequestParam(value = "sortedOrder", required = false, defaultValue = "DESC") String sortedOrder) {
-        List<Specification<TransactionRequest>> specs = new ArrayList<>();
-        if (payerPartyId != null) {
-            specs.add(TransactionRequestSpecs.match(TransactionRequest_.payerPartyId, payerPartyId));
-        }
-        if (payeePartyId != null) {
-            specs.add(TransactionRequestSpecs.match(TransactionRequest_.payeePartyId, payeePartyId));
-        }
-        if (payeeDfspId != null) {
-            specs.add(TransactionRequestSpecs.match(TransactionRequest_.payeeDfspId, payeeDfspId));
-        }
-        if (payerDfspId != null) {
-            specs.add(TransactionRequestSpecs.match(TransactionRequest_.payerDfspId, payerDfspId));
-        }
-        if (transactionId != null) {
-            specs.add(TransactionRequestSpecs.match(TransactionRequest_.transactionId, transactionId));
-        }
-        if (state != null && parseState(state) != null) {
-            specs.add(TransactionRequestSpecs.match(TransactionRequest_.state, parseState(state)));
-        }
-        if (amount != null) {
-            specs.add(TransactionRequestSpecs.match(TransactionRequest_.amount, amount));
-        }
-        if (currency != null) {
-            specs.add(TransactionRequestSpecs.match(TransactionRequest_.currency, currency));
-        }
-        if (direction != null) {
-            specs.add(TransactionRequestSpecs.match(TransactionRequest_.direction, direction));
-        }
-        try {
-            if (startFrom != null && startTo != null) {
-                specs.add(TransactionRequestSpecs.between(TransactionRequest_.startedAt, dateFormat().parse(startFrom), dateFormat().parse(startTo)));
-            } else if (startFrom != null) {
-                specs.add(TransactionRequestSpecs.later(TransactionRequest_.startedAt, dateFormat().parse(startFrom)));
-            } else if (startTo != null) {
-                specs.add(TransactionRequestSpecs.earlier(TransactionRequest_.startedAt, dateFormat().parse(startTo)));
+
+        return eventService.auditedEvent(event -> event
+                .setEvent("transaction request list invoked")
+                .setEventLogLevel(EventLogLevel.INFO)
+                .setSourceModule("operations-app")
+                .setTenantId(TenantAwareHeaderFilter.tenant.get()), event -> {
+
+            List<Specification<TransactionRequest>> specs = new ArrayList<>();
+            if (payerPartyId != null) {
+                specs.add(TransactionRequestSpecs.match(TransactionRequest_.payerPartyId, payerPartyId));
             }
-        } catch (Exception e) {
-            logger.warn("failed to parse dates {} / {}", startFrom, startTo);
-        }
-
-        PageRequest pager;
-        if (sortedBy == null || "startedAt".equals(sortedBy)) {
-            pager = PageRequest.of(page, size, Sort.by(Sort.Direction.valueOf(sortedOrder), "startedAt"));
-        } else {
-            pager = PageRequest.of(page, size, Sort.by(Sort.Direction.valueOf(sortedOrder), sortedBy));
-        }
-
-        if (specs.size() > 0) {
-            Specification<TransactionRequest> compiledSpecs = specs.get(0);
-            for (int i = 1; i < specs.size(); i++) {
-                compiledSpecs = compiledSpecs.and(specs.get(i));
+            if (payeePartyId != null) {
+                specs.add(TransactionRequestSpecs.match(TransactionRequest_.payeePartyId, payeePartyId));
+            }
+            if (payeeDfspId != null) {
+                specs.add(TransactionRequestSpecs.match(TransactionRequest_.payeeDfspId, payeeDfspId));
+            }
+            if (payerDfspId != null) {
+                specs.add(TransactionRequestSpecs.match(TransactionRequest_.payerDfspId, payerDfspId));
+            }
+            if (transactionId != null) {
+                specs.add(TransactionRequestSpecs.match(TransactionRequest_.transactionId, transactionId));
+            }
+            if (state != null && parseState(state) != null) {
+                specs.add(TransactionRequestSpecs.match(TransactionRequest_.state, parseState(state)));
+            }
+            if (amount != null) {
+                specs.add(TransactionRequestSpecs.match(TransactionRequest_.amount, amount));
+            }
+            if (currency != null) {
+                specs.add(TransactionRequestSpecs.match(TransactionRequest_.currency, currency));
+            }
+            if (direction != null) {
+                specs.add(TransactionRequestSpecs.match(TransactionRequest_.direction, direction));
+            }
+            try {
+                if (startFrom != null && startTo != null) {
+                    specs.add(TransactionRequestSpecs.between(TransactionRequest_.startedAt, dateFormat().parse(startFrom), dateFormat().parse(startTo)));
+                } else if (startFrom != null) {
+                    specs.add(TransactionRequestSpecs.later(TransactionRequest_.startedAt, dateFormat().parse(startFrom)));
+                } else if (startTo != null) {
+                    specs.add(TransactionRequestSpecs.earlier(TransactionRequest_.startedAt, dateFormat().parse(startTo)));
+                }
+            } catch (Exception e) {
+                logger.warn("failed to parse dates {} / {}", startFrom, startTo);
             }
 
-            return transactionRequestRepository.findAll(compiledSpecs, pager);
-        } else {
-            return transactionRequestRepository.findAll(pager);
-        }
+            PageRequest pager;
+            if (sortedBy == null || "startedAt".equals(sortedBy)) {
+                pager = PageRequest.of(page, size, Sort.by(Sort.Direction.valueOf(sortedOrder), "startedAt"));
+            } else {
+                pager = PageRequest.of(page, size, Sort.by(Sort.Direction.valueOf(sortedOrder), sortedBy));
+            }
+
+            if (specs.size() > 0) {
+                Specification<TransactionRequest> compiledSpecs = specs.get(0);
+                for (int i = 1; i < specs.size(); i++) {
+                    compiledSpecs = compiledSpecs.and(specs.get(i));
+                }
+
+                return transactionRequestRepository.findAll(compiledSpecs, pager);
+            } else {
+                return transactionRequestRepository.findAll(pager);
+            }
+        });
     }
 
     /**
@@ -271,63 +298,70 @@ public class OperationsDetailedApi {
             @RequestParam(value = "state", required = false) String state,
             @RequestBody Map<String, List<String>> body) {
 
-        if (!command.equalsIgnoreCase("export")) {
-            return new ErrorResponse.Builder()
-                    .setErrorCode("" + HttpServletResponse.SC_NOT_FOUND)
-                    .setErrorDescription(command + " not supported")
-                    .setDeveloperMessage("Possible supported command is " + command).build();
-        }
+        return eventService.auditedEvent(event -> event
+                .setEvent("transaction requests search invoked")
+                .setEventLogLevel(EventLogLevel.INFO)
+                .setSourceModule("operations-app")
+                .setTenantId(TenantAwareHeaderFilter.tenant.get()), event -> {
 
-        List<String> filterByList = new ArrayList<>(body.keySet());
-
-        List<Specification<TransactionRequest>> specs = new ArrayList<>();
-        if (state != null && parseState(state) != null) {
-            specs.add(TransactionRequestSpecs.match(TransactionRequest_.state, parseState(state)));
-            logger.info("State filter added");
-        }
-        try {
-            specs.add(getDateSpecification(startTo, startFrom));
-            logger.info("Date filter parsed successful");
-        } catch (Exception e) {
-            logger.warn("failed to parse dates {} / {}", startFrom, startTo);
-        }
-
-        Specification<TransactionRequest> spec = null;
-        List<TransactionRequest> data = new ArrayList<>();
-        for (String filterBy : filterByList) {
-            List<String> ids = body.get(filterBy);
-            if (ids.isEmpty()) {
-                continue;
+            if (!command.equalsIgnoreCase("export")) {
+                return new ErrorResponse.Builder()
+                        .setErrorCode("" + HttpServletResponse.SC_NOT_FOUND)
+                        .setErrorDescription(command + " not supported")
+                        .setDeveloperMessage("Possible supported command is " + command).build();
             }
-            Filter filter;
+
+            List<String> filterByList = new ArrayList<>(body.keySet());
+
+            List<Specification<TransactionRequest>> specs = new ArrayList<>();
+            if (state != null && parseState(state) != null) {
+                specs.add(TransactionRequestSpecs.match(TransactionRequest_.state, parseState(state)));
+                logger.info("State filter added");
+            }
             try {
-                filter = parseFilter(filterBy);
-                logger.info("Filter parsed successfully " + filter.name());
+                specs.add(getDateSpecification(startTo, startFrom));
+                logger.info("Date filter parsed successful");
             } catch (Exception e) {
-                logger.info("Unable to parse filter " + filterBy + " skipping");
-                continue;
+                logger.warn("failed to parse dates {} / {}", startFrom, startTo);
             }
-            spec = getFilterSpecs(filter, ids);
-            Page<TransactionRequest> result = executeRequest(spec, specs, page, size, sortedOrder);
-            data.addAll(result.getContent());
-            logger.info("Result for " + filter + " : " + data);
-        }
-        if (data.isEmpty()) {
-            response.setStatus(HttpServletResponse.SC_NOT_FOUND);
-            return new ErrorResponse.Builder()
-                    .setErrorCode("" + HttpServletResponse.SC_NOT_FOUND)
-                    .setErrorDescription("Empty response")
-                    .setDeveloperMessage("Empty response").build();
-        }
-        try {
-            CsvUtility.writeToCsv(response, data);
-        } catch (WriteToCsvException e) {
-            return new ErrorResponse.Builder()
-                    .setErrorCode(e.getErrorCode())
-                    .setErrorDescription(e.getErrorDescription())
-                    .setDeveloperMessage(e.getDeveloperMessage()).build();
-        }
-        return null;
+
+            Specification<TransactionRequest> spec = null;
+            List<TransactionRequest> data = new ArrayList<>();
+            for (String filterBy : filterByList) {
+                List<String> ids = body.get(filterBy);
+                if (ids.isEmpty()) {
+                    continue;
+                }
+                Filter filter;
+                try {
+                    filter = parseFilter(filterBy);
+                    logger.info("Filter parsed successfully " + filter.name());
+                } catch (Exception e) {
+                    logger.info("Unable to parse filter " + filterBy + " skipping");
+                    continue;
+                }
+                spec = getFilterSpecs(filter, ids);
+                Page<TransactionRequest> result = executeRequest(spec, specs, page, size, sortedOrder);
+                data.addAll(result.getContent());
+                logger.info("Result for " + filter + " : " + data);
+            }
+            if (data.isEmpty()) {
+                response.setStatus(HttpServletResponse.SC_NOT_FOUND);
+                return new ErrorResponse.Builder()
+                        .setErrorCode("" + HttpServletResponse.SC_NOT_FOUND)
+                        .setErrorDescription("Empty response")
+                        .setDeveloperMessage("Empty response").build();
+            }
+            try {
+                CsvUtility.writeToCsv(response, data);
+            } catch (WriteToCsvException e) {
+                return new ErrorResponse.Builder()
+                        .setErrorCode(e.getErrorCode())
+                        .setErrorDescription(e.getErrorDescription())
+                        .setDeveloperMessage(e.getDeveloperMessage()).build();
+            }
+            return null;
+        });
     }
 
     /*

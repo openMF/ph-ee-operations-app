@@ -18,9 +18,12 @@
  */
 package org.apache.fineract.api;
 
+import com.baasflow.commons.events.EventLogLevel;
+import com.baasflow.commons.events.EventService;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletResponse;
+import org.apache.fineract.core.service.TenantAwareHeaderFilter;
 import org.apache.fineract.organisation.role.Role;
 import org.apache.fineract.organisation.role.RoleRepository;
 import org.apache.fineract.organisation.user.AppUser;
@@ -28,18 +31,11 @@ import org.apache.fineract.organisation.user.AppUserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.Optional;
 
 import static java.util.stream.Collectors.toList;
 import static org.apache.fineract.api.AssignmentAction.ASSIGN;
@@ -59,77 +55,139 @@ public class UsersApi {
     @Autowired
     private RoleRepository roleRepository;
 
+    @Autowired
+    private EventService eventService;
+
     @GetMapping(produces = MediaType.APPLICATION_JSON_VALUE)
     public List<AppUser> retrieveAll() {
-        return this.appuserRepository.findAll();
+        return eventService.auditedEvent(event -> event
+                .setEvent("retrieve all users")
+                .setEventLogLevel(EventLogLevel.INFO)
+                .setSourceModule("operations-app")
+                .setTenantId(TenantAwareHeaderFilter.tenant.get()), event -> {
+            return this.appuserRepository.findAll();
+        });
     }
 
     @GetMapping(path = "/{userId}", produces = MediaType.APPLICATION_JSON_VALUE)
     public AppUser retrieveOne(@PathVariable("userId") Long userId, HttpServletResponse response) {
-        AppUser user = appuserRepository.findById(userId).get();
-        if(user != null) {
-            return user;
-        } else {
-            response.setStatus(HttpServletResponse.SC_NOT_FOUND);
-            return null;
-        }
+        return eventService.auditedEvent(event -> event
+                .setEvent("retrieve user")
+                .setEventLogLevel(EventLogLevel.INFO)
+                .setSourceModule("operations-app")
+                .setPayload(String.valueOf(userId))
+                .setPayloadType("string")
+                .setTenantId(TenantAwareHeaderFilter.tenant.get()), event -> {
+
+            Optional<AppUser> user = appuserRepository.findById(userId);
+            if (user.isPresent()) {
+                return user.get();
+            } else {
+                response.setStatus(HttpServletResponse.SC_NOT_FOUND);
+                return null;
+            }
+        });
     }
 
     @GetMapping(path = "/{userId}/roles", produces = MediaType.APPLICATION_JSON_VALUE)
     public Collection<Role> retrieveRoles(@PathVariable("userId") Long userId, HttpServletResponse response) {
-        AppUser user = appuserRepository.findById(userId).get();
-        if(user != null) {
-            return user.getRoles();
-        } else {
-            response.setStatus(HttpServletResponse.SC_NOT_FOUND);
-            return null;
-        }
+        return eventService.auditedEvent(event -> event
+                        .setEvent("retrieve roles for user")
+                        .setEventLogLevel(EventLogLevel.INFO)
+                        .setSourceModule("operations-app")
+                        .setPayload(String.valueOf(userId))
+                        .setPayloadType("string")
+                        .setTenantId(TenantAwareHeaderFilter.tenant.get()), event -> {
+                    Optional<AppUser> user = appuserRepository.findById(userId);
+                    if (user.isPresent()) {
+                        return user.get().getRoles();
+                    } else {
+                        response.setStatus(HttpServletResponse.SC_NOT_FOUND);
+                        return null;
+                    }
+                }
+        );
     }
 
     @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
     public void create(@RequestBody AppUser appUser, HttpServletResponse response) {
-        AppUser existing = appuserRepository.findAppUserByName(appUser.getUsername());
-        if (existing == null) {
-            // TODO enforce password policy
-            appUser.setId(null);
-            appUser.setPassword(passwordEncoder.encode(appUser.getPassword()));
-            appuserRepository.saveAndFlush(appUser);
-        } else {
-            response.setStatus(HttpServletResponse.SC_CONFLICT);
-        }
+        eventService.auditedEvent(event -> event
+                .setEvent("create user")
+                .setEventLogLevel(EventLogLevel.INFO)
+                .setSourceModule("operations-app")
+                .setPayload(appUser.getUsername())
+                .setPayloadType("string"), event -> {
+            AppUser existing = appuserRepository.findAppUserByName(appUser.getUsername());
+            if (existing == null) {
+                // TODO enforce password policy
+                appUser.setId(null);
+                appUser.setPassword(passwordEncoder.encode(appUser.getPassword()));
+                appuserRepository.saveAndFlush(appUser);
+            } else {
+                response.setStatus(HttpServletResponse.SC_CONFLICT);
+            }
+            return null;
+        });
     }
 
     @PutMapping(path = "/{userId}", consumes = MediaType.APPLICATION_JSON_VALUE)
     public void update(@PathVariable("userId") Long userId, @RequestBody AppUser appUser, HttpServletResponse response) {
-        AppUser existing = appuserRepository.findById(userId).get();
-        if (existing != null) {
-            appUser.setId(userId);
-            appUser.setPassword(passwordEncoder.encode(appUser.getPassword()));
-            appUser.setRoles(existing.getRoles());
-            appuserRepository.saveAndFlush(appUser);
-        } else {
-            response.setStatus(HttpServletResponse.SC_NOT_FOUND);
-        }
+        eventService.auditedEvent(event -> event
+                .setEvent("update user")
+                .setEventLogLevel(EventLogLevel.INFO)
+                .setSourceModule("operations-app")
+                .setPayload(String.valueOf(userId))
+                .setPayloadType("string"), event -> {
+            AppUser existing = appuserRepository.findById(userId).get();
+            if (existing != null) {
+                appUser.setId(userId);
+                appUser.setPassword(passwordEncoder.encode(appUser.getPassword()));
+                appUser.setRoles(existing.getRoles());
+                appuserRepository.saveAndFlush(appUser);
+            } else {
+                response.setStatus(HttpServletResponse.SC_NOT_FOUND);
+            }
+            return null;
+        });
     }
 
     @DeleteMapping(path = "/{userId}", produces = MediaType.TEXT_HTML_VALUE)
     public void delete(@PathVariable("userId") Long userId, HttpServletResponse response) {
-        if(appuserRepository.findById(userId).isPresent()) {
-            appuserRepository.deleteById(userId);
-        } else {
-            response.setStatus(HttpServletResponse.SC_NOT_FOUND);
-        }
+        eventService.auditedEvent(event -> event
+                .setEvent("delete user")
+                .setEventLogLevel(EventLogLevel.INFO)
+                .setSourceModule("operations-app")
+                .setPayload(String.valueOf(userId))
+                .setPayloadType("string"), event -> {
+            if (appuserRepository.findById(userId).isPresent()) {
+                appuserRepository.deleteById(userId);
+            } else {
+                response.setStatus(HttpServletResponse.SC_NOT_FOUND);
+            }
+            return null;
+        });
     }
 
     @PutMapping(path = "/{userId}/roles", consumes = MediaType.APPLICATION_JSON_VALUE)
     public void userAssignment(@PathVariable("userId") Long userId, @RequestParam("action") AssignmentAction action,
                                @RequestBody EntityAssignments assignments, HttpServletResponse response) {
-        AppUser existingUser = appuserRepository.findById(userId).get();
-        if (existingUser != null) {
-            Collection<Role> rolesToAssign = existingUser.getRoles();
+        eventService.auditedEvent(event -> event
+                .setEvent("update user assignments")
+                .setEventLogLevel(EventLogLevel.INFO)
+                .setSourceModule("operations-app")
+                .setPayload(String.valueOf(userId))
+                .setPayloadType("string"), event -> {
+            Optional<AppUser> existingUser = appuserRepository.findById(userId);
+            if (existingUser.isEmpty()) {
+                response.setStatus(HttpServletResponse.SC_NOT_FOUND);
+                return null;
+            }
+
+            AppUser user = existingUser.get();
+            Collection<Role> rolesToAssign = user.getRoles();
             List<Long> existingRoleIds = rolesToAssign.stream()
                     .map(Role::getId)
-                    .collect(toList());
+                    .toList();
             List<Role> deltaRoles = assignments.getEntityIds().stream()
                     .filter(id -> {
                         if (ASSIGN.equals(action)) {
@@ -153,11 +211,10 @@ public class UsersApi {
                 } else { // revoke
                     rolesToAssign.removeAll(deltaRoles);
                 }
-                existingUser.setRoles(rolesToAssign);
-                appuserRepository.saveAndFlush(existingUser);
+                user.setRoles(rolesToAssign);
+                appuserRepository.saveAndFlush(user);
             }
-        } else {
-            response.setStatus(HttpServletResponse.SC_NOT_FOUND);
-        }
+            return null;
+        });
     }
 }
