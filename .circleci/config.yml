@@ -71,6 +71,7 @@ jobs:
           name: Build Docker image
           command: |
             ./gradlew clean
+            ./gradlew clean build
             ./gradlew bootJar
             docker build -t openmf/ph-ee-operations-app:latest .
 
@@ -84,14 +85,6 @@ jobs:
           name: Push Docker image to DockerHub
           command: docker push openmf/ph-ee-operations-app:latest
 
-      - run: |
-          kubectl config use-context arn:aws:eks:$REGION:$ACCOUNT_ID:cluster/sit
-          kubectl config get-contexts
-
-      - run:
-          name: Restart Pod
-          command: kubectl delete pods -n $NAMESPACE `kubectl get pods -n $NAMESPACE | grep ph-ee-operations-app|cut -d " " -f1`
-
   build-and-host-engine:
     docker:
       - image: cimg/python:3.10
@@ -100,7 +93,7 @@ jobs:
       TERM: dumb
     steps:
       - run: git clone https://github.com/openMF/ph-ee-env-template
-      - run: rm -f helm/ph-ee-engine/Chart.lock helm/ph-ee-engine/requirements.lock helm/ph-ee-engine/charts/*
+      - run: rm -f ph-ee-env-template/helm/ph-ee-engine/Chart.lock ph-ee-env-template/helm/ph-ee-engine/requirements.lock ph-ee-env-template/helm/ph-ee-engine/charts/*
       - helm/install-helm-client:
           version: "v3.8.2"
       #      - run: "sed -i '2s/.*/appVersion: 0.0.0/' helm/ph-ee-engine/Chart.yaml"
