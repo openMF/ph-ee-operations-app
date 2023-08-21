@@ -70,7 +70,6 @@ jobs:
       - run:
           name: Build Docker image
           command: |
-            ./gradlew clean
             ./gradlew clean build
             ./gradlew bootJar
             docker build -t openmf/ph-ee-operations-app:latest .
@@ -170,10 +169,6 @@ jobs:
           add-repo: "https://fynarfin.io/images/ph-ee-g2psandbox-fynarfin"
           wait: true
           timeout: "300s"
-      - run: |
-          kubectl config use-context arn:aws:eks:$REGION:419830066942:cluster/sit
-          kubectl config get-contexts
-          kubectl delete pod ph-ee-operations-app -n paymenthub
 
   test-chart-gov:
     docker:
