@@ -1,10 +1,8 @@
 package org.apache.fineract.operations;
 
-import org.springframework.data.jpa.domain.Specification;
 import org.springframework.data.jpa.domain.Specifications;
 
 import javax.persistence.metamodel.SingularAttribute;
-
 import java.util.Date;
 
 import static org.springframework.data.jpa.domain.Specifications.where;
