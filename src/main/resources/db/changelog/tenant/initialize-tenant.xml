@@ -35,4 +35,5 @@
     <include file="parts/0006_bcrypt_default_password.xml" relativeToChangelogFile="true"/>
     <include file="parts/0007_clientcorrelation_to_endtoendid.xml" relativeToChangelogFile="true"/>
     <include file="parts/0008_new_transfer_fields.xml" relativeToChangelogFile="true"/>
+    <include file="parts/0009_add_payment_status.xml" relativeToChangelogFile="true"/>
 </databaseChangeLog>

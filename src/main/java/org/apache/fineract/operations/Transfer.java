@@ -89,6 +89,8 @@ public class Transfer {
     @Column(name = "RECALL_DIRECTION")
     private String recallDirection;
 
+    @Column(name = "PAYMENT_STATUS")
+    private String paymentStatus;
 
     public Transfer() {
     }
