@@ -131,6 +131,7 @@ public class BatchApi {
             httpServletResponse.setStatus(200);
             return batchPaginatedResponse;
         } catch (Exception e) {
+            e.printStackTrace();
             httpServletResponse.setStatus(400);
             return null;
         }
