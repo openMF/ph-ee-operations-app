@@ -25,27 +25,28 @@ public class BatchDbServiceImpl implements BatchDbService {
     @Override
     public BatchPaginatedResponse getBatch(String startFrom, String startTo, String registeringInstitutionId, String payerFsp, String batchId, PageRequest pager) {
         try {
-            Long totalTransactions = batchRepository.getTotalTransactionsDateBetween(
+            Optional<Long> totalTransactions = batchRepository.getTotalTransactionsDateBetween(
                     dateFormat().parse(startFrom), dateFormat().parse(startTo),
                     registeringInstitutionId, payerFsp, batchId);
-            Long totalAmount = batchRepository.getTotalAmountDateBetween(
+            Optional<Long> totalAmount = batchRepository.getTotalAmountDateBetween(
                     dateFormat().parse(startFrom), dateFormat().parse(startTo),
                     registeringInstitutionId, payerFsp, batchId);
-            Long totalBatches = batchRepository.getTotalBatchesDateBetween(
+            Optional<Long> totalBatches = batchRepository.getTotalBatchesDateBetween(
                     dateFormat().parse(startFrom), dateFormat().parse(startTo),
                     registeringInstitutionId, payerFsp, batchId);
-            Long totalApprovedCount = batchRepository.getTotalApprovedCountDateBetween(
+            Optional<Long> totalApprovedCount = batchRepository.getTotalApprovedCountDateBetween(
                     dateFormat().parse(startFrom), dateFormat().parse(startTo),
                     registeringInstitutionId, payerFsp, batchId);
-            Long totalApprovedAmount = batchRepository.getTotalApprovedAmountDateBetween(
+            Optional<Long> totalApprovedAmount = batchRepository.getTotalApprovedAmountDateBetween(
                     dateFormat().parse(startFrom), dateFormat().parse(startTo),
                     registeringInstitutionId, payerFsp, batchId);
             List<Batch> batches = batchRepository.findAllFilterDateBetween(
                     dateFormat().parse(startFrom), dateFormat().parse(startTo),
                     registeringInstitutionId, payerFsp, batchId,
                     pager);
-            return getBatchPaginatedResponseInstance(totalBatches, totalTransactions, totalAmount, totalApprovedCount,
-                    totalApprovedAmount, 10, batches);
+            return getBatchPaginatedResponseInstance(totalBatches.orElse(0L), totalTransactions.orElse(0L),
+                    totalAmount.orElse(0L), totalApprovedCount.orElse(0L),
+                    totalApprovedAmount.orElse(0L), 10, batches);
         } catch (Exception e) {
             log.warn("failed to parse dates {} / {}", startFrom, startTo);
             return null;
@@ -61,8 +62,6 @@ public class BatchDbServiceImpl implements BatchDbService {
         Optional<Long> totalApprovedCount = batchRepository.getTotalApprovedCount(registeringInstitutionId, payerFsp, batchId);
         Optional<Long> totalApprovedAmount = batchRepository.getTotalApprovedAmount(registeringInstitutionId, payerFsp, batchId);
         List<Batch> batches = batchRepository.findAllBatch(registeringInstitutionId, payerFsp, batchId, pager);
-        log.info("Total batches: {}", batches.size());
-        log.info("{},{},{},{},{},{}", totalTransactions, totalAmount, totalBatches, totalApprovedCount, totalApprovedAmount, batches.size());
         return getBatchPaginatedResponseInstance(totalBatches.orElse(0L), totalTransactions.orElse(0L),
                 totalAmount.orElse(0L), totalApprovedCount.orElse(0L),
                 totalApprovedAmount.orElse(0L), 10, batches);
@@ -71,26 +70,27 @@ public class BatchDbServiceImpl implements BatchDbService {
     @Override
     public BatchPaginatedResponse getBatchDateTo(String startTo, String registeringInstitutionId, String payerFsp, String batchId, PageRequest pager) {
         try {
-            Long totalTransactions = batchRepository.getTotalTransactionsDateTo(
+            Optional<Long> totalTransactions = batchRepository.getTotalTransactionsDateTo(
                     dateFormat().parse(startTo),
                     registeringInstitutionId, payerFsp, batchId);
-            Long totalAmount = batchRepository.getTotalAmountDateTo(
+            Optional<Long> totalAmount = batchRepository.getTotalAmountDateTo(
                     dateFormat().parse(startTo),
                     registeringInstitutionId, payerFsp, batchId);
-            Long totalBatches = batchRepository.getTotalBatchesDateTo(
+            Optional<Long> totalBatches = batchRepository.getTotalBatchesDateTo(
                     dateFormat().parse(startTo),
                     registeringInstitutionId, payerFsp, batchId);
-            Long totalApprovedCount = batchRepository.getTotalApprovedCountDateTo(
+            Optional<Long> totalApprovedCount = batchRepository.getTotalApprovedCountDateTo(
                     dateFormat().parse(startTo),
                     registeringInstitutionId, payerFsp, batchId);
-            Long totalApprovedAmount= batchRepository.getTotalApprovedAmountDateTo(
+            Optional<Long> totalApprovedAmount= batchRepository.getTotalApprovedAmountDateTo(
                     dateFormat().parse(startTo),
                     registeringInstitutionId, payerFsp, batchId);
             List<Batch> batches = batchRepository.findAllFilterDateTo(
                     dateFormat().parse(startTo),
                     registeringInstitutionId, payerFsp, batchId, pager);
-            return getBatchPaginatedResponseInstance(totalBatches, totalTransactions, totalAmount, totalApprovedCount,
-                    totalApprovedAmount, 10, batches);
+            return getBatchPaginatedResponseInstance(totalBatches.orElse(0L), totalTransactions.orElse(0L),
+                    totalAmount.orElse(0L), totalApprovedCount.orElse(0L),
+                    totalApprovedAmount.orElse(0L), 10, batches);
         } catch (Exception e) {
             log.warn("failed to parse startTo date {}", startTo);
             return null;
@@ -100,26 +100,27 @@ public class BatchDbServiceImpl implements BatchDbService {
     @Override
     public BatchPaginatedResponse getBatchDateFrom(String startFrom, String registeringInstitutionId, String payerFsp, String batchId, PageRequest pager) {
         try {
-            Long totalTransactions = batchRepository.getTotalTransactionsDateFrom(
+            Optional<Long> totalTransactions = batchRepository.getTotalTransactionsDateFrom(
                     dateFormat().parse(startFrom),
                     registeringInstitutionId, payerFsp, batchId);
-            Long totalAmount = batchRepository.getTotalAmountDateFrom(
+            Optional<Long> totalAmount = batchRepository.getTotalAmountDateFrom(
                     dateFormat().parse(startFrom),
                     registeringInstitutionId, payerFsp, batchId);
-            Long totalBatches = batchRepository.getTotalBatchesDateFrom(
+            Optional<Long> totalBatches = batchRepository.getTotalBatchesDateFrom(
                     dateFormat().parse(startFrom),
                     registeringInstitutionId, payerFsp, batchId);
-            Long totalApprovedCount = batchRepository.getTotalApprovedCountDateFrom(
+            Optional<Long> totalApprovedCount = batchRepository.getTotalApprovedCountDateFrom(
                     dateFormat().parse(startFrom),
                     registeringInstitutionId, payerFsp, batchId);
-            Long totalApprovedAmount = batchRepository.getTotalApprovedAmountDateFrom(
+            Optional<Long> totalApprovedAmount = batchRepository.getTotalApprovedAmountDateFrom(
                     dateFormat().parse(startFrom),
                     registeringInstitutionId, payerFsp, batchId);
             List<Batch> batches = batchRepository.findAllFilterDateFrom(
                     dateFormat().parse(startFrom),
                     registeringInstitutionId, payerFsp, batchId, pager);
-            return getBatchPaginatedResponseInstance(totalBatches, totalTransactions, totalAmount, totalApprovedCount,
-                    totalApprovedAmount, 10, batches);
+            return getBatchPaginatedResponseInstance(totalBatches.orElse(0L), totalTransactions.orElse(0L),
+                    totalAmount.orElse(0L), totalApprovedCount.orElse(0L),
+                    totalApprovedAmount.orElse(0L), 10, batches);
         } catch (Exception e) {
             log.warn("failed to parse startFrom date {}", startFrom);
             return null;
