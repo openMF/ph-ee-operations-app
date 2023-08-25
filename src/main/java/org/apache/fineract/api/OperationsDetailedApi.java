@@ -64,6 +64,7 @@ public class OperationsDetailedApi {
             @RequestParam(value = "payeeDfspId", required = false) String payeeDfspId,
             @RequestParam(value = "transactionId", required = false) String transactionId,
             @RequestParam(value = "status", required = false) String status,
+            @RequestParam(value = "paymentStatus", required = false) String paymentStatus,
             @RequestParam(value = "amount", required = false) BigDecimal amount,
             @RequestParam(value = "currency", required = false) String currency,
             @RequestParam(value = "startFrom", required = false) String startFrom,
@@ -125,6 +126,9 @@ public class OperationsDetailedApi {
             }
             if (status != null && parseStatus(status) != null) {
                 specs.add(TransferSpecs.match(Transfer_.status, parseStatus(status)));
+            }
+            if (StringUtils.isNotBlank(paymentStatus)) {
+                specs.add(TransferSpecs.match(Transfer_.paymentStatus, paymentStatus));
             }
             if (amount != null) {
                 specs.add(TransferSpecs.match(Transfer_.amount, amount));
