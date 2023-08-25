@@ -53,12 +53,15 @@ public class BatchDbServiceImpl implements BatchDbService {
 
     @Override
     public BatchPaginatedResponse getBatch(String registeringInstitutionId, String payerFsp, String batchId, PageRequest pager) {
+        log.info("Get batch function");
+        log.info("BatchDbServiceImpl: {}, payerFsp: {}, batchId{}", registeringInstitutionId, payerFsp, batchId);
         Long totalTransactions = batchRepository.getTotalTransactions(registeringInstitutionId, payerFsp, batchId);
         Long totalAmount = batchRepository.getTotalAmount(registeringInstitutionId, payerFsp, batchId);
         Long totalBatches = batchRepository.getTotalBatches(registeringInstitutionId, payerFsp, batchId);
         Long totalApprovedCount = batchRepository.getTotalApprovedCount(registeringInstitutionId, payerFsp, batchId);
         Long totalApprovedAmount = batchRepository.getTotalApprovedAmount(registeringInstitutionId, payerFsp, batchId);
         List<Batch> batches = batchRepository.findAllBatch(registeringInstitutionId, payerFsp, batchId, pager);
+        log.info("Total batches: {}", batches.size());
         log.info("{},{},{},{},{},{}", totalTransactions, totalAmount, totalBatches, totalApprovedCount, totalApprovedAmount, batches.size());
         return getBatchPaginatedResponseInstance(totalBatches, totalTransactions, totalAmount, totalApprovedCount,
                 totalApprovedAmount, 10, batches);
