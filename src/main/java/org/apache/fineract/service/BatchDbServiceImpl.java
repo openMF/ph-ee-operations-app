@@ -8,6 +8,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Optional;
 
 import static org.apache.fineract.core.service.OperatorUtils.dateFormat;
 
@@ -54,17 +55,17 @@ public class BatchDbServiceImpl implements BatchDbService {
     @Override
     public BatchPaginatedResponse getBatch(String registeringInstitutionId, String payerFsp, String batchId, PageRequest pager) {
         log.info("Get batch function");
-        log.info("BatchDbServiceImpl: {}, payerFsp: {}, batchId{}", registeringInstitutionId, payerFsp, batchId);
-        Long totalTransactions = batchRepository.getTotalTransactions(registeringInstitutionId, payerFsp, batchId);
-        Long totalAmount = batchRepository.getTotalAmount(registeringInstitutionId, payerFsp, batchId);
-        Long totalBatches = batchRepository.getTotalBatches(registeringInstitutionId, payerFsp, batchId);
-        Long totalApprovedCount = batchRepository.getTotalApprovedCount(registeringInstitutionId, payerFsp, batchId);
-        Long totalApprovedAmount = batchRepository.getTotalApprovedAmount(registeringInstitutionId, payerFsp, batchId);
+        Optional<Long> totalTransactions = batchRepository.getTotalTransactions(registeringInstitutionId, payerFsp, batchId);
+        Optional<Long> totalAmount = batchRepository.getTotalAmount(registeringInstitutionId, payerFsp, batchId);
+        Optional<Long> totalBatches = batchRepository.getTotalBatches(registeringInstitutionId, payerFsp, batchId);
+        Optional<Long> totalApprovedCount = batchRepository.getTotalApprovedCount(registeringInstitutionId, payerFsp, batchId);
+        Optional<Long> totalApprovedAmount = batchRepository.getTotalApprovedAmount(registeringInstitutionId, payerFsp, batchId);
         List<Batch> batches = batchRepository.findAllBatch(registeringInstitutionId, payerFsp, batchId, pager);
         log.info("Total batches: {}", batches.size());
         log.info("{},{},{},{},{},{}", totalTransactions, totalAmount, totalBatches, totalApprovedCount, totalApprovedAmount, batches.size());
-        return getBatchPaginatedResponseInstance(totalBatches, totalTransactions, totalAmount, totalApprovedCount,
-                totalApprovedAmount, 10, batches);
+        return getBatchPaginatedResponseInstance(totalBatches.orElse(0L), totalTransactions.orElse(0L),
+                totalAmount.orElse(0L), totalApprovedCount.orElse(0L),
+                totalApprovedAmount.orElse(0L), 10, batches);
     }
 
     @Override
@@ -130,6 +131,7 @@ public class BatchDbServiceImpl implements BatchDbService {
                                                                      long totalAmount, long totalApprovedCount,
                                                                      long totalApprovedAmount,
                                                                      long totalSubBatchesCreated, List<Batch> batches) {
+        log.info("Inside getBatchPaginatedResponseInstance");
         log.info("TotalBatch: {}, TotalTransactions: {}, Total Amount: {}, Batches: {}",
                 totalBatches, totalTransactions, totalAmount, batches.size());
         BatchPaginatedResponse batchPaginatedResponse = new BatchPaginatedResponse();

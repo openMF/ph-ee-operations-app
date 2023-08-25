@@ -7,6 +7,7 @@ import org.springframework.data.jpa.repository.Query;
 
 import java.util.Date;
 import java.util.List;
+import java.util.Optional;
 
 public interface BatchRepository extends JpaRepository<Batch, Long>, JpaSpecificationExecutor<Batch> {
 
@@ -41,7 +42,7 @@ public interface BatchRepository extends JpaRepository<Batch, Long>, JpaSpecific
     @Query(value = "SELECT COUNT(bt) FROM Batch bt " +
             "WHERE (bt.registeringInstitutionId LIKE :registeringInstitutionId) AND (bt.payerFsp LIKE :payerFsp) AND " +
             "bt.batchId LIKE :batchId AND bt.subBatchId IS NULL")
-    Long getTotalBatches(String registeringInstitutionId, String payerFsp, String batchId);
+    Optional<Long> getTotalBatches(String registeringInstitutionId, String payerFsp, String batchId);
 
     @Query(value = "SELECT COUNT(bt) FROM Batch bt " +
             "WHERE bt.startedAt >= :dateFrom AND " +
@@ -64,7 +65,7 @@ public interface BatchRepository extends JpaRepository<Batch, Long>, JpaSpecific
     @Query(value = "SELECT SUM(bt.totalTransactions) FROM Batch bt " +
             "WHERE (bt.registeringInstitutionId LIKE :registeringInstitutionId) AND (bt.payerFsp LIKE :payerFsp) AND " +
             "bt.batchId LIKE :batchId AND bt.subBatchId IS NULL")
-    Long getTotalTransactions(String registeringInstitutionId, String payerFsp, String batchId);
+    Optional<Long> getTotalTransactions(String registeringInstitutionId, String payerFsp, String batchId);
 
     @Query(value = "SELECT SUM(bt.totalTransactions) FROM Batch bt " +
             "WHERE bt.startedAt >= :dateFrom AND " +
@@ -87,7 +88,7 @@ public interface BatchRepository extends JpaRepository<Batch, Long>, JpaSpecific
     @Query(value = "SELECT SUM(bt.totalAmount) FROM Batch bt " +
             "WHERE (bt.registeringInstitutionId LIKE :registeringInstitutionId) AND (bt.payerFsp LIKE :payerFsp) AND " +
             "bt.batchId LIKE :batchId AND bt.subBatchId IS NULL")
-    Long getTotalAmount(String registeringInstitutionId, String payerFsp, String batchId);
+    Optional<Long> getTotalAmount(String registeringInstitutionId, String payerFsp, String batchId);
 
     @Query(value = "SELECT SUM(bt.totalAmount) FROM Batch bt " +
             "WHERE bt.startedAt >= :dateFrom AND " +
@@ -110,7 +111,7 @@ public interface BatchRepository extends JpaRepository<Batch, Long>, JpaSpecific
     @Query(value = "SELECT SUM(bt.approvedAmount) FROM Batch bt " +
             "WHERE (bt.registeringInstitutionId LIKE :registeringInstitutionId) AND (bt.payerFsp LIKE :payerFsp) AND " +
             "bt.batchId LIKE :batchId AND bt.subBatchId IS NULL")
-    Long getTotalApprovedAmount(String registeringInstitutionId, String payerFsp, String batchId);
+    Optional<Long> getTotalApprovedAmount(String registeringInstitutionId, String payerFsp, String batchId);
 
     @Query(value = "SELECT SUM(bt.approvedAmount) FROM Batch bt " +
             "WHERE bt.startedAt >= :dateFrom AND " +
@@ -133,7 +134,7 @@ public interface BatchRepository extends JpaRepository<Batch, Long>, JpaSpecific
     @Query(value = "SELECT SUM(bt.approvedCount) FROM Batch bt " +
             "WHERE (bt.registeringInstitutionId LIKE :registeringInstitutionId) AND (bt.payerFsp LIKE :payerFsp) AND " +
             "bt.batchId LIKE :batchId AND bt.subBatchId IS NULL")
-    Long getTotalApprovedCount(String registeringInstitutionId, String payerFsp, String batchId);
+    Optional<Long> getTotalApprovedCount(String registeringInstitutionId, String payerFsp, String batchId);
 
     @Query(value = "SELECT SUM(bt.approvedCount) FROM Batch bt " +
             "WHERE bt.startedAt >= :dateFrom AND " +
