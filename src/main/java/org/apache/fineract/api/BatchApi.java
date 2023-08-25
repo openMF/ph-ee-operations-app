@@ -95,7 +95,7 @@ public class BatchApi {
                                            @RequestParam(value = "limit", required = false, defaultValue = "10")
                                            Integer limit,
                                            @RequestParam(value = "sort", required = false,
-                                                   defaultValue = "+completedAt") String sort,
+                                                   defaultValue = "-startedAt") String sort,
                                            @RequestParam(value = "dateFrom", required = false) String startFrom,
                                            @RequestParam(value = "dateTo", required = false) String startTo,
                                            @RequestParam(value = "registeringInstitutionId", required = false,
