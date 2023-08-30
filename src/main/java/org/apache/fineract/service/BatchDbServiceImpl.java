@@ -14,6 +14,10 @@ import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import static org.apache.fineract.core.service.OperatorUtils.dateFormat;
 
+/**
+ * For all the date part use the below format and make sure to pass the local date
+ * DD:MM:YYYY hh:mm:ss
+ */
 @Slf4j
 @Service
 public class BatchDbServiceImpl implements BatchDbService {
