@@ -1,9 +1,11 @@
 package org.apache.fineract.service;
 
 import lombok.extern.slf4j.Slf4j;
+import org.apache.fineract.core.service.ThreadLocalContextUtil;
 import org.apache.fineract.operations.Batch;
 import org.apache.fineract.operations.BatchPaginatedResponse;
 import org.apache.fineract.operations.BatchRepository;
+import org.apache.fineract.organisation.tenant.TenantServerConnection;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 
@@ -30,32 +32,51 @@ public class BatchDbServiceImpl implements BatchDbService {
         try {
             Date startDateObject = dateFormat().parse(startFrom);
             Date endDateObject = dateFormat().parse(startTo);
+            TenantServerConnection connection = ThreadLocalContextUtil.getTenant();
 
             CompletableFuture<Optional<Long>> totalTransactionsAsync =
-                    CompletableFuture.supplyAsync(() -> batchRepository.getTotalTransactionsDateBetween(
-                    startDateObject, endDateObject,
-                    registeringInstitutionId, payerFsp, batchId));
+                    CompletableFuture.supplyAsync(() -> {
+                        ThreadLocalContextUtil.setTenant(connection);
+                        return batchRepository.getTotalTransactionsDateBetween(
+                                startDateObject, endDateObject,
+                                registeringInstitutionId, payerFsp, batchId);
+                    });
             CompletableFuture<Optional<Long>> totalAmountAsync =
-                    CompletableFuture.supplyAsync(() -> batchRepository.getTotalAmountDateBetween(
-                            startDateObject, endDateObject,
-                            registeringInstitutionId, payerFsp, batchId));
+                    CompletableFuture.supplyAsync(() -> {
+                        ThreadLocalContextUtil.setTenant(connection);
+                        return batchRepository.getTotalAmountDateBetween(
+                                startDateObject, endDateObject,
+                                registeringInstitutionId, payerFsp, batchId);
+                    });
             CompletableFuture<Optional<Long>> totalBatchesAsync =
-                    CompletableFuture.supplyAsync(() -> batchRepository.getTotalBatchesDateBetween(
-                            startDateObject, endDateObject,
-                            registeringInstitutionId, payerFsp, batchId));
+                    CompletableFuture.supplyAsync(() -> {
+                        ThreadLocalContextUtil.setTenant(connection);
+                        return batchRepository.getTotalBatchesDateBetween(
+                                startDateObject, endDateObject,
+                                registeringInstitutionId, payerFsp, batchId);
+                    });
             CompletableFuture<Optional<Long>> totalApprovedCountAsync =
-                    CompletableFuture.supplyAsync(() -> batchRepository.getTotalApprovedCountDateBetween(
-                            startDateObject, endDateObject,
-                            registeringInstitutionId, payerFsp, batchId));
+                    CompletableFuture.supplyAsync(() -> {
+                        ThreadLocalContextUtil.setTenant(connection);
+                        return batchRepository.getTotalApprovedCountDateBetween(
+                                startDateObject, endDateObject,
+                                registeringInstitutionId, payerFsp, batchId);
+                    });
             CompletableFuture<Optional<Long>> totalApprovedAmountAsync =
-                    CompletableFuture.supplyAsync(() -> batchRepository.getTotalApprovedAmountDateBetween(
-                            startDateObject, endDateObject,
-                            registeringInstitutionId, payerFsp, batchId));
+                    CompletableFuture.supplyAsync(() -> {
+                        ThreadLocalContextUtil.setTenant(connection);
+                        return batchRepository.getTotalApprovedAmountDateBetween(
+                                startDateObject, endDateObject,
+                                registeringInstitutionId, payerFsp, batchId);
+                    });
             CompletableFuture<List<Batch>> batchesAsync =
-                    CompletableFuture.supplyAsync(() -> batchRepository.findAllFilterDateBetween(
-                            startDateObject, endDateObject,
-                            registeringInstitutionId, payerFsp, batchId,
-                            pager));
+                    CompletableFuture.supplyAsync(() -> {
+                        ThreadLocalContextUtil.setTenant(connection);
+                        return batchRepository.findAllFilterDateBetween(
+                                startDateObject, endDateObject,
+                                registeringInstitutionId, payerFsp, batchId,
+                                pager);
+                    });
 
             CompletableFuture<Void> allTasks = CompletableFuture.allOf(totalTransactionsAsync, totalAmountAsync,
                     totalBatchesAsync, totalApprovedCountAsync, totalApprovedAmountAsync, batchesAsync);
@@ -106,7 +127,7 @@ public class BatchDbServiceImpl implements BatchDbService {
             Optional<Long> totalApprovedCount = batchRepository.getTotalApprovedCountDateTo(
                     dateFormat().parse(startTo),
                     registeringInstitutionId, payerFsp, batchId);
-            Optional<Long> totalApprovedAmount= batchRepository.getTotalApprovedAmountDateTo(
+            Optional<Long> totalApprovedAmount = batchRepository.getTotalApprovedAmountDateTo(
                     dateFormat().parse(startTo),
                     registeringInstitutionId, payerFsp, batchId);
             List<Batch> batches = batchRepository.findAllFilterDateTo(
