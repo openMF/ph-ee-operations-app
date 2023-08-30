@@ -7,8 +7,11 @@ import org.apache.fineract.operations.BatchRepository;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 
+import java.text.ParseException;
+import java.util.Date;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
 
 import static org.apache.fineract.core.service.OperatorUtils.dateFormat;
 
@@ -25,25 +28,46 @@ public class BatchDbServiceImpl implements BatchDbService {
     @Override
     public BatchPaginatedResponse getBatch(String startFrom, String startTo, String registeringInstitutionId, String payerFsp, String batchId, PageRequest pager) {
         try {
-            Optional<Long> totalTransactions = batchRepository.getTotalTransactionsDateBetween(
-                    dateFormat().parse(startFrom), dateFormat().parse(startTo),
-                    registeringInstitutionId, payerFsp, batchId);
-            Optional<Long> totalAmount = batchRepository.getTotalAmountDateBetween(
-                    dateFormat().parse(startFrom), dateFormat().parse(startTo),
-                    registeringInstitutionId, payerFsp, batchId);
-            Optional<Long> totalBatches = batchRepository.getTotalBatchesDateBetween(
-                    dateFormat().parse(startFrom), dateFormat().parse(startTo),
-                    registeringInstitutionId, payerFsp, batchId);
-            Optional<Long> totalApprovedCount = batchRepository.getTotalApprovedCountDateBetween(
-                    dateFormat().parse(startFrom), dateFormat().parse(startTo),
-                    registeringInstitutionId, payerFsp, batchId);
-            Optional<Long> totalApprovedAmount = batchRepository.getTotalApprovedAmountDateBetween(
-                    dateFormat().parse(startFrom), dateFormat().parse(startTo),
-                    registeringInstitutionId, payerFsp, batchId);
-            List<Batch> batches = batchRepository.findAllFilterDateBetween(
-                    dateFormat().parse(startFrom), dateFormat().parse(startTo),
-                    registeringInstitutionId, payerFsp, batchId,
-                    pager);
+            Date startDateObject = dateFormat().parse(startFrom);
+            Date endDateObject = dateFormat().parse(startTo);
+
+            CompletableFuture<Optional<Long>> totalTransactionsAsync =
+                    CompletableFuture.supplyAsync(() -> batchRepository.getTotalTransactionsDateBetween(
+                    startDateObject, endDateObject,
+                    registeringInstitutionId, payerFsp, batchId));
+            CompletableFuture<Optional<Long>> totalAmountAsync =
+                    CompletableFuture.supplyAsync(() -> batchRepository.getTotalAmountDateBetween(
+                            startDateObject, endDateObject,
+                            registeringInstitutionId, payerFsp, batchId));
+            CompletableFuture<Optional<Long>> totalBatchesAsync =
+                    CompletableFuture.supplyAsync(() -> batchRepository.getTotalBatchesDateBetween(
+                            startDateObject, endDateObject,
+                            registeringInstitutionId, payerFsp, batchId));
+            CompletableFuture<Optional<Long>> totalApprovedCountAsync =
+                    CompletableFuture.supplyAsync(() -> batchRepository.getTotalApprovedCountDateBetween(
+                            startDateObject, endDateObject,
+                            registeringInstitutionId, payerFsp, batchId));
+            CompletableFuture<Optional<Long>> totalApprovedAmountAsync =
+                    CompletableFuture.supplyAsync(() -> batchRepository.getTotalApprovedAmountDateBetween(
+                            startDateObject, endDateObject,
+                            registeringInstitutionId, payerFsp, batchId));
+            CompletableFuture<List<Batch>> batchesAsync =
+                    CompletableFuture.supplyAsync(() -> batchRepository.findAllFilterDateBetween(
+                            startDateObject, endDateObject,
+                            registeringInstitutionId, payerFsp, batchId,
+                            pager));
+
+            CompletableFuture<Void> allTasks = CompletableFuture.allOf(totalTransactionsAsync, totalAmountAsync,
+                    totalBatchesAsync, totalApprovedCountAsync, totalApprovedAmountAsync, batchesAsync);
+            allTasks.join();
+
+            Optional<Long> totalTransactions = totalTransactionsAsync.join();
+            Optional<Long> totalAmount = totalAmountAsync.join();
+            Optional<Long> totalBatches = totalBatchesAsync.join();
+            Optional<Long> totalApprovedCount = totalApprovedCountAsync.join();
+            Optional<Long> totalApprovedAmount = totalApprovedAmountAsync.join();
+            List<Batch> batches = batchesAsync.join();
+
             return getBatchPaginatedResponseInstance(totalBatches.orElse(0L), totalTransactions.orElse(0L),
                     totalAmount.orElse(0L), totalApprovedCount.orElse(0L),
                     totalApprovedAmount.orElse(0L), 10, batches);
