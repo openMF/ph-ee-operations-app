@@ -19,7 +19,7 @@ security:
 spring:
   mvc:
     favicon:
-      enabled: false
+      enabled: true
   jmx:
     enabled: false
 
@@ -27,7 +27,7 @@ spring:
     enabled: false
   web:
     resources:
-      add-mappings: false
+      add-mappings: true
 
 server:
   port: 5000
@@ -42,6 +42,9 @@ rest:
         authority: "hasAuthority('ALL_FUNCTIONS')"
 logging:
   level:
+    org:
+      springframework:
+        security: TRACE
     root: ERROR
 #    pattern:
 #      console: "%clr(%d{dd-MM-yyyy HH:mm:ss.SSS}){faint} %clr(${LOG_LEVEL_PATTERN:-%5p}) %clr([%35.35t]){faint} %clr(%-28.28logger{28}){cyan} %clr(:){faint}%X{BUSINESS-LOG} %m%n${LOG_EXCEPTION_CONVERSION_WORD:-%wEx}"
@@ -66,6 +69,10 @@ payment:
     - id: "slcb"
       type: "BATCH"
   internal-account-id-prefix: ""
+
+rsa:
+  private-key: classpath:/jwt_pkcs8.pem
+  public-key: classpath:/jwt_pub.pem
 
 application:
   bucket-name: paymenthub-ee-dev

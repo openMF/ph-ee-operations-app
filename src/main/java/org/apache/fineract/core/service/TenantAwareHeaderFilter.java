@@ -36,7 +36,7 @@ import java.io.IOException;
 public class TenantAwareHeaderFilter extends GenericFilterBean {
     private static final String TENANT_IDENTIFIER_REQUEST_HEADER = "Platform-TenantId";
     private static final String TENANT_IDENTIFIER_REQUEST_PARAM = "tenantIdentifier";
-    private static final String EXCLUDED_URL = "/oauth/token_key";
+    private static final String EXCLUDED_URL = "/login";
     private static final String EXCLUDED_ACTUATOR_PREFIX = "/actuator";
 
     private final Logger logger = LoggerFactory.getLogger(this.getClass());

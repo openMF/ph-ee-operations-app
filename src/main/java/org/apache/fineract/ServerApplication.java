@@ -20,6 +20,9 @@ package org.apache.fineract;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.camunda.zeebe.spring.client.EnableZeebeClient;
+import io.swagger.v3.oas.models.OpenAPI;
+import io.swagger.v3.oas.models.info.Info;
+import org.apache.fineract.config.RsaKeyProperties;
 import org.apache.fineract.core.service.TenantAwareHeaderFilter;
 import org.apache.fineract.core.tenants.TenantsService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -36,6 +39,7 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.ProviderManager;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
+import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -43,6 +47,8 @@ import org.springframework.web.client.RestTemplate;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import org.springframework.web.filter.CorsFilter;
+import org.springframework.web.servlet.config.annotation.CorsRegistry;
+import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -51,8 +57,9 @@ import java.util.List;
         DataSourceTransactionManagerAutoConfiguration.class,
 //        FlywayAutoConfiguration.class,
         ErrorMvcAutoConfiguration.class})
-@EnableConfigurationProperties
+@EnableConfigurationProperties(RsaKeyProperties.class)
 @EnableZeebeClient
+@EnableGlobalMethodSecurity(prePostEnabled=true)
 public class ServerApplication {
 
     @Autowired
@@ -89,7 +96,7 @@ public class ServerApplication {
         return provider;
     }
 
-    @Bean
+    /*@Bean
     public FilterRegistrationBean tenantFilter() {
         FilterRegistrationBean registration = new FilterRegistrationBean();
         registration.setFilter(new TenantAwareHeaderFilter(tenantsService));
@@ -97,13 +104,13 @@ public class ServerApplication {
         registration.setName("tenantFilter");
         registration.setOrder(Integer.MIN_VALUE + 1);
         return registration;
-    }
+    }*/
 
-    @Bean
+    /*@Bean
     public FilterRegistrationBean corsFilter() {
         CorsConfiguration config = new CorsConfiguration();
         config.setAllowCredentials(true);
-        config.addAllowedOriginPattern("*");
+        config.addAllowedOrigin("http://localhost:4200");
         config.addAllowedHeader("*");
         config.addAllowedMethod("*");
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
@@ -111,6 +118,20 @@ public class ServerApplication {
         FilterRegistrationBean bean = new FilterRegistrationBean(new CorsFilter(source));
         bean.setOrder(securityFilterOrder - 5);
         return bean;
+    }*/
+
+    @Bean
+    public WebMvcConfigurer corsConfigurer() {
+        return new WebMvcConfigurer() {
+            @Override
+            public void addCorsMappings(CorsRegistry registry) {
+                registry.addMapping("/**")
+                        .allowedOrigins("http://localhost:4200")
+                        .allowedMethods("GET", "POST", "PUT", "DELETE", "HEAD", "OPTIONS")
+                        .allowedHeaders("*")
+                        .allowCredentials(true);
+            }
+        };
     }
 
     @Bean
