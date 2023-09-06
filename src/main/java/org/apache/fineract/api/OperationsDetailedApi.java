@@ -2,7 +2,6 @@ package org.apache.fineract.api;
 
 import com.baasflow.commons.events.EventLogLevel;
 import com.baasflow.commons.events.EventService;
-import com.baasflow.commons.events.EventType;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletResponse;
@@ -79,108 +78,144 @@ public class OperationsDetailedApi {
                 .setEvent("transfers list invoked")
                 .setEventLogLevel(EventLogLevel.INFO)
                 .setSourceModule("operations-app")
-                .setTenantId(TenantAwareHeaderFilter.tenant.get()), event -> {
+                .setTenantId(TenantAwareHeaderFilter.tenant.get()), event ->
+                loadTransfers(Transfer.TransferType.TRANSFER, page, size, _payerPartyId, payerDfspId, _payeePartyId, payeeDfspId, transactionId, status, paymentStatus, amount, currency, startFrom, startTo, direction, sortedBy, _partyId, partyIdType, sortedOrder, endToEndIdentification));
+    }
 
-            String payerPartyId = _payerPartyId;
-            String payeePartyId = _payeePartyId;
-            String partyId = _partyId;
+    @GetMapping("/recalls")
+    public Page<Transfer> recalls(
+            @RequestParam(value = "page") Integer page,
+            @RequestParam(value = "size") Integer size,
+            @RequestParam(value = "payerPartyId", required = false) String _payerPartyId,
+            @RequestParam(value = "payerDfspId", required = false) String payerDfspId,
+            @RequestParam(value = "payeePartyId", required = false) String _payeePartyId,
+            @RequestParam(value = "payeeDfspId", required = false) String payeeDfspId,
+            @RequestParam(value = "transactionId", required = false) String transactionId,
+            @RequestParam(value = "status", required = false) String status,
+            @RequestParam(value = "paymentStatus", required = false) String paymentStatus,
+            @RequestParam(value = "amount", required = false) BigDecimal amount,
+            @RequestParam(value = "currency", required = false) String currency,
+            @RequestParam(value = "startFrom", required = false) String startFrom,
+            @RequestParam(value = "startTo", required = false) String startTo,
+            @RequestParam(value = "direction", required = false) String direction,
+            @RequestParam(value = "sortedBy", required = false) String sortedBy,
+            @RequestParam(value = "partyId", required = false) String _partyId,
+            @RequestParam(value = "partyIdType", required = false) String partyIdType,
+            @RequestParam(value = "sortedOrder", required = false, defaultValue = "DESC") String sortedOrder,
+            @RequestParam(value = "endToEndIdentification", required = false) String endToEndIdentification) {
+        return eventService.auditedEvent(event -> event
+                .setEvent("recalls list invoked")
+                .setEventLogLevel(EventLogLevel.INFO)
+                .setSourceModule("operations-app")
+                .setTenantId(TenantAwareHeaderFilter.tenant.get()), event ->
+                loadTransfers(Transfer.TransferType.RECALL, page, size, _payerPartyId, payerDfspId, _payeePartyId, payeeDfspId, transactionId, status, paymentStatus, amount, currency, startFrom, startTo, direction, sortedBy, _partyId, partyIdType, sortedOrder, endToEndIdentification));
+    }
 
-            List<Specification<Transfer>> specs = new ArrayList<>();
+    private Page<Transfer> loadTransfers(Transfer.TransferType transferType, Integer page, Integer size, String _payerPartyId, String payerDfspId, String _payeePartyId, String payeeDfspId, String transactionId, String status, String paymentStatus, BigDecimal amount, String currency, String startFrom, String startTo, String direction, String sortedBy, String _partyId, String partyIdType, String sortedOrder, String endToEndIdentification) {
+        String payerPartyId = _payerPartyId;
+        String payeePartyId = _payeePartyId;
+        String partyId = _partyId;
 
-            if (StringUtils.isNotBlank(payerPartyId)) {
-                payerPartyId = urlDecode(payerPartyId, "Decoded payerPartyId: ");
+        List<Specification<Transfer>> specs = new ArrayList<>();
 
-                if (payerPartyId.length() == 8) {
-                    String likeTerm = "%" + payerPartyId;
-                    if (StringUtils.isNotBlank(internalAccountIdPrefix)) {
-                        likeTerm = internalAccountIdPrefix + likeTerm;
-                    }
-                    logger.info("PayerPartyId is 8 characters long, using LIKE search to match internalAccountId: {}", likeTerm);
-                    specs.add(TransferSpecs.like(Transfer_.payerPartyId, likeTerm));
-                } else {
-                    specs.add(TransferSpecs.match(Transfer_.payerPartyId, payerPartyId));
-                }
-            }
-            if (StringUtils.isNotBlank(payeePartyId)) {
-                payeePartyId = urlDecode(payeePartyId, "Decoded payeePartyId: ");
-
-                if (payeePartyId.length() == 8) {
-                    String likeTerm = "%" + payeePartyId;
-                    if (StringUtils.isNotBlank(internalAccountIdPrefix)) {
-                        likeTerm = internalAccountIdPrefix + likeTerm;
-                    }
-                    logger.info("PayeePartyId is 8 characters long, using LIKE search to match internalAccountId: {}", likeTerm);
-                    specs.add(TransferSpecs.like(Transfer_.payeePartyId, likeTerm));
-                } else {
-                    specs.add(TransferSpecs.match(Transfer_.payeePartyId, payeePartyId));
-                }
-            }
-            if (StringUtils.isNotBlank(payeeDfspId)) {
-                specs.add(TransferSpecs.match(Transfer_.payeeDfspId, payeeDfspId));
-            }
-            if (StringUtils.isNotBlank(payerDfspId)) {
-                specs.add(TransferSpecs.match(Transfer_.payerDfspId, payerDfspId));
-            }
-            if (StringUtils.isNotBlank(transactionId)) {
-                specs.add(TransferSpecs.match(Transfer_.transactionId, transactionId));
-            }
-            if (status != null && parseStatus(status) != null) {
-                specs.add(TransferSpecs.match(Transfer_.status, parseStatus(status)));
-            }
-            if (StringUtils.isNotBlank(paymentStatus)) {
-                specs.add(TransferSpecs.match(Transfer_.paymentStatus, paymentStatus));
-            }
-            if (amount != null) {
-                specs.add(TransferSpecs.match(Transfer_.amount, amount));
-            }
-            if (StringUtils.isNotBlank(currency)) {
-                specs.add(TransferSpecs.match(Transfer_.currency, currency));
-            }
-            if (StringUtils.isNotBlank(direction)) {
-                specs.add(TransferSpecs.match(Transfer_.direction, direction));
-            }
-            if (StringUtils.isNotBlank(partyIdType)) {
-                specs.add(TransferSpecs.multiMatch(Transfer_.payeePartyIdType, Transfer_.payerPartyIdType, partyIdType));
-            }
-            if (StringUtils.isNotBlank(partyId)) {
-                partyId = urlDecode(partyId, "Decoded PartyId: ");
-                specs.add(TransferSpecs.multiMatch(Transfer_.payerPartyId, Transfer_.payeePartyId, partyId));
-            }
-            try {
-                if (startFrom != null && startTo != null) {
-                    specs.add(TransferSpecs.between(Transfer_.startedAt, dateFormat().parse(startFrom), dateFormat().parse(startTo)));
-                } else if (startFrom != null) {
-                    specs.add(TransferSpecs.later(Transfer_.startedAt, dateFormat().parse(startFrom)));
-                } else if (startTo != null) {
-                    specs.add(TransferSpecs.earlier(Transfer_.startedAt, dateFormat().parse(startTo)));
-                }
-            } catch (Exception e) {
-                logger.warn("failed to parse dates {} / {}", startFrom, startTo);
-            }
-
-            if (StringUtils.isNotBlank(endToEndIdentification)) {
-                specs.add(TransferSpecs.match(Transfer_.endToEndIdentification, endToEndIdentification));
-            }
-
-            PageRequest pager;
-            if (sortedBy == null || "startedAt".equals(sortedBy)) {
-                pager = PageRequest.of(page, size, Sort.by(Sort.Direction.fromString(sortedOrder), "startedAt"));
-            } else {
-                pager = PageRequest.of(page, size, Sort.by(Sort.Direction.fromString(sortedOrder), sortedBy));
-            }
-
-            logger.info("finding transfers based on {} specs", specs.size());
-            if (!specs.isEmpty()) {
-                Specification<Transfer> compiledSpecs = specs.get(0);
-                for (int i = 1; i < specs.size(); i++) {
-                    compiledSpecs = compiledSpecs.and(specs.get(i));
-                }
-
-                return transferRepository.findAll(compiledSpecs, pager);
-            } else {
-                return transferRepository.findAll(pager);
-            }
+        specs.add((Specification<Transfer>) (root, query, cb) -> switch (transferType) {
+            case TRANSFER -> cb.isNull(root.get("recallDirection"));
+            case RECALL -> cb.isNotNull(root.get("recallDirection"));
         });
+
+        if (StringUtils.isNotBlank(payerPartyId)) {
+            payerPartyId = urlDecode(payerPartyId, "Decoded payerPartyId: ");
+
+            if (payerPartyId.length() == 8) {
+                String likeTerm = "%" + payerPartyId;
+                if (StringUtils.isNotBlank(internalAccountIdPrefix)) {
+                    likeTerm = internalAccountIdPrefix + likeTerm;
+                }
+                logger.info("PayerPartyId is 8 characters long, using LIKE search to match internalAccountId: {}", likeTerm);
+                specs.add(TransferSpecs.like(Transfer_.payerPartyId, likeTerm));
+            } else {
+                specs.add(TransferSpecs.match(Transfer_.payerPartyId, payerPartyId));
+            }
+        }
+        if (StringUtils.isNotBlank(payeePartyId)) {
+            payeePartyId = urlDecode(payeePartyId, "Decoded payeePartyId: ");
+
+            if (payeePartyId.length() == 8) {
+                String likeTerm = "%" + payeePartyId;
+                if (StringUtils.isNotBlank(internalAccountIdPrefix)) {
+                    likeTerm = internalAccountIdPrefix + likeTerm;
+                }
+                logger.info("PayeePartyId is 8 characters long, using LIKE search to match internalAccountId: {}", likeTerm);
+                specs.add(TransferSpecs.like(Transfer_.payeePartyId, likeTerm));
+            } else {
+                specs.add(TransferSpecs.match(Transfer_.payeePartyId, payeePartyId));
+            }
+        }
+        if (StringUtils.isNotBlank(payeeDfspId)) {
+            specs.add(TransferSpecs.match(Transfer_.payeeDfspId, payeeDfspId));
+        }
+        if (StringUtils.isNotBlank(payerDfspId)) {
+            specs.add(TransferSpecs.match(Transfer_.payerDfspId, payerDfspId));
+        }
+        if (StringUtils.isNotBlank(transactionId)) {
+            specs.add(TransferSpecs.match(Transfer_.transactionId, transactionId));
+        }
+        if (status != null && parseStatus(status) != null) {
+            specs.add(TransferSpecs.match(Transfer_.status, parseStatus(status)));
+        }
+        if (StringUtils.isNotBlank(paymentStatus)) {
+            specs.add(TransferSpecs.match(Transfer_.paymentStatus, paymentStatus));
+        }
+        if (amount != null) {
+            specs.add(TransferSpecs.match(Transfer_.amount, amount));
+        }
+        if (StringUtils.isNotBlank(currency)) {
+            specs.add(TransferSpecs.match(Transfer_.currency, currency));
+        }
+        if (StringUtils.isNotBlank(direction)) {
+            specs.add(TransferSpecs.match(Transfer_.direction, direction));
+        }
+        if (StringUtils.isNotBlank(partyIdType)) {
+            specs.add(TransferSpecs.multiMatch(Transfer_.payeePartyIdType, Transfer_.payerPartyIdType, partyIdType));
+        }
+        if (StringUtils.isNotBlank(partyId)) {
+            partyId = urlDecode(partyId, "Decoded PartyId: ");
+            specs.add(TransferSpecs.multiMatch(Transfer_.payerPartyId, Transfer_.payeePartyId, partyId));
+        }
+        try {
+            if (startFrom != null && startTo != null) {
+                specs.add(TransferSpecs.between(Transfer_.startedAt, dateFormat().parse(startFrom), dateFormat().parse(startTo)));
+            } else if (startFrom != null) {
+                specs.add(TransferSpecs.later(Transfer_.startedAt, dateFormat().parse(startFrom)));
+            } else if (startTo != null) {
+                specs.add(TransferSpecs.earlier(Transfer_.startedAt, dateFormat().parse(startTo)));
+            }
+        } catch (Exception e) {
+            logger.warn("failed to parse dates {} / {}", startFrom, startTo);
+        }
+
+        if (StringUtils.isNotBlank(endToEndIdentification)) {
+            specs.add(TransferSpecs.match(Transfer_.endToEndIdentification, endToEndIdentification));
+        }
+
+        PageRequest pager;
+        if (sortedBy == null || "startedAt".equals(sortedBy)) {
+            pager = PageRequest.of(page, size, Sort.by(Sort.Direction.fromString(sortedOrder), "startedAt"));
+        } else {
+            pager = PageRequest.of(page, size, Sort.by(Sort.Direction.fromString(sortedOrder), sortedBy));
+        }
+
+        logger.info("finding transfers based on {} specs", specs.size());
+        if (!specs.isEmpty()) {
+            Specification<Transfer> compiledSpecs = specs.get(0);
+            for (int i = 1; i < specs.size(); i++) {
+                compiledSpecs = compiledSpecs.and(specs.get(i));
+            }
+
+            return transferRepository.findAll(compiledSpecs, pager);
+        } else {
+            return transferRepository.findAll(pager);
+        }
     }
 
     private String urlDecode(String variable, String logPrefix) {
