@@ -79,7 +79,7 @@ public class OperationsDetailedApi {
                 .setEventLogLevel(EventLogLevel.INFO)
                 .setSourceModule("operations-app")
                 .setTenantId(TenantAwareHeaderFilter.tenant.get()), event ->
-                loadTransfers(Transfer.TransferType.TRANSFER, page, size, _payerPartyId, payerDfspId, _payeePartyId, payeeDfspId, transactionId, status, paymentStatus, amount, currency, startFrom, startTo, direction, sortedBy, _partyId, partyIdType, sortedOrder, endToEndIdentification));
+                loadTransfers(Transfer.TransferType.TRANSFER, page, size, _payerPartyId, payerDfspId, _payeePartyId, payeeDfspId, transactionId, status, null, null, paymentStatus, amount, currency, startFrom, startTo, direction, sortedBy, _partyId, partyIdType, sortedOrder, endToEndIdentification));
     }
 
     @GetMapping("/recalls")
@@ -92,6 +92,8 @@ public class OperationsDetailedApi {
             @RequestParam(value = "payeeDfspId", required = false) String payeeDfspId,
             @RequestParam(value = "transactionId", required = false) String transactionId,
             @RequestParam(value = "status", required = false) String status,
+            @RequestParam(value = "recallStatus", required = false) String recallStatus,
+            @RequestParam(value = "recallDirection", required = false) String recallDirection,
             @RequestParam(value = "paymentStatus", required = false) String paymentStatus,
             @RequestParam(value = "amount", required = false) BigDecimal amount,
             @RequestParam(value = "currency", required = false) String currency,
@@ -108,10 +110,10 @@ public class OperationsDetailedApi {
                 .setEventLogLevel(EventLogLevel.INFO)
                 .setSourceModule("operations-app")
                 .setTenantId(TenantAwareHeaderFilter.tenant.get()), event ->
-                loadTransfers(Transfer.TransferType.RECALL, page, size, _payerPartyId, payerDfspId, _payeePartyId, payeeDfspId, transactionId, status, paymentStatus, amount, currency, startFrom, startTo, direction, sortedBy, _partyId, partyIdType, sortedOrder, endToEndIdentification));
+                loadTransfers(Transfer.TransferType.RECALL, page, size, _payerPartyId, payerDfspId, _payeePartyId, payeeDfspId, transactionId, status, recallStatus, recallDirection, paymentStatus, amount, currency, startFrom, startTo, direction, sortedBy, _partyId, partyIdType, sortedOrder, endToEndIdentification));
     }
 
-    private Page<Transfer> loadTransfers(Transfer.TransferType transferType, Integer page, Integer size, String _payerPartyId, String payerDfspId, String _payeePartyId, String payeeDfspId, String transactionId, String status, String paymentStatus, BigDecimal amount, String currency, String startFrom, String startTo, String direction, String sortedBy, String _partyId, String partyIdType, String sortedOrder, String endToEndIdentification) {
+    private Page<Transfer> loadTransfers(Transfer.TransferType transferType, Integer page, Integer size, String _payerPartyId, String payerDfspId, String _payeePartyId, String payeeDfspId, String transactionId, String status, String recallStatus, String recallDirection, String paymentStatus, BigDecimal amount, String currency, String startFrom, String startTo, String direction, String sortedBy, String _partyId, String partyIdType, String sortedOrder, String endToEndIdentification) {
         String payerPartyId = _payerPartyId;
         String payeePartyId = _payeePartyId;
         String partyId = _partyId;
@@ -162,6 +164,12 @@ public class OperationsDetailedApi {
         }
         if (status != null && parseStatus(status) != null) {
             specs.add(TransferSpecs.match(Transfer_.status, parseStatus(status)));
+        }
+        if (StringUtils.isNotBlank(recallStatus)) {
+            specs.add(TransferSpecs.match(Transfer_.recallStatus, recallStatus));
+        }
+        if (StringUtils.isNotBlank(recallDirection)) {
+            specs.add(TransferSpecs.match(Transfer_.recallDirection, recallDirection));
         }
         if (StringUtils.isNotBlank(paymentStatus)) {
             specs.add(TransferSpecs.match(Transfer_.paymentStatus, paymentStatus));
