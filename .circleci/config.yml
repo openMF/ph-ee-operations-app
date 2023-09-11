@@ -13,6 +13,7 @@ executors:
           username: $DOCKERHUB_USERNAME
           password: $DOCKERHUB_PASSWORD
 
+
 jobs:
   build_and_push_tag_image:
     executor: docker-executor
