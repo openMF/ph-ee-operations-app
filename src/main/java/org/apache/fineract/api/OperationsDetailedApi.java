@@ -1,16 +1,13 @@
 package org.apache.fineract.api;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import org.apache.commons.lang3.StringEscapeUtils;
 import org.apache.fineract.data.ErrorResponse;
 import org.apache.fineract.exception.WriteToCsvException;
 import org.apache.fineract.operations.*;
 import org.apache.fineract.utils.CsvUtility;
 import org.apache.fineract.utils.DateUtil;
-import org.mifos.connector.common.channel.dto.PhErrorDTO;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,15 +17,15 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specifications;
 import org.springframework.web.bind.annotation.*;
-import io.swagger.v3.oas.annotations.media.Schema;
+
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.math.BigDecimal;
 import java.net.URLDecoder;
 import java.util.ArrayList;
-import java.util.Map;
 import java.util.List;
+import java.util.Map;
 
 import static org.apache.fineract.core.service.OperatorUtils.dateFormat;
 
@@ -168,12 +165,12 @@ public class OperationsDetailedApi {
             }
             transferPage = transferRepository.findAll(compiledSpecs, pager);
         } else {
-            transferPage =  transferRepository.findAll(pager);
+            transferPage = transferRepository.findAll(pager);
         }
 
         List<TransferResponse> transferResponseList = new ArrayList<>();
         int i = 0;
-        for (Transfer transfer: transferPage.getContent()) {
+        for (Transfer transfer : transferPage.getContent()) {
             TransferResponse transferResponse = null;
             try {
                 String json = transfer.getErrorInformation();
@@ -193,6 +190,62 @@ public class OperationsDetailedApi {
 
         Page<TransferResponse> paginatedTransferResponse = new PageImpl<>(transferResponseList, transferPage.getPageable(), transferPage.getTotalPages());
 
+        return paginatedTransferResponse;
+    }
+
+    //payment status check api
+    @PostMapping("/transfers")
+    public Page<TransferResponse> transfersStatusCheck(
+            @RequestHeader("Platform-TenantId") String tenantId,
+            @RequestParam(value = "page", required = false, defaultValue = "0") Integer page,
+            @RequestParam(value = "size", required = false, defaultValue = "10000") Integer size,
+            @RequestParam(value = "sortedOrder", required = false, defaultValue = "DESC") String sortedOrder,
+            @RequestParam(value = "startFrom", required = false) String startFrom,
+            @RequestParam(value = "startTo", required = false) String startTo,
+            @RequestParam(value = "sortedBy", required = false) String sortedBy,
+            @RequestBody Map<String, List<String>> body) throws IOException {
+        List<Specifications<Transfer>> specs = new ArrayList<>();
+        PageRequest pager;
+        if (sortedBy == null || "startedAt".equals(sortedBy)) {
+            pager = new PageRequest(page, size, new Sort(Sort.Direction.fromString(sortedOrder),
+                    "startedAt"));
+        } else {
+            pager = new PageRequest(page, size, new Sort(Sort.Direction.fromString(sortedOrder), sortedBy));
+        }
+        Specifications<Transfer> spec = null;
+        List<String> filterByList = new ArrayList<>(body.keySet());
+        for (String filterBy : filterByList) {
+            List<String> ids = body.get(filterBy);
+            if (ids.isEmpty()) {
+                continue;
+            } else {
+                if (filterBy.equals("requestIds")) {
+                    spec = TransferSpecs.in(Transfer_.clientCorrelationId, ids);
+                } else if (filterBy.equals("payeePartyIds")) {
+                    spec = TransferSpecs.in(Transfer_.payeeDfspId, ids);
+                }
+            }
+        }
+        Page<Transfer> transferPage;
+        transferPage = executeTransferRequest(spec, specs, page, size, sortedOrder);
+        List<TransferResponse> transferResponseList = new ArrayList<>();
+        for (Transfer transfer : transferPage.getContent()) {
+            TransferResponse transferResponse = null;
+            try {
+                String json = transfer.getErrorInformation();
+                transfer.setErrorInformation(null);
+                transferResponse = objectMapper.readValue(objectMapper.writeValueAsString(transfer),
+                        TransferResponse.class);
+                transferResponse.parseErrorInformation(json, objectMapper);
+                transferResponseList.add(transferResponse);
+            } catch (Exception e) {
+                logger.error("Error parsing errorInformation into DTO: {}", e.getMessage());
+                if (transferResponse != null) {
+                    transferResponseList.add(transferResponse);
+                }
+            }
+        }
+        Page<TransferResponse> paginatedTransferResponse = new PageImpl<>(transferResponseList, transferPage.getPageable(), transferPage.getTotalPages());
         return paginatedTransferResponse;
     }
 
@@ -304,9 +357,9 @@ public class OperationsDetailedApi {
             @RequestParam(value = "state", required = false) String state,
             @RequestBody Map<String, List<String>> body) {
 
-        if(!command.equalsIgnoreCase("export")) {
+        if (!command.equalsIgnoreCase("export")) {
             return new ErrorResponse.Builder()
-                    .setErrorCode(""+HttpServletResponse.SC_NOT_FOUND)
+                    .setErrorCode("" + HttpServletResponse.SC_NOT_FOUND)
                     .setErrorDescription(command + " not supported")
                     .setDeveloperMessage("Possible supported command is " + command).build();
         }
@@ -354,7 +407,7 @@ public class OperationsDetailedApi {
         if (data.isEmpty()) {
             response.setStatus(HttpServletResponse.SC_NOT_FOUND);
             return new ErrorResponse.Builder()
-                    .setErrorCode(""+HttpServletResponse.SC_NOT_FOUND)
+                    .setErrorCode("" + HttpServletResponse.SC_NOT_FOUND)
                     .setErrorDescription("Empty response")
                     .setDeveloperMessage("Empty response").build();
         }
@@ -446,13 +499,28 @@ public class OperationsDetailedApi {
         return result;
     }
 
+    private Page<Transfer> executeTransferRequest(
+            Specifications<Transfer> baseSpec, List<Specifications<Transfer>> extraSpecs,
+            int page, int size, String sortedOrder) {
+        PageRequest pager = new PageRequest(page, size, new Sort(Sort.Direction.valueOf(sortedOrder), "startedAt"));
+        Page<Transfer> result;
+        if (baseSpec == null) {
+            result = transferRepository.findAll(pager);
+            logger.info("Getting data without spec");
+        } else {
+            Specifications<Transfer> combineSpecs = combineSpecs(baseSpec, extraSpecs);
+            result = transferRepository.findAll(combineSpecs, pager);
+        }
+        return result;
+    }
+
     /*
      * Combines the multiple specifications into one using and clause
      * @param baseSpec the base specification in which all the other spec needed to be merged
      * @param specs the list of specification which is required to be merged in [baseSpec]
      */
     private <T> Specifications<T> combineSpecs(Specifications<T> baseSpec,
-                                                            List<Specifications<T>> specs) {
+                                               List<Specifications<T>> specs) {
         logger.info("Combining specs " + specs.size());
         for (Specifications<T> specifications : specs) {
             baseSpec = baseSpec.and(specifications);
@@ -515,4 +583,5 @@ public class OperationsDetailedApi {
         }
         return stateList;
     }
+
 }
