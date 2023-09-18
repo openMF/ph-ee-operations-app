@@ -122,7 +122,7 @@ public class OperationsApi {
             Optional<Variable> paymentSchemeOpt = variableRepository.findByWorkflowInstanceKeyAndVariableName("paymentScheme", transfer.getWorkflowInstanceKey());
             String paymentScheme = paymentSchemeOpt.orElseThrow(() -> new RuntimeException("Payment scheme not found for transactionId " + transactionId)).getValue();
 
-            camundaService.startRecallFlow(paymentScheme, transfer);
+            camundaService.startRecallFlow(requestBody, paymentScheme, transfer);
             response.setStatus(200);
             return "{}";
         });
