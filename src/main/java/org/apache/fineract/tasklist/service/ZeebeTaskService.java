@@ -242,7 +242,7 @@ public class ZeebeTaskService {
         String taskForm = task.getTaskForm();
         Map<String, String> variableTypes = getVariableType(taskForm);
         variables.keySet().forEach(s -> {
-            if (variableTypes.containsKey(s)) {
+            if (!variables.isNull(s) && variableTypes.containsKey(s)) {
                 String variableType = variableTypes.get(s);
                 String value = variables.getString(s);
                 if ("true".equalsIgnoreCase(value)) {
