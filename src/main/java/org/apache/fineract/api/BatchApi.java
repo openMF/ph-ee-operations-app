@@ -144,21 +144,6 @@ public class BatchApi {
         }
     }
 
-    @GetMapping("/batch/{batchId}")
-    public BatchDTO batchAggregation(@PathVariable(value = "batchId") String batchId,
-                                     @RequestParam(value = "requestId", required = false) String requestId,
-                                     @RequestParam(value = "command", required = false) String command) {
-        Batch batch = batchRepository.findByBatchId(batchId);
-        if (batch != null && batch.getResultGeneratedAt() != null
-                && new Date().getTime() - batch.getResultGeneratedAt().getTime() < 600000) {
-            return generateDetails(batch);
-        }
-        Batch newBatch = new Batch();
-        newBatch.setBatchId(batchId);
-        newBatch.setRequestId(requestId);
-        return generateDetails(newBatch);
-    }
-
     @GetMapping("/batch")
     public ResponseEntity<Object> batchDetails(@RequestParam(value = "batchId", required = false) String batchId,
                                                @RequestParam(value = "requestId", required = false) String requestId) {
@@ -414,12 +399,14 @@ public class BatchApi {
         DecimalFormat decimalFormat = new DecimalFormat("#.##");
         decimalFormat.setRoundingMode(RoundingMode.FLOOR);
 
+
         return new BatchDTO(batch.getBatchId(),
                 batch.getRequestId(), batch.getTotalTransactions(), batch.getOngoing(),
                 batch.getFailed(), batch.getCompleted(), new BigDecimal(batch.getTotalAmount()),
                 new BigDecimal(batch.getCompletedAmount()), new BigDecimal(batch.getOngoingAmount()),
                 new BigDecimal(batch.getFailedAmount()), batch.getResult_file(), batch.getNote(),
-                decimalFormat.format(batchCompletedPercent), decimalFormat.format(batchFailedPercent));
+                decimalFormat.format(batchCompletedPercent), decimalFormat.format(batchFailedPercent),
+                batch.getRegisteringInstitutionId(), batch.getPayerFsp(), batch.getCorrelationId());
     }
 
 }
