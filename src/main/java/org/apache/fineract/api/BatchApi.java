@@ -42,6 +42,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Optional;
+import java.util.function.Supplier;
 
 import static org.apache.fineract.core.service.OperatorUtils.strip;
 
@@ -399,13 +400,22 @@ public class BatchApi {
         DecimalFormat decimalFormat = new DecimalFormat("#.##");
         decimalFormat.setRoundingMode(RoundingMode.FLOOR);
 
+        Optional<Long> totalAmount = Optional.ofNullable(batch.getTotalAmount());
+        Optional<Long> completedAmount = Optional.ofNullable(batch.getCompletedAmount());
+        Optional<Long> ongoingAmount = Optional.ofNullable(batch.getOngoingAmount());
+        Optional<Long> failedAmount = Optional.ofNullable(batch.getFailedAmount());
+
+        Long nullValue = 0L;
 
         return new BatchDTO(batch.getBatchId(),
                 batch.getRequestId(), batch.getTotalTransactions(), batch.getOngoing(),
-                batch.getFailed(), batch.getCompleted(), new BigDecimal(batch.getTotalAmount()),
-                new BigDecimal(batch.getCompletedAmount()), new BigDecimal(batch.getOngoingAmount()),
-                new BigDecimal(batch.getFailedAmount()), batch.getResult_file(), batch.getNote(),
-                decimalFormat.format(batchCompletedPercent), decimalFormat.format(batchFailedPercent),
+                batch.getFailed(), batch.getCompleted(),
+                BigDecimal.valueOf(totalAmount.orElse(nullValue)),
+                BigDecimal.valueOf(completedAmount.orElse(nullValue)),
+                BigDecimal.valueOf(ongoingAmount.orElse(nullValue)),
+                BigDecimal.valueOf(failedAmount.orElse(nullValue)),
+                batch.getResult_file(), batch.getNote(),
+                decimalFormat.format(batchFailedPercent), decimalFormat.format(batchCompletedPercent),
                 batch.getRegisteringInstitutionId(), batch.getPayerFsp(), batch.getCorrelationId());
     }
 
