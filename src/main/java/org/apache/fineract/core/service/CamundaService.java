@@ -58,6 +58,7 @@ public class CamundaService {
             bpmn = recallBpmnBatch;
             variables.put("originalPacs008", getTransferVariable(transfer, "generatedPacs008Fragment"));
             variables.put("paymentScheme", "IG2:RECALL");
+            variables.put("originalFileMetadata", getTransferVariable(transfer, "fileMetadata"));
         }
         variables.put("iban", iban);
         variables.put("creditorIban", debtorIban);
