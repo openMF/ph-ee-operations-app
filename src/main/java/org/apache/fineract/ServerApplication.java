@@ -20,6 +20,7 @@ package org.apache.fineract;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.camunda.zeebe.spring.client.EnableZeebeClient;
+import org.apache.fineract.config.RsaKeyProperties;
 import org.apache.fineract.core.service.TenantAwareHeaderFilter;
 import org.apache.fineract.core.tenants.TenantsService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -36,13 +37,11 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.ProviderManager;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
+import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.client.RestTemplate;
-import org.springframework.web.cors.CorsConfiguration;
-import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
-import org.springframework.web.filter.CorsFilter;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -51,8 +50,9 @@ import java.util.List;
         DataSourceTransactionManagerAutoConfiguration.class,
 //        FlywayAutoConfiguration.class,
         ErrorMvcAutoConfiguration.class})
-@EnableConfigurationProperties
+@EnableConfigurationProperties(RsaKeyProperties.class)
 @EnableZeebeClient
+@EnableGlobalMethodSecurity(prePostEnabled=true)
 public class ServerApplication {
 
     @Autowired
@@ -82,7 +82,7 @@ public class ServerApplication {
 
     @Bean
     public DaoAuthenticationProvider customAuthenticationProvider(PasswordEncoder passwordEncoder,
-                                                                  UserDetailsService userDetailsService) {
+                                                                     UserDetailsService userDetailsService) {
         DaoAuthenticationProvider provider = new DaoAuthenticationProvider();
         provider.setUserDetailsService(userDetailsService);
         provider.setPasswordEncoder(passwordEncoder);
@@ -99,11 +99,11 @@ public class ServerApplication {
         return registration;
     }
 
-    @Bean
+    /*@Bean
     public FilterRegistrationBean corsFilter() {
         CorsConfiguration config = new CorsConfiguration();
         config.setAllowCredentials(true);
-        config.addAllowedOriginPattern("*");
+        config.addAllowedOrigin("http://localhost:4200");
         config.addAllowedHeader("*");
         config.addAllowedMethod("*");
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
@@ -111,7 +111,19 @@ public class ServerApplication {
         FilterRegistrationBean bean = new FilterRegistrationBean(new CorsFilter(source));
         bean.setOrder(securityFilterOrder - 5);
         return bean;
-    }
+    }*/
+
+    /*@Bean
+    public CorsFilter corsFilter() {
+        final UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        final CorsConfiguration config = new CorsConfiguration();
+        config.setAllowCredentials(true);
+        config.setAllowedOrigins(Collections.singletonList("http://localhost:4200"));
+        config.setAllowedHeaders(Arrays.asList("Origin", "Content-Type", "Accept"));
+        config.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "OPTIONS", "DELETE", "PATCH"));
+        source.registerCorsConfiguration("/**", config);
+        return new CorsFilter(source);
+    }*/
 
     @Bean
     public AuthenticationManager authenticationManager(DaoAuthenticationProvider customAuthenticationProvider) {
@@ -119,4 +131,5 @@ public class ServerApplication {
         providers.add(customAuthenticationProvider);
         return new ProviderManager(providers);
     }
+
 }

@@ -19,11 +19,14 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.io.UnsupportedEncodingException;
 import java.math.BigDecimal;
 import java.net.URLDecoder;
+import java.security.Principal;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -53,6 +56,7 @@ public class OperationsDetailedApi {
     private EventService eventService;
 
 
+    @PreAuthorize("hasAuthority('SCOPE_ALL_FUNCTIONS') and hasRole('ROLE_Admin')")
     @GetMapping("/transfers")
     public Page<Transfer> transfers(
             @RequestParam(value = "page") Integer page,
@@ -73,7 +77,8 @@ public class OperationsDetailedApi {
             @RequestParam(value = "partyId", required = false) String _partyId,
             @RequestParam(value = "partyIdType", required = false) String partyIdType,
             @RequestParam(value = "sortedOrder", required = false, defaultValue = "DESC") String sortedOrder,
-            @RequestParam(value = "endToEndIdentification", required = false) String endToEndIdentification) {
+            @RequestParam(value = "endToEndIdentification", required = false) String endToEndIdentification, Authentication auth) {
+            System.out.println(auth.getAuthorities());
         return eventService.auditedEvent(event -> event
                 .setEvent("transfers list invoked")
                 .setEventLogLevel(EventLogLevel.INFO)

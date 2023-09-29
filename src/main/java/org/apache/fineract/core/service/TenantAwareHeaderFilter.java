@@ -27,17 +27,19 @@ import org.apache.commons.lang3.time.StopWatch;
 import org.apache.fineract.core.tenants.TenantsService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.filter.GenericFilterBean;
 
 import java.io.IOException;
+import java.util.List;
 
 
 public class TenantAwareHeaderFilter extends GenericFilterBean {
     private static final String TENANT_IDENTIFIER_REQUEST_HEADER = "Platform-TenantId";
-    private static final String TENANT_IDENTIFIER_REQUEST_PARAM = "tenantIdentifier";
-    private static final String EXCLUDED_URL = "/oauth/token_key";
-    private static final String EXCLUDED_ACTUATOR_PREFIX = "/actuator";
+    public static final String TENANT_IDENTIFIER_REQUEST_PARAM = "tenantIdentifier";
+    private static final List<String> EXCLUDED_URL = List.of("/oauth2/authorize", "/oauth2/revoke", "/favicon.ico", "/login", "/oauth2/token", "/logout");
+    private static final List<String> EXCLUDED_PREFIX = List.of("/actuator", "/css", "/images");
 
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
     private final TenantsService tenantService;
@@ -55,7 +57,7 @@ public class TenantAwareHeaderFilter extends GenericFilterBean {
         task.start();
 
         try {
-            if (!EXCLUDED_URL.equals(request.getServletPath()) && !request.getServletPath().startsWith(EXCLUDED_ACTUATOR_PREFIX) &&
+            if (!EXCLUDED_URL.contains(request.getServletPath()) && !EXCLUDED_PREFIX.stream().anyMatch(pref -> request.getServletPath().startsWith(pref)) &&
                     !request.getServletPath().contains("swagger") && !request.getServletPath().contains("api-docs") && !"OPTIONS".equalsIgnoreCase(request.getMethod())) {
                 String tenantIdentifier = request.getHeader(TENANT_IDENTIFIER_REQUEST_HEADER);
                 if (tenantIdentifier == null || tenantIdentifier.length() < 1) {
@@ -63,6 +65,8 @@ public class TenantAwareHeaderFilter extends GenericFilterBean {
                 }
 
                 if (tenantIdentifier == null || tenantIdentifier.length() < 1) {
+                    System.out.println(request.getServletPath());
+                    System.out.println(request.getMethod());
                     throw new RuntimeException(
                             String.format("No tenant identifier found! Add request header: %s or request param: %s", TENANT_IDENTIFIER_REQUEST_HEADER, TENANT_IDENTIFIER_REQUEST_PARAM));
                 }
