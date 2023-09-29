@@ -43,9 +43,11 @@ public class CamundaService {
         Map<String, String> variables = new HashMap<>();
         String bpmn;
         String comment = null;
+        String recallAdditionalInformation = "";
         try {
             JSONObject body = new JSONObject(requestBody);
             comment = body.optString("comment", null);
+            recallAdditionalInformation =  body.optString("recallAdditionalInformation", "");
         } catch (Exception e) {
             logger.error("Could not parse recall request body {}, can not set comment on recall!", requestBody);
         }
@@ -53,7 +55,7 @@ public class CamundaService {
             bpmn = recallBpmnInstant;
             variables.put("originalPacs008", getTransferVariable(transfer, "generatedPacs008"));
             variables.put("paymentScheme", "HCT_INST:RECALL");
-            variables.put("recallAdditionalInformation", comment);
+            variables.put("recallAdditionalInformation", recallAdditionalInformation);
         } else {
             bpmn = recallBpmnBatch;
             variables.put("originalPacs008", getTransferVariable(transfer, "generatedPacs008Fragment"));
