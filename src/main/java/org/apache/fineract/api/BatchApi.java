@@ -318,7 +318,7 @@ public class BatchApi {
                 batch.getFailed(), batch.getCompleted(), totalAmount, completedAmount,
                 ongoingAmount, failedAmount, batch.getResult_file(), batch.getNote(),
                 batchCompletedPercent.toString(), batchFailedPercent.toString(), batch.getRegisteringInstitutionId(),
-                batch.getPayerFsp(), batch.getCorrelationId());
+                batch.getPayerFsp(), batch.getCorrelationId(), batch.getApprovedCount(),  batch.getApprovedAmount());
 
         response.setCreated_at("" + batch.getStartedAt());
         response.setModes(modes.toString());

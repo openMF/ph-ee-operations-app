@@ -54,11 +54,13 @@ public class BatchDTO {
     private String payerFsp;
 
     private String correlationId;
+    private Long approvedAmount;
+    private Long approvedCount;
 
     public BatchDTO(String batchId, String requestId, Long totalTransactions, Long ongoing, Long failed,
                     Long completed, BigDecimal total_amount, BigDecimal completed_amount, BigDecimal ongoing_amount,
                     BigDecimal failed_amount, String result_file, String note, String failPercentage,
-                    String successPercentage, String registeringInstitutionId, String payerFsp, String correlationId) {
+                    String successPercentage, String registeringInstitutionId, String payerFsp, String correlationId, Long approvedAmount, Long approvedCount) {
         this.batch_id = batchId;
         this.request_id = requestId;
         this.total = totalTransactions;
@@ -76,5 +78,7 @@ public class BatchDTO {
         this.registeringInstitutionId = registeringInstitutionId;
         this.payerFsp = payerFsp;
         this.correlationId = correlationId;
+        this.approvedAmount = approvedAmount;
+        this.approvedCount = approvedCount;
     }
 }
