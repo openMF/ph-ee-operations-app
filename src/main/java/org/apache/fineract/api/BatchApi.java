@@ -407,7 +407,7 @@ public class BatchApi {
 
         Long nullValue = 0L;
 
-        return new BatchDTO(batch.getBatchId(),
+        BatchDTO batchDTO = new BatchDTO(batch.getBatchId(),
                 batch.getRequestId(), batch.getTotalTransactions(), batch.getOngoing(),
                 batch.getFailed(), batch.getCompleted(),
                 BigDecimal.valueOf(totalAmount.orElse(nullValue)),
@@ -417,6 +417,18 @@ public class BatchApi {
                 batch.getResult_file(), batch.getNote(),
                 decimalFormat.format(batchFailedPercent), decimalFormat.format(batchCompletedPercent),
                 batch.getRegisteringInstitutionId(), batch.getPayerFsp(), batch.getCorrelationId());
+
+        if (batch.getTotalTransactions() != null &&
+                batch.getCompleted() != null &&
+                batch.getTotalTransactions().longValue() == batch.getCompleted().longValue()) {
+            batchDTO.setStatus("COMPLETED");
+        } else if (batch.getOngoing() != null && batch.getOngoing() != 0 && batch.getCompletedAt() == null) {
+            batchDTO.setStatus("Pending");
+        } else {
+            batchDTO.setStatus("UNKNOWN");
+        }
+
+        return batchDTO;
     }
 
 }
