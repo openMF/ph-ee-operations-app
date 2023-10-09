@@ -32,6 +32,14 @@ spring:
 server:
   port: 5000
 
+frontend:
+  url: "http://localhost"
+  port: 4200
+
+client:
+  id: "community-app"
+  secret: "secret"
+
 rest:
   authorization:
     enabled: false
@@ -42,9 +50,6 @@ rest:
         authority: "hasAuthority('ALL_FUNCTIONS')"
 logging:
   level:
-    org:
-      springframework:
-        security: TRACE
     root: ERROR
 #    pattern:
 #      console: "%clr(%d{dd-MM-yyyy HH:mm:ss.SSS}){faint} %clr(${LOG_LEVEL_PATTERN:-%5p}) %clr([%35.35t]){faint} %clr(%-28.28logger{28}){cyan} %clr(:){faint}%X{BUSINESS-LOG} %m%n${LOG_EXCEPTION_CONVERSION_WORD:-%wEx}"

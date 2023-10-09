@@ -56,7 +56,7 @@ public class OperationsDetailedApi {
     private EventService eventService;
 
 
-    @PreAuthorize("hasAuthority('SCOPE_ALL_FUNCTIONS') and hasRole('ROLE_Admin')")
+    @PreAuthorize("hasAuthority('ALL_FUNCTIONS') and hasRole('Admin')")
     @GetMapping("/transfers")
     public Page<Transfer> transfers(
             @RequestParam(value = "page") Integer page,
@@ -77,8 +77,7 @@ public class OperationsDetailedApi {
             @RequestParam(value = "partyId", required = false) String _partyId,
             @RequestParam(value = "partyIdType", required = false) String partyIdType,
             @RequestParam(value = "sortedOrder", required = false, defaultValue = "DESC") String sortedOrder,
-            @RequestParam(value = "endToEndIdentification", required = false) String endToEndIdentification, Authentication auth) {
-            System.out.println(auth.getAuthorities());
+            @RequestParam(value = "endToEndIdentification", required = false) String endToEndIdentification) {
         return eventService.auditedEvent(event -> event
                 .setEvent("transfers list invoked")
                 .setEventLogLevel(EventLogLevel.INFO)

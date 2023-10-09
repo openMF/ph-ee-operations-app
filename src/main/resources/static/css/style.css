@@ -1,4 +1,5 @@
-@import url(https://fonts.googleapis.com/css?family=Roboto:300);
+@import url(https://fonts.googleapis.com/css?family=Roboto);
+@import url(https://fonts.googleapis.com/css?family=Roboto:500);
 
 .login-page {
   width: 700px;
@@ -15,14 +16,23 @@
   text-align: center;
   box-shadow: 0 0 20px 0 rgba(0, 0, 0, 0.2), 0 5px 5px 0 rgba(0, 0, 0, 0.24);
 }
-
 .form img {
-  max-width: 100%; /* Ensure the image doesn't exceed the width of its container */
-  height: auto; /* Maintain the image's aspect ratio */
+  max-width: 100%;
+  height: auto;
 }
-
+.password-container {
+    position: relative;
+}
+.password-toggle-icon {
+    position: absolute;
+    top: 38%;
+    right: 15px;
+    transform: translateY(-50%);
+    cursor: pointer;
+    font-size: 20px;
+}
 .form input {
-  font-family: "Roboto", sans-serif;
+  font-family: "Roboto", "Helvetica Neue", sans-serif;
   outline: 0;
   background: #f2f2f2;
   width: 100%;
@@ -32,41 +42,57 @@
   box-sizing: border-box;
   font-size: 14px;
 }
+.form input[type="checkbox"] {
+  height: 16px;
+  width: 16px;
+  margin: 0 10px 0 0;
+}
 .form .button {
-  font-family: "Roboto", sans-serif;
-  text-transform: uppercase;
+  font-family: "Roboto", "Helvetica Neue", sans-serif;
+  font-size: 14px;
+  font-weight: 500;
   outline: 0;
-  background: #4169E1;
-  width: 100%;
+  background: #1074b9;
+  width: 14rem;
   border: 0;
+  border-radius: 4px;
   padding: 15px;
   color: #FFFFFF;
-  font-size: 14px;
-  -webkit-transition: all 0.3 ease;
-  transition: all 0.3 ease;
   cursor: pointer;
+  box-shadow: 0px 3px 1px -2px rgba(0, 0, 0, 0.2), 0px 2px 2px 0px rgba(0, 0, 0, 0.14), 0px 1px 5px 0px rgba(0, 0, 0, 0.12);
 }
-.form button:hover,.form button:active,.form button:focus {
-  background: #4169E1;
+.form .button:disabled {
+  color: rgba(0, 0, 0, 0.26);
+  background: rgba(0, 0, 0, 0.12);
+  cursor: default;
 }
 .form .message {
   margin: 15px 0 0;
   color: #b3b3b3;
   font-size: 12px;
 }
+.form .remember {
+	padding: 15px;
+}
+.form .remember label {
+  display: inline-flex;
+  align-items: center;
+  white-space: nowrap;
+}
 .form .error {
 	color: red;
+	padding: 15px;
 }
-.form h1 {
-	color: #4169E1;
+.form h3 {
+    font-family: "Roboto", "Helvetica Neue", sans-serif;
+	font-weight: 400;
+	color: rgba(0, 0, 0, 0.87);
 }
 .form .message a {
   color: #4169E1;
   text-decoration: none;
 }
 body {
-  //background: #4169E1;
-  font-family: "Roboto", sans-serif;
+  font-family: "Roboto", "Helvetica Neue", sans-serif;
   -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
 }

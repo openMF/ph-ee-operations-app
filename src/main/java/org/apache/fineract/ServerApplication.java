@@ -20,6 +20,7 @@ package org.apache.fineract;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.camunda.zeebe.spring.client.EnableZeebeClient;
+import org.apache.fineract.auth.TenantAuthenticationProvider;
 import org.apache.fineract.config.RsaKeyProperties;
 import org.apache.fineract.core.service.TenantAwareHeaderFilter;
 import org.apache.fineract.core.tenants.TenantsService;
@@ -36,7 +37,6 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.ProviderManager;
-import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -81,9 +81,9 @@ public class ServerApplication {
     }
 
     @Bean
-    public DaoAuthenticationProvider customAuthenticationProvider(PasswordEncoder passwordEncoder,
+    public TenantAuthenticationProvider customAuthenticationProvider(PasswordEncoder passwordEncoder,
                                                                      UserDetailsService userDetailsService) {
-        DaoAuthenticationProvider provider = new DaoAuthenticationProvider();
+        TenantAuthenticationProvider provider = new TenantAuthenticationProvider(tenantsService);
         provider.setUserDetailsService(userDetailsService);
         provider.setPasswordEncoder(passwordEncoder);
         return provider;
@@ -126,7 +126,7 @@ public class ServerApplication {
     }*/
 
     @Bean
-    public AuthenticationManager authenticationManager(DaoAuthenticationProvider customAuthenticationProvider) {
+    public AuthenticationManager authenticationManager(TenantAuthenticationProvider customAuthenticationProvider) {
         List<AuthenticationProvider> providers = new ArrayList<>();
         providers.add(customAuthenticationProvider);
         return new ProviderManager(providers);

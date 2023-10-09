@@ -38,7 +38,7 @@ import java.util.List;
 public class TenantAwareHeaderFilter extends GenericFilterBean {
     private static final String TENANT_IDENTIFIER_REQUEST_HEADER = "Platform-TenantId";
     public static final String TENANT_IDENTIFIER_REQUEST_PARAM = "tenantIdentifier";
-    private static final List<String> EXCLUDED_URL = List.of("/oauth2/authorize", "/oauth2/revoke", "/favicon.ico", "/login", "/oauth2/token", "/logout");
+    private static final List<String> EXCLUDED_URL = List.of("/oauth2/authorize", "/favicon.ico", "/login", "/oauth2/token", "/logout");
     private static final List<String> EXCLUDED_PREFIX = List.of("/actuator", "/css", "/images");
 
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
@@ -65,8 +65,6 @@ public class TenantAwareHeaderFilter extends GenericFilterBean {
                 }
 
                 if (tenantIdentifier == null || tenantIdentifier.length() < 1) {
-                    System.out.println(request.getServletPath());
-                    System.out.println(request.getMethod());
                     throw new RuntimeException(
                             String.format("No tenant identifier found! Add request header: %s or request param: %s", TENANT_IDENTIFIER_REQUEST_HEADER, TENANT_IDENTIFIER_REQUEST_PARAM));
                 }
