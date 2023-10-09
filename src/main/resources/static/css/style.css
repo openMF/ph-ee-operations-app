@@ -1,0 +1,98 @@
+@import url(https://fonts.googleapis.com/css?family=Roboto);
+@import url(https://fonts.googleapis.com/css?family=Roboto:500);
+
+.login-page {
+  width: 700px;
+  padding: 8% 0 0;
+  margin: auto;
+}
+.form {
+  position: relative;
+  z-index: 1;
+  background: #FFFFFF;
+  max-width: 360px;
+  margin: 0 auto 100px;
+  padding: 45px;
+  text-align: center;
+  box-shadow: 0 0 20px 0 rgba(0, 0, 0, 0.2), 0 5px 5px 0 rgba(0, 0, 0, 0.24);
+}
+.form img {
+  max-width: 100%;
+  height: auto;
+}
+.password-container {
+    position: relative;
+}
+.password-toggle-icon {
+    position: absolute;
+    top: 38%;
+    right: 15px;
+    transform: translateY(-50%);
+    cursor: pointer;
+    font-size: 20px;
+}
+.form input {
+  font-family: "Roboto", "Helvetica Neue", sans-serif;
+  outline: 0;
+  background: #f2f2f2;
+  width: 100%;
+  border: 0;
+  margin: 0 0 15px;
+  padding: 15px;
+  box-sizing: border-box;
+  font-size: 14px;
+}
+.form input[type="checkbox"] {
+  height: 16px;
+  width: 16px;
+  margin: 0 10px 0 0;
+}
+.form .button {
+  font-family: "Roboto", "Helvetica Neue", sans-serif;
+  font-size: 14px;
+  font-weight: 500;
+  outline: 0;
+  background: #1074b9;
+  width: 14rem;
+  border: 0;
+  border-radius: 4px;
+  padding: 15px;
+  color: #FFFFFF;
+  cursor: pointer;
+  box-shadow: 0px 3px 1px -2px rgba(0, 0, 0, 0.2), 0px 2px 2px 0px rgba(0, 0, 0, 0.14), 0px 1px 5px 0px rgba(0, 0, 0, 0.12);
+}
+.form .button:disabled {
+  color: rgba(0, 0, 0, 0.26);
+  background: rgba(0, 0, 0, 0.12);
+  cursor: default;
+}
+.form .message {
+  margin: 15px 0 0;
+  color: #b3b3b3;
+  font-size: 12px;
+}
+.form .remember {
+	padding: 15px;
+}
+.form .remember label {
+  display: inline-flex;
+  align-items: center;
+  white-space: nowrap;
+}
+.form .error {
+	color: red;
+	padding: 15px;
+}
+.form h3 {
+    font-family: "Roboto", "Helvetica Neue", sans-serif;
+	font-weight: 400;
+	color: rgba(0, 0, 0, 0.87);
+}
+.form .message a {
+  color: #4169E1;
+  text-decoration: none;
+}
+body {
+  font-family: "Roboto", "Helvetica Neue", sans-serif;
+  -webkit-font-smoothing: antialiased;
+}

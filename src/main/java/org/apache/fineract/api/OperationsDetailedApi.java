@@ -19,11 +19,14 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.io.UnsupportedEncodingException;
 import java.math.BigDecimal;
 import java.net.URLDecoder;
+import java.security.Principal;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -53,6 +56,7 @@ public class OperationsDetailedApi {
     private EventService eventService;
 
 
+    @PreAuthorize("hasAuthority('ALL_FUNCTIONS') and hasRole('Admin')")
     @GetMapping("/transfers")
     public Page<Transfer> transfers(
             @RequestParam(value = "page") Integer page,

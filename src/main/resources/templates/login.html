@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:th="https://www.thymeleaf.org">
+<head>
+    <title>Please Log In</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+</head>
+<body>
+<div class="login-page">
+    <div class="form">
+        <div>
+            <img class="img-fluid" th:src="@{/images/mifos-logo-flat.png}" />
+        </div>
+        <h3>Payment Hub EE - Operations Management</h3>
+        <!--div class="error" th:if="${param.error}">
+            Invalid username and password.</div-->
+        <div th:if="${param.error != null}" class="error" th:utext="${session[SPRING_SECURITY_LAST_EXCEPTION].message}">error</div>
+        <div class="error" th:if="${param.logout}">
+            You have been logged out.</div>
+        <form  class="login-form" th:action="@{/login}" method="post">
+            <div>
+                <input type="text" id="username" name="username" class="form-control" placeholder="Username" required autofocus/>
+            </div>
+            <div class="password-container">
+                <input type="password" id="password" name="password" class="form-control" placeholder="Password" required/>
+                <i class="password-toggle-icon fa fa-eye" onclick="togglePasswordVisibility()"></i>
+            </div>
+            <div>
+                <input type="text" id="tenantIdentifier" name="tenantIdentifier" class="form-control" placeholder="Tenant" required/>
+            </div>
+            <div class="remember">
+                <label>
+                    <input type="checkbox" id="rememberMe" value="true">
+                    Remember me
+                </label>
+            </div>
+            <input class="button" id="loginButton" type="submit" value="Login" disabled/>
+        </form>
+    </div>
+</div>
+<script>
+    // Get references to the input elements and the login button
+    const usernameInput = document.getElementById('username');
+    const passwordInput = document.getElementById('password');
+    const tenantInput = document.getElementById('tenantIdentifier');
+    const loginButton = document.getElementById('loginButton');
+
+    // Function to enable or disable the login button based on input values
+    function updateLoginButtonState() {
+        if (usernameInput.value.trim() !== '' && passwordInput.value.trim() !== '' && tenantInput.value.trim() !== '') {
+            loginButton.removeAttribute('disabled');
+        } else {
+            loginButton.setAttribute('disabled', 'disabled');
+        }
+    }
+
+    // Attach event listeners to the input elements
+    usernameInput.addEventListener('input', updateLoginButtonState);
+    passwordInput.addEventListener('input', updateLoginButtonState);
+    tenantInput.addEventListener('input', updateLoginButtonState);
+
+    // Initial state check
+    updateLoginButtonState();
+
+    function togglePasswordVisibility() {
+        const passwordInput = document.getElementById('password');
+        const icon = document.querySelector('.password-toggle-icon');
+
+        if (passwordInput.type === 'password') {
+            passwordInput.type = 'text';
+            icon.classList.remove('fa-eye');
+            icon.classList.add('fa-eye-slash');
+        } else {
+            passwordInput.type = 'password';
+            icon.classList.remove('fa-eye-slash');
+            icon.classList.add('fa-eye');
+        }
+    }
+</script>
+</body>
+</html>

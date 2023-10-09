@@ -19,7 +19,7 @@ security:
 spring:
   mvc:
     favicon:
-      enabled: false
+      enabled: true
   jmx:
     enabled: false
 
@@ -27,10 +27,18 @@ spring:
     enabled: false
   web:
     resources:
-      add-mappings: false
+      add-mappings: true
 
 server:
   port: 5000
+
+frontend:
+  url: "http://localhost"
+  port: 4200
+
+client:
+  id: "community-app"
+  secret: "secret"
 
 rest:
   authorization:
@@ -67,6 +75,10 @@ payment:
       type: "BATCH"
   internal-account-id-prefix: ""
 
+rsa:
+  private-key: classpath:jwt_pkcs8.pem
+  public-key: classpath:jwt_pub.pem
+
 application:
   bucket-name: paymenthub-ee-dev
 
@@ -91,4 +103,3 @@ management:
     health:
       show-details: always
       probes:
-        enabled: true

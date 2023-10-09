@@ -32,33 +32,30 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.apache.commons.codec.binary.Base64;
 import org.apache.fineract.core.service.TenantAwareHeaderFilter;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import org.apache.fineract.organisation.role.Role;
 import org.apache.fineract.organisation.user.AppUser;
 import org.apache.fineract.organisation.user.AppUserRepository;
-import org.apache.fineract.utils.JwtUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.core.io.ClassPathResource;
 import org.springframework.http.MediaType;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.oauth2.jwt.JwtClaimsSet;
+import org.springframework.security.oauth2.jwt.JwtEncoder;
+import org.springframework.security.oauth2.jwt.JwtEncoderParameters;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.net.URISyntaxException;
-import java.security.KeyFactory;
-import java.security.NoSuchAlgorithmException;
-import java.security.PrivateKey;
-import java.security.spec.InvalidKeySpecException;
-import java.security.spec.PKCS8EncodedKeySpec;
-import java.text.ParseException;
 import java.time.Instant;
-import java.util.Arrays;
-import java.util.Date;
+import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -68,7 +65,7 @@ import java.util.stream.Collectors;
 @Tag(name = "Oauth API")
 public class OauthApi {
 
-    private final Logger logger = LoggerFactory.getLogger(this.getClass());
+/*    private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
     @Autowired
     private AppUserRepository appUserRepository;
@@ -127,41 +124,29 @@ public class OauthApi {
         });
     }
 
-    private static void checkUserExists(AppUser appUser) {
-        if (appUser == null) {
-            throw new RuntimeException("Login failed!");
-        }
-    }
-
-    private String generateResponse(String username, String clientId, List<String> scope, String jti, List<String> roles) throws IOException, URISyntaxException, ParseException, JOSEException, InvalidKeySpecException, NoSuchAlgorithmException {
-        JWSHeader header = new JWSHeader.Builder(JWSAlgorithm.RS256)
-                .type(JOSEObjectType.JWT)
-                .build();
-
+    private String generateResponse(Authentication authentication, String clientId) {
+        AppUser appUser = (AppUser) authentication.getPrincipal();
+        List<String> roles = appUser.getRoles().stream().map(Role::getName).toList();
+        List<String> scope = appUser.getAuthorities().stream()
+                .map(GrantedAuthority::getAuthority)
+                .collect(Collectors.toList());
         List<String> finalScope = scope == null || scope.isEmpty() ? List.of("all") : scope;
 
-        JWTClaimsSet payload = new JWTClaimsSet.Builder()
-                .claim("userName", username)
+        String jti = UUID.randomUUID().toString();
+        Instant now = Instant.now();
+        JwtClaimsSet payload = JwtClaimsSet.builder()
+                .claim("userName", appUser.getUsername())
                 .claim("authorities", List.of("ALL_FUNCTIONS"))
                 .claim("clientId", clientId)
                 .claim("scope", finalScope)
                 .claim("roles", roles)
-                .jwtID(jti)
-                .expirationTime(Date.from(Instant.now().plusSeconds(3600)))
+                .id(jti)
+                .issuedAt(now)
+                .expiresAt(now.plus(1, ChronoUnit.HOURS))
+                .subject(authentication.getName())
                 .build();
 
-        String privateKey = getPemContent("jwt_pkcs8.pem")
-                .replaceAll("-----BEGIN PRIVATE KEY-----", "")
-                .replaceAll("-----END PRIVATE KEY-----", "");
-
-        byte[] key = Base64.decodeBase64(privateKey);
-        KeyFactory keyFactory = KeyFactory.getInstance("RSA");
-        PKCS8EncodedKeySpec keySpec = new PKCS8EncodedKeySpec(key);
-        PrivateKey finalKey = keyFactory.generatePrivate(keySpec);
-        SignedJWT signedJWT = new SignedJWT(header, payload);
-        signedJWT.sign(new RSASSASigner(finalKey));
-        String jwt = signedJWT.serialize();
-
+        String jwt = this.encoder.encode(JwtEncoderParameters.from(payload)).getTokenValue();
 
         String responseBody = String.format("{\n" +
                 "  \"access_token\": \"%s\",\n" +
@@ -172,12 +157,6 @@ public class OauthApi {
                 "  \"jti\": \"%s\"\n" +
                 "}\n", jwt, jwt, 3600, jti);
         return responseBody;
-    }
+    }*/
 
-
-    private String getPemContent(String file) throws IOException, URISyntaxException {
-        try (BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(new ClassPathResource(file).getInputStream()))) {
-            return bufferedReader.lines().collect(Collectors.joining(""));
-        }
-    }
 }
