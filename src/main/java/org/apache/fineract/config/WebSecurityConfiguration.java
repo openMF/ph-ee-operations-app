@@ -91,8 +91,8 @@ public class WebSecurityConfiguration {
     @Value("${client.secret}")
     private String secret;
 
-    @Value("${frontend.callback-url}")
-    private String callbackUrl;
+    @Value("${frontend.callback-url-base}")
+    private String callbackUrlBase;
 
 
     @Bean
@@ -166,7 +166,7 @@ public class WebSecurityConfiguration {
                 .authorizationGrantType(AuthorizationGrantType.REFRESH_TOKEN)
                 .authorizationGrantType(AuthorizationGrantType.CLIENT_CREDENTIALS)
                 .scope(OidcScopes.OPENID)
-                .redirectUri(callbackUrl)
+                .redirectUri(callbackUrlBase + "/callback")
                 .tokenSettings(TokenSettings.builder().accessTokenTimeToLive(Duration.ofHours(1)).build())
                 .clientSettings(ClientSettings.builder().requireAuthorizationConsent(false).requireProofKey(true).build())
                 .build();
@@ -232,7 +232,7 @@ public class WebSecurityConfiguration {
     CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
         config.setAllowCredentials(true);
-        config.addAllowedOrigin("http://localhost:4200");
+        config.addAllowedOrigin(callbackUrlBase);
         config.addAllowedHeader("*");
         config.addAllowedMethod("*");
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
