@@ -142,7 +142,7 @@ public class WebSecurityConfiguration {
                 .formLogin(form -> form.loginPage("/login")
                         .authenticationDetailsSource(new TenantAuthenticationDetailsSource()))
                 .logout(lo -> lo.logoutSuccessHandler(new HttpStatusReturningLogoutSuccessHandler()));
-        if (callbackUrl.startsWith("https")) {
+        if (callbackUrlBase.startsWith("https")) {
             http.logout(lo -> lo.addLogoutHandler(new HeaderWriterLogoutHandler(new ClearSiteDataHeaderWriter(
                     ClearSiteDataHeaderWriter.Directive.CACHE,
                     ClearSiteDataHeaderWriter.Directive.COOKIES,
