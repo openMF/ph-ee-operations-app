@@ -91,11 +91,8 @@ public class WebSecurityConfiguration {
     @Value("${client.secret}")
     private String secret;
 
-    @Value("${frontend.url}")
-    private String frontendUrl;
-
-    @Value("${frontend.port}")
-    private String frontendPort;
+    @Value("${frontend.callback-url}")
+    private String callbackUrl;
 
 
     @Bean
@@ -145,7 +142,7 @@ public class WebSecurityConfiguration {
                 .formLogin(form -> form.loginPage("/login")
                         .authenticationDetailsSource(new TenantAuthenticationDetailsSource()))
                 .logout(lo -> lo.logoutSuccessHandler(new HttpStatusReturningLogoutSuccessHandler()));
-        if (frontendUrl.startsWith("https")) {
+        if (callbackUrl.startsWith("https")) {
             http.logout(lo -> lo.addLogoutHandler(new HeaderWriterLogoutHandler(new ClearSiteDataHeaderWriter(
                     ClearSiteDataHeaderWriter.Directive.CACHE,
                     ClearSiteDataHeaderWriter.Directive.COOKIES,
@@ -169,7 +166,7 @@ public class WebSecurityConfiguration {
                 .authorizationGrantType(AuthorizationGrantType.REFRESH_TOKEN)
                 .authorizationGrantType(AuthorizationGrantType.CLIENT_CREDENTIALS)
                 .scope(OidcScopes.OPENID)
-                .redirectUri(frontendUrl + ":" + frontendPort + "/callback")
+                .redirectUri(callbackUrl)
                 .tokenSettings(TokenSettings.builder().accessTokenTimeToLive(Duration.ofHours(1)).build())
                 .clientSettings(ClientSettings.builder().requireAuthorizationConsent(false).requireProofKey(true).build())
                 .build();

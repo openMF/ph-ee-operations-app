@@ -33,8 +33,7 @@ server:
   port: 5000
 
 frontend:
-  url: "http://localhost"
-  port: 4200
+  callback-url: "http://localhost:4200/callback"
 
 client:
   id: "community-app"
