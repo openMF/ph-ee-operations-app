@@ -2,10 +2,12 @@ fineract:
   datasource:
     core:
       host: operations-mysql
+#      host: "127.0.0.1"
       port: 3306
       schema: tenants
       username: root
       password: mysql
+#      password: "ethieTieCh8ahv"
     common:
       protocol: jdbc
       subprotocol: mysql
@@ -21,6 +23,8 @@ token:
     refresh-validity-seconds: 43200
   client:
     access-validity-seconds: 3600
+    channel:
+      secret: "p2345"
 
 config:
   imu:
@@ -82,3 +86,7 @@ payment:
 
 application:
   bucket-name: paymenthub-ee-dev
+
+channel-connector:
+  url: http://bb-connector-channel.mifos.io
+  transfer-path: /channel/transfer

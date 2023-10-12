@@ -27,14 +27,22 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import javax.servlet.http.HttpServletResponse;
+import org.springframework.data.jpa.domain.Specifications;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.math.BigDecimal;
+import javax.servlet.http.HttpServletResponse;
+import java.math.RoundingMode;
+import java.text.DecimalFormat;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Optional;
+import java.util.function.Supplier;
 
 import static org.apache.fineract.core.service.OperatorUtils.strip;
 
@@ -138,27 +146,28 @@ public class BatchApi {
     }
 
     @GetMapping("/batch")
-    public BatchDTO batchDetails(@RequestParam(value = "batchId", required = false) String batchId,
-                                 @RequestParam(value = "requestId", required = false) String requestId) {
+    public ResponseEntity<Object> batchDetails(@RequestParam(value = "batchId", required = false) String batchId,
+                                               @RequestParam(value = "requestId", required = false) String requestId) {
         Batch batch = batchRepository.findByBatchId(batchId);
-        if (batch != null) {
-            if (batch.getResultGeneratedAt() != null) {
-//                Checks if last status was checked before 10 mins
-                if (new Date().getTime() - batch.getResultGeneratedAt().getTime() < 600000) {
-                    return generateDetails(batch);
-                } else {
-                    return generateDetails(batch);
-                }
-            } else {
-                return generateDetails(batch);
-            }
-        } else {
-            Batch batch1 = new Batch();
-            batch1.setBatchId(batchId);
-            batch1.setRequestId(requestId);
-            return generateDetails(batch1);
-        }
 
+        if (batch == null) {
+            String errorMessage = "Batch corresponding to batchId: " + batchId + " does not exist.";
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(errorMessage);
+        }
+        return ResponseEntity.ok(generateBatchSummaryResponse(batch));
+    }
+
+    @GetMapping("/batch/{batchId}")
+    public ResponseEntity<Object> batchAggregation(@PathVariable(value = "batchId") String batchId,
+                                     @RequestParam(value = "requestId", required = false) String requestId,
+                                     @RequestParam(value = "command", required = false, defaultValue = "aggregate") String command) {
+        Batch batch = batchRepository.findByBatchId(batchId);
+
+        if (batch == null) {
+            String errorMessage = "Batch corresponding to batchId: " + batchId + " does not exist.";
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(errorMessage);
+        }
+        return ResponseEntity.ok(generateDetails(batch));
     }
 
     @GetMapping("/batch/detail")
@@ -377,6 +386,49 @@ public class BatchApi {
             System.err.format("Exception: %s%n", e);
         }
         return null;
+    }
+
+    private BatchDTO generateBatchSummaryResponse(Batch batch) {
+        double batchFailedPercent = 0;
+        double batchCompletedPercent = 0;
+
+        if(batch.getTotalTransactions() != null){
+            batchFailedPercent = ((double) batch.getFailed()) / batch.getTotalTransactions() * 100;
+            batchCompletedPercent = ((double) batch.getCompleted()) / batch.getTotalTransactions() * 100;
+        }
+
+        DecimalFormat decimalFormat = new DecimalFormat("#.##");
+        decimalFormat.setRoundingMode(RoundingMode.FLOOR);
+
+        Optional<Long> totalAmount = Optional.ofNullable(batch.getTotalAmount());
+        Optional<Long> completedAmount = Optional.ofNullable(batch.getCompletedAmount());
+        Optional<Long> ongoingAmount = Optional.ofNullable(batch.getOngoingAmount());
+        Optional<Long> failedAmount = Optional.ofNullable(batch.getFailedAmount());
+
+        Long nullValue = 0L;
+
+        BatchDTO batchDTO = new BatchDTO(batch.getBatchId(),
+                batch.getRequestId(), batch.getTotalTransactions(), batch.getOngoing(),
+                batch.getFailed(), batch.getCompleted(),
+                BigDecimal.valueOf(totalAmount.orElse(nullValue)),
+                BigDecimal.valueOf(completedAmount.orElse(nullValue)),
+                BigDecimal.valueOf(ongoingAmount.orElse(nullValue)),
+                BigDecimal.valueOf(failedAmount.orElse(nullValue)),
+                batch.getResult_file(), batch.getNote(),
+                decimalFormat.format(batchFailedPercent), decimalFormat.format(batchCompletedPercent),
+                batch.getRegisteringInstitutionId(), batch.getPayerFsp(), batch.getCorrelationId());
+
+        if (batch.getTotalTransactions() != null &&
+                batch.getCompleted() != null &&
+                batch.getTotalTransactions().longValue() == batch.getCompleted().longValue()) {
+            batchDTO.setStatus("COMPLETED");
+        } else if (batch.getOngoing() != null && batch.getOngoing() != 0 && batch.getCompletedAt() == null) {
+            batchDTO.setStatus("Pending");
+        } else {
+            batchDTO.setStatus("UNKNOWN");
+        }
+
+        return batchDTO;
     }
 
 }
