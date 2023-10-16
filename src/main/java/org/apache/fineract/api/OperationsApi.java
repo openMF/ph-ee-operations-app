@@ -222,7 +222,7 @@ public class OperationsApi {
     }
 
     @GetMapping("/variables")
-    public List<List<Variable>> variables(
+    public List<List<VariableDto>> variables(
             @RequestParam(value = "businessKey") String businessKey,
             @RequestParam(value = "businessKeyType") String businessKeyType
     ) {
@@ -232,12 +232,10 @@ public class OperationsApi {
                 .setSourceModule("operations-app")
                 .setPayload(businessKey)
                 .setPayloadType("string")
-                .setTenantId(TenantAwareHeaderFilter.tenant.get()), event -> {
-
-            return loadTransfers(businessKey, businessKeyType).stream()
-                    .map(transfer -> variableRepository.findByWorkflowInstanceKeyOrderByTimestamp(transfer.getWorkflowInstanceKey()))
-                    .collect(Collectors.toList());
-        });
+                .setTenantId(TenantAwareHeaderFilter.tenant.get()), event -> loadTransfers(businessKey, businessKeyType).stream()
+                        .map(transfer -> variableRepository.findByWorkflowInstanceKeyOrderByTimestamp(transfer.getWorkflowInstanceKey())
+                                .stream().map(v -> modelMapper.map(v, VariableDto.class)).collect(Collectors.toList()))
+                        .collect(Collectors.toList()));
     }
 
     @GetMapping("/tasks")
