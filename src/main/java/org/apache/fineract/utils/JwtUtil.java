@@ -18,7 +18,7 @@ public class JwtUtil {
     public static String getUsername(String jwtToken) {
         try {
             SignedJWT jwt = SignedJWT.parse(jwtToken.replace("Bearer ", ""));
-            return jwt.getJWTClaimsSet().getStringClaim("userName");
+            return jwt.getJWTClaimsSet().getStringClaim("sub");
         } catch (java.text.ParseException e) {
             throw new RuntimeException(e);
         }
@@ -26,7 +26,7 @@ public class JwtUtil {
 
     public static String getUsername(SignedJWT signedJWT) {
         try {
-            return signedJWT.getJWTClaimsSet().getStringClaim("userName");
+            return signedJWT.getJWTClaimsSet().getStringClaim("sub");
         } catch (java.text.ParseException e) {
             throw new RuntimeException(e);
         }
@@ -34,7 +34,7 @@ public class JwtUtil {
 
     public static List<String> getRoles(SignedJWT signedJWT) {
         try {
-            return signedJWT.getJWTClaimsSet().getStringListClaim("roles");
+            return signedJWT.getJWTClaimsSet().getStringListClaim("role");
         } catch (java.text.ParseException e) {
             throw new RuntimeException(e);
         }
