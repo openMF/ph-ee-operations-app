@@ -39,4 +39,9 @@ public class Variable {
     @ManyToOne
     private TransactionRequest transactionRequest;
 
+    @Id
+    @ManyToOne(fetch=FetchType.LAZY)
+    @JoinColumn(name = "WORKFLOW_INSTANCE_KEY", referencedColumnName = "WORKFLOW_INSTANCE_KEY", insertable = false, updatable = false)
+    private Transfer transfer;
+
 }

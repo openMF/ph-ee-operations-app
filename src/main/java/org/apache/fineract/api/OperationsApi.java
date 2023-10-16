@@ -3,15 +3,16 @@ package org.apache.fineract.api;
 
 import com.baasflow.commons.events.EventLogLevel;
 import com.baasflow.commons.events.EventService;
-import com.baasflow.commons.events.EventType;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import jakarta.servlet.http.HttpServletResponse;
 import org.apache.commons.text.StringEscapeUtils;
 import org.apache.fineract.core.service.CamundaService;
 import org.apache.fineract.core.service.TenantAwareHeaderFilter;
 import org.apache.fineract.operations.*;
+import org.apache.fineract.operations.TransferDto;
 import org.json.JSONArray;
 import org.json.JSONObject;
+import org.modelmapper.ModelMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -65,6 +66,9 @@ public class OperationsApi {
 
     @Autowired
     private EventService eventService;
+
+    @Autowired
+    private ModelMapper modelMapper;
 
 
     @PostMapping("/transfer/{transactionId}/refund")
@@ -192,7 +196,11 @@ public class OperationsApi {
                 ;
                 it.setValue(value);
             });
-            return new TransferDetail(transfer, tasks, variables);
+            return new TransferDetail(
+                    modelMapper.map(transfer, TransferDto.class),
+                    tasks,
+                    variables.stream().map(v -> modelMapper.map(v, VariableDto.class)).collect(Collectors.toList())
+            );
         });
     }
 

@@ -7,6 +7,7 @@ import lombok.Data;
 
 import java.math.BigDecimal;
 import java.util.Date;
+import java.util.List;
 
 @Entity
 @Table(name = "transfers")
@@ -90,6 +91,9 @@ public class Transfer {
 
     @Column(name = "PAYMENT_STATUS")
     private String paymentStatus;
+
+    @OneToMany(cascade = CascadeType.ALL, mappedBy = "transfer", fetch = FetchType.LAZY)
+    private List<Variable> variables;
 
     public Transfer() {
     }

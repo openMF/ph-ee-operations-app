@@ -24,6 +24,7 @@ import org.apache.fineract.auth.TenantAuthenticationProvider;
 import org.apache.fineract.config.RsaKeyProperties;
 import org.apache.fineract.core.service.TenantAwareHeaderFilter;
 import org.apache.fineract.core.tenants.TenantsService;
+import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -79,6 +80,9 @@ public class ServerApplication {
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
     }
+
+    @Bean
+    public ModelMapper modelMapper() { return new ModelMapper(); }
 
     @Bean
     public TenantAuthenticationProvider customAuthenticationProvider(PasswordEncoder passwordEncoder,

@@ -4,13 +4,16 @@ import com.baasflow.commons.events.EventLogLevel;
 import com.baasflow.commons.events.EventService;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.persistence.criteria.Join;
 import jakarta.servlet.http.HttpServletResponse;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.fineract.core.service.TenantAwareHeaderFilter;
 import org.apache.fineract.data.ErrorResponse;
 import org.apache.fineract.exception.WriteToCsvException;
 import org.apache.fineract.operations.*;
+import org.apache.fineract.operations.TransferDto;
 import org.apache.fineract.utils.CsvUtility;
+import org.modelmapper.ModelMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,13 +23,11 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.io.UnsupportedEncodingException;
 import java.math.BigDecimal;
 import java.net.URLDecoder;
-import java.security.Principal;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -55,10 +56,13 @@ public class OperationsDetailedApi {
     @Autowired
     private EventService eventService;
 
+    @Autowired
+    private ModelMapper modelMapper;
+
 
     @PreAuthorize("hasAuthority('ALL_FUNCTIONS') and hasRole('Admin')")
     @GetMapping("/transfers")
-    public Page<Transfer> transfers(
+    public Page<TransferDto> transfers(
             @RequestParam(value = "page") Integer page,
             @RequestParam(value = "size") Integer size,
             @RequestParam(value = "payerPartyId", required = false) String _payerPartyId,
@@ -83,11 +87,12 @@ public class OperationsDetailedApi {
                 .setEventLogLevel(EventLogLevel.INFO)
                 .setSourceModule("operations-app")
                 .setTenantId(TenantAwareHeaderFilter.tenant.get()), event ->
-                loadTransfers(Transfer.TransferType.TRANSFER, page, size, _payerPartyId, payerDfspId, _payeePartyId, payeeDfspId, transactionId, status, null, null, paymentStatus, amount, currency, startFrom, startTo, direction, sortedBy, _partyId, partyIdType, sortedOrder, endToEndIdentification));
+                loadTransfers(Transfer.TransferType.TRANSFER, page, size, _payerPartyId, payerDfspId, _payeePartyId, payeeDfspId, transactionId, status, null, null, paymentStatus, amount, currency, startFrom, startTo, direction, sortedBy, _partyId, partyIdType, sortedOrder, endToEndIdentification))
+                .map(t -> modelMapper.map(t, TransferDto.class));
     }
 
     @GetMapping("/recalls")
-    public Page<Transfer> recalls(
+    public Page<TransferDto> recalls(
             @RequestParam(value = "page") Integer page,
             @RequestParam(value = "size") Integer size,
             @RequestParam(value = "payerPartyId", required = false) String _payerPartyId,
@@ -114,7 +119,8 @@ public class OperationsDetailedApi {
                 .setEventLogLevel(EventLogLevel.INFO)
                 .setSourceModule("operations-app")
                 .setTenantId(TenantAwareHeaderFilter.tenant.get()), event ->
-                loadTransfers(Transfer.TransferType.RECALL, page, size, _payerPartyId, payerDfspId, _payeePartyId, payeeDfspId, transactionId, status, recallStatus, recallDirection, paymentStatus, amount, currency, startFrom, startTo, direction, sortedBy, _partyId, partyIdType, sortedOrder, endToEndIdentification));
+                loadTransfers(Transfer.TransferType.RECALL, page, size, _payerPartyId, payerDfspId, _payeePartyId, payeeDfspId, transactionId, status, recallStatus, recallDirection, paymentStatus, amount, currency, startFrom, startTo, direction, sortedBy, _partyId, partyIdType, sortedOrder, endToEndIdentification))
+                .map(t -> modelMapper.map(t, TransferDto.class));
     }
 
     private Page<Transfer> loadTransfers(Transfer.TransferType transferType, Integer page, Integer size, String _payerPartyId, String payerDfspId, String _payeePartyId, String payeeDfspId, String transactionId, String status, String recallStatus, String recallDirection, String paymentStatus, BigDecimal amount, String currency, String startFrom, String startTo, String direction, String sortedBy, String _partyId, String partyIdType, String sortedOrder, String endToEndIdentification) {
@@ -185,7 +191,15 @@ public class OperationsDetailedApi {
             specs.add(TransferSpecs.match(Transfer_.currency, currency));
         }
         if (StringUtils.isNotBlank(direction)) {
-            specs.add(TransferSpecs.match(Transfer_.direction, direction));
+            if (Transfer.TransferType.TRANSFER.equals(transferType)) {
+                specs.add((Specification<Transfer>) (root, query, cb) -> {
+                    Join<Transfer, Variable> transferVariables = root.join(Transfer_.variables);
+                    transferVariables.on(cb.equal(transferVariables.get(Variable_.name), "paymentScheme"));
+                    return cb.or(cb.equal(transferVariables.get(Variable_.value), "ON_US"), cb.equal(root.get("direction"), direction));
+                });
+            } else {
+                specs.add(TransferSpecs.match(Transfer_.direction, direction));
+            }
         }
         if (StringUtils.isNotBlank(partyIdType)) {
             specs.add(TransferSpecs.multiMatch(Transfer_.payeePartyIdType, Transfer_.payerPartyIdType, partyIdType));
