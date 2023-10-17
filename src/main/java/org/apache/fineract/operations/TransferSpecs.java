@@ -3,11 +3,21 @@ package org.apache.fineract.operations;
 import org.springframework.data.jpa.domain.Specification;
 
 import jakarta.persistence.metamodel.SingularAttribute;
+
+import java.math.BigDecimal;
 import java.util.Date;
 
 import static org.springframework.data.jpa.domain.Specification.where;
 
 public class TransferSpecs {
+
+    public static Specification<Transfer> greaterThanOrEqualTo(SingularAttribute<Transfer, BigDecimal> attribute, BigDecimal input) {
+        return where((root, query, builder) -> builder.greaterThanOrEqualTo(root.get(attribute), input));
+    }
+
+    public static Specification<Transfer> lessThanOrEqualTo(SingularAttribute<Transfer, BigDecimal> attribute, BigDecimal input) {
+        return where((root, query, builder) -> builder.lessThanOrEqualTo(root.get(attribute), input));
+    }
 
     public static Specification<Transfer> between(SingularAttribute<Transfer, Date> attribute, Date from, Date to) {
         return where((root, query, builder) -> builder.and(

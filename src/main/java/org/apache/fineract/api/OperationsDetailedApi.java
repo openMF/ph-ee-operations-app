@@ -72,7 +72,8 @@ public class OperationsDetailedApi {
             @RequestParam(value = "transactionId", required = false) String transactionId,
             @RequestParam(value = "status", required = false) String status,
             @RequestParam(value = "paymentStatus", required = false) String paymentStatus,
-            @RequestParam(value = "amount", required = false) BigDecimal amount,
+            @RequestParam(value = "amountFrom", required = false) BigDecimal amountFrom,
+            @RequestParam(value = "amountTo", required = false) BigDecimal amountTo,
             @RequestParam(value = "currency", required = false) String currency,
             @RequestParam(value = "startFrom", required = false) String startFrom,
             @RequestParam(value = "startTo", required = false) String startTo,
@@ -87,7 +88,7 @@ public class OperationsDetailedApi {
                 .setEventLogLevel(EventLogLevel.INFO)
                 .setSourceModule("operations-app")
                 .setTenantId(TenantAwareHeaderFilter.tenant.get()), event ->
-                loadTransfers(Transfer.TransferType.TRANSFER, page, size, _payerPartyId, payerDfspId, _payeePartyId, payeeDfspId, transactionId, status, null, null, paymentStatus, amount, currency, startFrom, startTo, direction, sortedBy, _partyId, partyIdType, sortedOrder, endToEndIdentification))
+                loadTransfers(Transfer.TransferType.TRANSFER, page, size, _payerPartyId, payerDfspId, _payeePartyId, payeeDfspId, transactionId, status, null, null, paymentStatus, currency, amountFrom, amountTo, startFrom, startTo, direction, sortedBy, _partyId, partyIdType, sortedOrder, endToEndIdentification))
                 .map(t -> modelMapper.map(t, TransferDto.class));
     }
 
@@ -104,7 +105,8 @@ public class OperationsDetailedApi {
             @RequestParam(value = "recallStatus", required = false) String recallStatus,
             @RequestParam(value = "recallDirection", required = false) String recallDirection,
             @RequestParam(value = "paymentStatus", required = false) String paymentStatus,
-            @RequestParam(value = "amount", required = false) BigDecimal amount,
+            @RequestParam(value = "amountFrom", required = false) BigDecimal amountFrom,
+            @RequestParam(value = "amountTo", required = false) BigDecimal amountTo,
             @RequestParam(value = "currency", required = false) String currency,
             @RequestParam(value = "startFrom", required = false) String startFrom,
             @RequestParam(value = "startTo", required = false) String startTo,
@@ -119,11 +121,11 @@ public class OperationsDetailedApi {
                 .setEventLogLevel(EventLogLevel.INFO)
                 .setSourceModule("operations-app")
                 .setTenantId(TenantAwareHeaderFilter.tenant.get()), event ->
-                loadTransfers(Transfer.TransferType.RECALL, page, size, _payerPartyId, payerDfspId, _payeePartyId, payeeDfspId, transactionId, status, recallStatus, recallDirection, paymentStatus, amount, currency, startFrom, startTo, direction, sortedBy, _partyId, partyIdType, sortedOrder, endToEndIdentification))
+                loadTransfers(Transfer.TransferType.RECALL, page, size, _payerPartyId, payerDfspId, _payeePartyId, payeeDfspId, transactionId, status, recallStatus, recallDirection, paymentStatus, currency, amountFrom, amountTo, startFrom, startTo, direction, sortedBy, _partyId, partyIdType, sortedOrder, endToEndIdentification))
                 .map(t -> modelMapper.map(t, TransferDto.class));
     }
 
-    private Page<Transfer> loadTransfers(Transfer.TransferType transferType, Integer page, Integer size, String _payerPartyId, String payerDfspId, String _payeePartyId, String payeeDfspId, String transactionId, String status, String recallStatus, String recallDirection, String paymentStatus, BigDecimal amount, String currency, String startFrom, String startTo, String direction, String sortedBy, String _partyId, String partyIdType, String sortedOrder, String endToEndIdentification) {
+    private Page<Transfer> loadTransfers(Transfer.TransferType transferType, Integer page, Integer size, String _payerPartyId, String payerDfspId, String _payeePartyId, String payeeDfspId, String transactionId, String status, String recallStatus, String recallDirection, String paymentStatus, String currency, BigDecimal amountFrom, BigDecimal amountTo, String startFrom, String startTo, String direction, String sortedBy, String _partyId, String partyIdType, String sortedOrder, String endToEndIdentification) {
         String payerPartyId = _payerPartyId;
         String payeePartyId = _payeePartyId;
         String partyId = _partyId;
@@ -184,8 +186,11 @@ public class OperationsDetailedApi {
         if (StringUtils.isNotBlank(paymentStatus)) {
             specs.add(TransferSpecs.match(Transfer_.paymentStatus, paymentStatus));
         }
-        if (amount != null) {
-            specs.add(TransferSpecs.match(Transfer_.amount, amount));
+        if (amountFrom != null) {
+            specs.add(TransferSpecs.greaterThanOrEqualTo(Transfer_.amount, amountFrom));
+        }
+        if (amountTo != null) {
+            specs.add(TransferSpecs.lessThanOrEqualTo(Transfer_.amount, amountTo));
         }
         if (StringUtils.isNotBlank(currency)) {
             specs.add(TransferSpecs.match(Transfer_.currency, currency));
