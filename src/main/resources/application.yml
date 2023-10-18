@@ -102,3 +102,9 @@ management:
     health:
       show-details: always
       probes:
+
+baasflow:
+  events:
+    channels:
+      audit:
+        topic: "auditlog"
