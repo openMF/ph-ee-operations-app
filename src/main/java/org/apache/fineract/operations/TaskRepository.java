@@ -6,6 +6,6 @@ import java.util.List;
 
 public interface TaskRepository extends CrudRepository<Task, Long> {
 
-    List<Task> findByWorkflowInstanceKeyOrderByTimestamp(Long workflowInstanceKey);
+    List<Task> findByWorkflowInstanceKeyOrderByTimestamp(String workflowInstanceKey);
 
 }
