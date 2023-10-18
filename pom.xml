@@ -96,7 +96,7 @@
         <dependency>
             <groupId>com.baasflow.events</groupId>
             <artifactId>baasflow-events-spring-boot-starter</artifactId>
-            <version>1.0.3</version>
+            <version>1.1.1</version>
         </dependency>
 
         <dependency>
