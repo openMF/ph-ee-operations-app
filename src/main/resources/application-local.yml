@@ -51,11 +51,4 @@ tenant:
 baasflow:
     commons:
         events:
-            audit:
-                kafka:
-                    brokers: "localhost:9092"
-                    topic: auditlog
-            generic:
-                kafka:
-                    brokers: "localhost:9092"
-                    topic: events
+            disabled: true
