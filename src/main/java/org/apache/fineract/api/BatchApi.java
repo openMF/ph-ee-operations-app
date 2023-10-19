@@ -203,7 +203,7 @@ public class BatchApi {
     }
 
     @GetMapping("/batch/transactions")
-    public HashMap<String, String> batchTransactionDetails(@RequestParam String batchId) {
+    public HashMap<String, String> batchTransactionDetails(@RequestHeader("batchId") String batchId) {
         Batch batch = batchRepository.findByBatchId(batchId);
         if (batch != null) {
             List<Transfer> transfers = transferRepository.findAllByBatchId(batch.getBatchId());
