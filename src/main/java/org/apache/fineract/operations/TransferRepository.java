@@ -9,7 +9,7 @@ import java.util.List;
 
 public interface TransferRepository extends JpaRepository<Transfer, Long>, JpaSpecificationExecutor {
 
-    Transfer findFirstByWorkflowInstanceKey(Long workflowInstanceKey);
+    Transfer findFirstByWorkflowInstanceKey(String workflowInstanceKey);
 
     Transfer findFirstByTransactionIdAndDirection(String transactionId, String direction);
 

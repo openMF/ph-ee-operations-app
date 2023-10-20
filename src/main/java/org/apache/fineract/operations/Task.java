@@ -14,7 +14,7 @@ public class Task extends AbstractPersistableCustom<Long> {
     @Column(name = "WORKFLOW_KEY")
     private Long workflowKey;
     @Column(name = "WORKFLOW_INSTANCE_KEY")
-    private Long workflowInstanceKey;
+    private String workflowInstanceKey;
     @Column(name = "TIMESTAMP")
     private Long timestamp;
     @Column(name = "INTENT")
@@ -42,11 +42,11 @@ public class Task extends AbstractPersistableCustom<Long> {
         this.workflowKey = workflowKey;
     }
 
-    public Long getWorkflowInstanceKey() {
+    public String getWorkflowInstanceKey() {
         return workflowInstanceKey;
     }
 
-    public void setWorkflowInstanceKey(Long workflowInstanceKey) {
+    public void setWorkflowInstanceKey(String workflowInstanceKey) {
         this.workflowInstanceKey = workflowInstanceKey;
     }
 

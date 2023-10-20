@@ -9,7 +9,7 @@ import java.util.List;
 
 public interface TransactionRequestRepository extends JpaRepository<TransactionRequest, Long>, JpaSpecificationExecutor {
 
-    TransactionRequest findFirstByWorkflowInstanceKey(Long workflowInstanceKey);
+    TransactionRequest findFirstByWorkflowInstanceKey(String workflowInstanceKey);
 
 //    @Deprecated(forRemoval = true)
     @Query("SELECT tr FROM TransactionRequest tr INNER JOIN Variable v ON tr.workflowInstanceKey = v.workflowInstanceKey" +

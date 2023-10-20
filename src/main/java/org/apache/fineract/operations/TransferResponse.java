@@ -16,7 +16,7 @@ import java.util.Date;
 public class TransferResponse {
 
     private int id;
-    private Long workflowInstanceKey;
+    private String workflowInstanceKey;
 
     private String transactionId;
 

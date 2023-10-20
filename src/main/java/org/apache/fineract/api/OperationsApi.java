@@ -138,7 +138,7 @@ public class OperationsApi {
     }
 
     @GetMapping("/transfer/{workflowInstanceKey}")
-    public TransferDetail transferDetails(@PathVariable Long workflowInstanceKey) {
+    public TransferDetail transferDetails(@PathVariable String workflowInstanceKey) {
         Transfer transfer = transferRepository.findFirstByWorkflowInstanceKey(workflowInstanceKey);
         List<Task> tasks = taskRepository.findByWorkflowInstanceKeyOrderByTimestamp(workflowInstanceKey);
         List<Variable> variables = variableRepository.findByWorkflowInstanceKeyOrderByTimestamp(workflowInstanceKey);
@@ -146,7 +146,7 @@ public class OperationsApi {
     }
 
     @GetMapping("/transactionRequest/{workflowInstanceKey}")
-    public TransactionRequestDetail transactionRequestDetails(@PathVariable Long workflowInstanceKey) {
+    public TransactionRequestDetail transactionRequestDetails(@PathVariable String workflowInstanceKey) {
         TransactionRequest transactionRequest = transactionRequestRepository.findFirstByWorkflowInstanceKey(workflowInstanceKey);
         List<Task> tasks = taskRepository.findByWorkflowInstanceKeyOrderByTimestamp(workflowInstanceKey);
         List<Variable> variables = variableRepository.findByWorkflowInstanceKeyOrderByTimestamp(workflowInstanceKey);

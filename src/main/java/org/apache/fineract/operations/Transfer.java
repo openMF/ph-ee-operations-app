@@ -20,7 +20,7 @@ public class Transfer extends AbstractPersistableCustom<Long> {
     @Column(name = "WORKFLOW_INSTANCE_KEY")
     @Index(name = "idx_paymentProcessId")
     @JsonFormat(shape = JsonFormat.Shape.STRING)
-    private Long workflowInstanceKey;
+    private String workflowInstanceKey;
 
     @Column(name = "TRANSACTION_ID")
     private String transactionId;
@@ -84,7 +84,7 @@ public class Transfer extends AbstractPersistableCustom<Long> {
     public Transfer() {
     }
 
-    public Transfer(Long workflowInstanceKey) {
+    public Transfer(String workflowInstanceKey) {
         this.workflowInstanceKey = workflowInstanceKey;
         this.status = TransferStatus.IN_PROGRESS;
     }
@@ -145,11 +145,11 @@ public class Transfer extends AbstractPersistableCustom<Long> {
         this.transactionId = transactionId;
     }
 
-    public Long getWorkflowInstanceKey() {
+    public String getWorkflowInstanceKey() {
         return workflowInstanceKey;
     }
 
-    public void setWorkflowInstanceKey(Long paymentProcessId) {
+    public void setWorkflowInstanceKey(String paymentProcessId) {
         this.workflowInstanceKey = paymentProcessId;
     }
 
