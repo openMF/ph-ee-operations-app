@@ -9,7 +9,7 @@ import java.util.Optional;
 
 public interface VariableRepository extends CrudRepository<Variable, Long> {
 
-    List<Variable> findByWorkflowInstanceKeyOrderByTimestamp(Long workflowInstanceKey);
+    List<Variable> findByWorkflowInstanceKeyOrderByName(Long workflowInstanceKey);
 
     @Query("SELECT v from Variable v WHERE v.workflowInstanceKey=:workflowInstanceKey and v.name=:name")
     Optional<Variable> findByWorkflowInstanceKeyAndVariableName(@Param("name") String name,

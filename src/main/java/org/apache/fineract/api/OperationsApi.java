@@ -185,7 +185,7 @@ public class OperationsApi {
 
             Transfer transfer = transferRepository.findFirstByWorkflowInstanceKey(workflowInstanceKey);
             List<Task> tasks = taskRepository.findByWorkflowInstanceKeyOrderByTimestamp(workflowInstanceKey);
-            List<Variable> variables = variableRepository.findByWorkflowInstanceKeyOrderByTimestamp(workflowInstanceKey);
+            List<Variable> variables = variableRepository.findByWorkflowInstanceKeyOrderByName(workflowInstanceKey);
             variables.forEach(it -> {
                 String value = StringEscapeUtils.unescapeJava(it.getValue());
                 value = StringEscapeUtils.unescapeJson(value);
@@ -216,7 +216,7 @@ public class OperationsApi {
 
             TransactionRequest transactionRequest = transactionRequestRepository.findFirstByWorkflowInstanceKey(workflowInstanceKey);
             List<Task> tasks = taskRepository.findByWorkflowInstanceKeyOrderByTimestamp(workflowInstanceKey);
-            List<Variable> variables = variableRepository.findByWorkflowInstanceKeyOrderByTimestamp(workflowInstanceKey);
+            List<Variable> variables = variableRepository.findByWorkflowInstanceKeyOrderByName(workflowInstanceKey);
             return new TransactionRequestDetail(transactionRequest, tasks, variables);
         });
     }
@@ -233,7 +233,7 @@ public class OperationsApi {
                 .setPayload(businessKey)
                 .setPayloadType("string")
                 .setTenantId(TenantAwareHeaderFilter.tenant.get()), event -> loadTransfers(businessKey, businessKeyType).stream()
-                        .map(transfer -> variableRepository.findByWorkflowInstanceKeyOrderByTimestamp(transfer.getWorkflowInstanceKey())
+                        .map(transfer -> variableRepository.findByWorkflowInstanceKeyOrderByName(transfer.getWorkflowInstanceKey())
                                 .stream().map(v -> modelMapper.map(v, VariableDto.class)).collect(Collectors.toList()))
                         .collect(Collectors.toList()));
     }

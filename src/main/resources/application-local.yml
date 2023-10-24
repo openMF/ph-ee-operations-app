@@ -49,6 +49,10 @@ tenant:
     name: binx
 
 baasflow:
-    commons:
-        events:
-            disabled: true
+    events:
+        kafka:
+            brokers: "localhost:9092"
+        disabled: true
+        channels:
+            audit:
+                topic: "auditlog"
