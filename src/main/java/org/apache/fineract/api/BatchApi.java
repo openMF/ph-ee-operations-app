@@ -14,7 +14,9 @@ import org.apache.fineract.operations.TransferRepository;
 import org.apache.fineract.operations.TransferStatus;
 import org.apache.fineract.operations.Variable;
 import org.apache.fineract.operations.VariableRepository;
+import org.apache.fineract.response.BatchAndSubBatchSummaryResponse;
 import org.apache.fineract.service.BatchDbService;
+import org.apache.fineract.service.BatchService;
 import org.apache.fineract.utils.DateUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -22,6 +24,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
+import org.springframework.util.ObjectUtils;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -78,6 +81,8 @@ public class BatchApi {
 
     @Value("${application.bucket-name}")
     private String bucketName;
+    @Autowired
+    private BatchService batchService;
 
     private Sort getSortObject(String sort) {
         Sort.Direction sortDirection;
@@ -215,6 +220,17 @@ public class BatchApi {
         } else {
             return null;
         }
+    }
+    @GetMapping("/batches/{batchId}")
+    public ResponseEntity<BatchAndSubBatchSummaryResponse> getBatchAndSubBatchSummary(@PathVariable String batchId,
+                                                                                      @RequestHeader(name = "X-Correlation-ID") String clientCorrelationId){
+        BatchAndSubBatchSummaryResponse response = batchService.getBatchAndSubBatchSummary(batchId, clientCorrelationId);
+
+        if(ObjectUtils.isEmpty(response)){
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        }
+
+        return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
     private BatchDTO generateDetails(Batch batch) {

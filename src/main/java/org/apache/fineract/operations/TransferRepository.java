@@ -18,5 +18,7 @@ public interface TransferRepository extends JpaRepository<Transfer, Long>, JpaSp
     Page<Transfer> findAllByBatchIdAndStatus(String batchId, String status, Pageable pageable);
 
     Page<Transfer> findAllByBatchId(String batchId, Pageable pageable);
+    Long countAllByBatchId(String batchId);
+    List<Transfer> findAllBySubBatchId(String subBatchId);
 
 }
