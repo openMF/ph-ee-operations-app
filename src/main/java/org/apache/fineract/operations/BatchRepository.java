@@ -15,6 +15,8 @@ public interface BatchRepository extends JpaRepository<Batch, Long>, JpaSpecific
 
     @Query("SELECT bt FROM Batch bt WHERE bt.batchId = :batchId and bt.subBatchId is null")
     Batch findByBatchId(String batchId);
+    @Query("SELECT bt FROM Batch bt WHERE bt.batchId = :batchId and bt.subBatchId is not null")
+    List<Batch> findAllSubBatchId(String batchId);
 
     List<Batch> findAllByBatchId(String batchId);
 
