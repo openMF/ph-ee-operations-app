@@ -1,0 +1,2 @@
+ALTER TABLE `transfers`
+DROP COLUMN `SUB_BATCH_ID`;
