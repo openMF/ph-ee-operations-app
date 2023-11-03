@@ -287,7 +287,7 @@ public class BatchApi {
         BigDecimal ongoingAmount = BigDecimal.ZERO;
         BigDecimal failedAmount = BigDecimal.ZERO;
 
-            List<Transfer> transfers = transferRepository.findAllByBatchId(batch.getBatchId());
+            List<Transfer> transfers = transferRepository.findAllByBatchId(batch.getSubBatchId());
             for (Transfer transfer : transfers) {
                 Optional<Variable> variable = variableRepository.findByWorkflowInstanceKeyAndVariableName("paymentMode",
                         transfer.getWorkflowInstanceKey());
