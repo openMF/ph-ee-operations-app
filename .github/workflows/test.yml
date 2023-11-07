@@ -1,0 +1,12 @@
+name: Test
+on: [push, pull_request]
+jobs:
+  Test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository code
+        uses: actions/checkout@v2
+      - name: Package project
+        run: ./gradlew clean assemble
+      - name: Build docker image
+        run: docker build . -t paymenthubee.mifos.io/phee/operations-app
