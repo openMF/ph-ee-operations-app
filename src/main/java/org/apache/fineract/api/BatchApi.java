@@ -286,8 +286,13 @@ public class BatchApi {
         BigDecimal completedAmount = BigDecimal.ZERO;
         BigDecimal ongoingAmount = BigDecimal.ZERO;
         BigDecimal failedAmount = BigDecimal.ZERO;
+        List<Transfer> transfers = null;
+        if(batch.getSubBatchId()!=null){
+            transfers = transferRepository.findAllByBatchId(batch.getSubBatchId());
+        }else{
+            transfers = transferRepository.findAllByBatchId(batch.getBatchId());
+        }
 
-            List<Transfer> transfers = transferRepository.findAllByBatchId(batch.getSubBatchId());
             for (Transfer transfer : transfers) {
                 Optional<Variable> variable = variableRepository.findByWorkflowInstanceKeyAndVariableName("paymentMode",
                         transfer.getWorkflowInstanceKey());
@@ -371,8 +376,8 @@ public class BatchApi {
     private BatchDTO generateDetails(Batch batch){
 
         StringBuilder modes = new StringBuilder();
-        List<Batch> subBatches = batchRepository.findAllSubBatchId(batch.getBatchId());
-        for (Batch subBatch:subBatches){
+        List<Batch> batches = batchRepository.findAllByBatchId(batch.getBatchId());
+        for (Batch subBatch:batches){
             if (subBatch.getPaymentMode() != null && !modes.toString().contains(subBatch.getPaymentMode())) {
                 if (!modes.toString().equals("")) {
                     modes.append(",");
@@ -381,8 +386,13 @@ public class BatchApi {
             }
             evaluateBatchSummary(subBatch);
         }
-        List<Batch> allBatches = batchRepository.findAllByBatchId(batch.getBatchId());
-        Batch parentBatchSummary = getParentBatchSummary(allBatches);
+        Batch parentBatchSummary = null;
+        if(batches.size()==1){
+            parentBatchSummary = batch;
+        }else{
+            parentBatchSummary = getParentBatchSummary(batches);
+        }
+
 
         return getBatchSummary(parentBatchSummary, modes.toString());
     }
