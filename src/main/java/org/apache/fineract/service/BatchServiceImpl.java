@@ -43,6 +43,7 @@ public class BatchServiceImpl implements BatchService{
         BatchAndSubBatchSummaryResponse response = new BatchAndSubBatchSummaryResponse();
         subBatchCount=0;
         subBatchAmount=0;
+        Long totalSubBatch = 0L;
 
         for(Batch batch : batchAndSubBatches){
             if(StringUtils.isEmpty(batch.getSubBatchId())){
@@ -50,11 +51,13 @@ public class BatchServiceImpl implements BatchService{
             }
             else{
                 SubBatchSummary subBatchSummary = updateResponseWithSubBatchInfo(batch, response);
+                totalSubBatch++;
                 response.getSubBatchSummaryList().add(subBatchSummary);
             }
         }
         response.setApprovedTransactionCount(subBatchCount);
         response.setApprovedAmount(subBatchAmount);
+        response.setTotalSubBatches(totalSubBatch);
 
         return response;
     }

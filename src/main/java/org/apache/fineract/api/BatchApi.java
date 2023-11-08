@@ -30,7 +30,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import javax.servlet.http.HttpServletResponse;
-import org.springframework.data.jpa.domain.Specifications;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -38,14 +37,12 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.math.BigDecimal;
-import javax.servlet.http.HttpServletResponse;
 import java.math.RoundingMode;
 import java.text.DecimalFormat;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Optional;
-import java.util.function.Supplier;
 
 import static org.apache.fineract.core.service.OperatorUtils.strip;
 
@@ -232,65 +229,119 @@ public class BatchApi {
 
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
+    private void saveBatch(Batch batch,Long completed,Long ongoing,Long failed,
+                           Long totalTransfers,Long totalAmount,Long totalCompletedAmount,
+                           Long totalOngoingAmount,Long totalFailedAmount){
+        batch.setCompleted(completed);
+        batch.setFailed(failed);
+        batch.setResultGeneratedAt(new Date());
+        batch.setOngoing(ongoing);
+        batch.setTotalTransactions(totalTransfers);
+        batch.setTotalAmount(totalAmount);
+        batch.setCompletedAmount(totalCompletedAmount);
+        batch.setOngoingAmount(totalOngoingAmount);
+        batch.setFailedAmount(totalFailedAmount);
+        batchRepository.save(batch);
+    }
+    private BatchDTO getBatchSummary(Batch batch,String modes) {
+        Double batchCompletedPercent = 0.0;
+        Double batchFailedPercent = 0.0;
+        if (batch.getCompleted() != null){
+            batchCompletedPercent = (double) batch.getCompleted() / batch.getTotalTransactions() * 100;
+        }
+        if(batch.getFailed() != null){
+            batchFailedPercent = (double) batch.getFailed() / batch.getTotalTransactions() * 100;
+        }
 
-    private BatchDTO generateDetails(Batch batch) {
+        BatchDTO response = new BatchDTO(batch.getBatchId(),
+                batch.getRequestId(), batch.getTotalTransactions(), batch.getOngoing(),
+                batch.getFailed(), batch.getCompleted(),BigDecimal.valueOf(batch.getTotalAmount()),BigDecimal.valueOf(batch.getCompletedAmount()),
+                BigDecimal.valueOf(batch.getOngoingAmount()), BigDecimal.valueOf(batch.getFailedAmount()), batch.getResult_file(), batch.getNote(),
+                batchFailedPercent.toString(),batchCompletedPercent.toString(), batch.getRegisteringInstitutionId(),
+                batch.getPayerFsp(), batch.getCorrelationId());
 
-        StringBuilder modes = new StringBuilder();
+        response.setCreated_at("" + batch.getStartedAt());
+        response.setModes(modes);
+        response.setPurpose("Unknown purpose");
+        System.out.println("Batch details generated for batchId: " + response.getSuccessPercentage());
 
-        List<Transfer> transfers = transferRepository.findAllByBatchId(batch.getBatchId());
+        if (batch.getCompleted().longValue() == batch.getTotalTransactions().longValue()) {
+            response.setStatus("COMPLETED");
+        } else if (batch.getOngoing() != 0 && batch.getCompletedAt() == null) {
+            response.setStatus("Pending");
+        } else if (batch.getFailed().longValue() == batch.getFailed().longValue()) {
+            response.setStatus("Failed");
+        } else {
+            response.setStatus("UNKNOWN");
+        }
 
-        List<Batch> allBatches = batchRepository.findAllByBatchId(batch.getBatchId());
-
+        return response;
+    }
+    private void evaluateBatchSummary(Batch batch) {
         Long completed = 0L;
         Long failed = 0L;
         Long total = 0L;
         Long ongoing = 0L;
-        Double batchFailedPercent = 0.0;
-        Double batchCompletedPercent = 0.0;
         BigDecimal totalAmount = BigDecimal.ZERO;
         BigDecimal completedAmount = BigDecimal.ZERO;
         BigDecimal ongoingAmount = BigDecimal.ZERO;
         BigDecimal failedAmount = BigDecimal.ZERO;
-
-        for (Transfer transfer : transfers) {
-            Optional<Variable> variable = variableRepository.findByWorkflowInstanceKeyAndVariableName("paymentMode",
-                    transfer.getWorkflowInstanceKey());
-            if (variable.isPresent()) {
-                // this will prevent 2x count of variables by eliminating data from transfers table
-                if (paymentModeConfig.getByMode(strip(variable.get().getValue()))
-                        .getType().equalsIgnoreCase("BATCH")) {
-                    continue;
-                }
-            }
-            total++;
-            BigDecimal amount = transfer.getAmount();
-            totalAmount = totalAmount.add(amount);
-            if (transfer.getStatus().equals(TransferStatus.COMPLETED)) {
-                completed++;
-                completedAmount = completedAmount.add(amount);
-            } else if (transfer.getStatus().equals(TransferStatus.FAILED)) {
-                failed++;
-                failedAmount = failedAmount.add(amount);
-            } else if (transfer.getStatus().equals(TransferStatus.IN_PROGRESS)) {
-                if(transfer.getCompletedAt()== null || transfer.getCompletedAt().toString().isEmpty()) {
-                    ongoing++;
-                    ongoingAmount = ongoingAmount.add(amount);
-                }
-                else {
-                    completed++;
-                    completedAmount = completedAmount.add(amount);
-                }
-            }
+        List<Transfer> transfers = null;
+        if(batch.getSubBatchId()!=null){
+            transfers = transferRepository.findAllByBatchId(batch.getSubBatchId());
+        }else{
+            transfers = transferRepository.findAllByBatchId(batch.getBatchId());
         }
 
-        // calculating matrices for sub batches
+            for (Transfer transfer : transfers) {
+                Optional<Variable> variable = variableRepository.findByWorkflowInstanceKeyAndVariableName("paymentMode",
+                        transfer.getWorkflowInstanceKey());
+                if (variable.isPresent()) {
+                    // this will prevent 2x count of variables by eliminating data from transfers table
+                    if (paymentModeConfig.getByMode(strip(variable.get().getValue()))
+                            .getType().equalsIgnoreCase("BATCH")) {
+                        continue;
+                    }
+                }
+                total++;
+                BigDecimal amount = transfer.getAmount();
+                totalAmount = totalAmount.add(amount);
+                if (transfer.getStatus().equals(TransferStatus.COMPLETED)) {
+                    completed++;
+                    completedAmount = completedAmount.add(amount);
+                } else if (transfer.getStatus().equals(TransferStatus.FAILED)) {
+                    failed++;
+                    failedAmount = failedAmount.add(amount);
+                } else if (transfer.getStatus().equals(TransferStatus.IN_PROGRESS)) {
+                    if (transfer.getCompletedAt() == null || transfer.getCompletedAt().toString().isEmpty()) {
+                        ongoing++;
+                        ongoingAmount = ongoingAmount.add(amount);
+                    } else {
+                        completed++;
+                        completedAmount = completedAmount.add(amount);
+                    }
+                }
+            }
+        if (batch.getResult_file() == null || (batch.getResult_file() != null && batch.getResult_file().isEmpty())) {
+            batch.setResult_file(createDetailsFile(transfers));
+        }
+        saveBatch(batch, completed, ongoing, failed, total, totalAmount.longValue(), completedAmount.longValue(), ongoingAmount.longValue(), failedAmount.longValue());
+    }
+    private Batch getParentBatchSummary(List<Batch> batches){
+        StringBuilder modes = new StringBuilder();
+
         Long subBatchFailed = 0L;
         Long subBatchCompleted = 0L;
         Long subBatchOngoing = 0L;
         Long subBatchTotal = 0L;
 
+        BigDecimal totalAmount = BigDecimal.ZERO;
+        BigDecimal completedAmount = BigDecimal.ZERO;
+        BigDecimal ongoingAmount = BigDecimal.ZERO;
+        BigDecimal failedAmount = BigDecimal.ZERO;
+        Batch parentBatch = null;
 
-        for (Batch bt : allBatches) {
+        for (Batch bt : batches) {
             if (bt.getPaymentMode() != null && !modes.toString().contains(bt.getPaymentMode())) {
                 if (!modes.toString().equals("")) {
                     modes.append(",");
@@ -298,6 +349,7 @@ public class BatchApi {
                 modes.append(bt.getPaymentMode());
             }
             if (bt.getSubBatchId() == null || bt.getSubBatchId().isEmpty()) {
+                parentBatch = bt;
                 continue;
             }
             if (bt.getFailed() != null) {
@@ -317,50 +369,32 @@ public class BatchApi {
                 totalAmount = totalAmount.add(BigDecimal.valueOf(bt.getTotalAmount()));
             }
         }
+        saveBatch(parentBatch,subBatchCompleted,subBatchOngoing,subBatchFailed,subBatchTotal,
+                totalAmount.longValue(),completedAmount.longValue(),ongoingAmount.longValue(),failedAmount.longValue());
+        return  parentBatch;
+    }
+    private BatchDTO generateDetails(Batch batch){
 
-        // updating the data with sub batches details
-        completed += subBatchCompleted;
-        failed += subBatchFailed;
-        total += subBatchTotal;
-
-
-        ongoing += subBatchOngoing;
-
-        if (batch.getResult_file() == null || (batch.getResult_file() != null && batch.getResult_file().isEmpty())) {
-            batch.setResult_file(createDetailsFile(transfers));
+        StringBuilder modes = new StringBuilder();
+        List<Batch> batches = batchRepository.findAllByBatchId(batch.getBatchId());
+        for (Batch subBatch:batches){
+            if (subBatch.getPaymentMode() != null && !modes.toString().contains(subBatch.getPaymentMode())) {
+                if (!modes.toString().equals("")) {
+                    modes.append(",");
+                }
+                modes.append(subBatch.getPaymentMode());
+            }
+            evaluateBatchSummary(subBatch);
         }
-        batch.setCompleted(completed);
-        batch.setFailed(failed);
-        batch.setResultGeneratedAt(new Date());
-        batch.setOngoing(ongoing);
-        batch.setTotalTransactions(total);
-        batchRepository.save(batch);
-        batchCompletedPercent = (double) batch.getCompleted() / total * 100;
-        batchFailedPercent = (double) batch.getFailed() / total * 100;
-
-        BatchDTO response = new BatchDTO(batch.getBatchId(),
-                batch.getRequestId(), batch.getTotalTransactions(), batch.getOngoing(),
-                batch.getFailed(), batch.getCompleted(), totalAmount, completedAmount,
-                ongoingAmount, failedAmount, batch.getResult_file(), batch.getNote(),
-                batchCompletedPercent.toString(), batchFailedPercent.toString(), batch.getRegisteringInstitutionId(),
-                batch.getPayerFsp(), batch.getCorrelationId());
-
-        response.setCreated_at("" + batch.getStartedAt());
-        response.setModes(modes.toString());
-        response.setPurpose("Unknown purpose");
-        System.out.println("Batch details generated for batchId: " + response.getSuccessPercentage());
-
-        if (batch.getCompleted().longValue() == batch.getTotalTransactions().longValue()) {
-            response.setStatus("COMPLETED");
-        } else if (batch.getOngoing() != 0 && batch.getCompletedAt() == null) {
-            response.setStatus("Pending");
-        } else if (batch.getFailed().longValue() == batch.getFailed().longValue()) {
-            response.setStatus("Failed");
-        } else {
-            response.setStatus("UNKNOWN");
+        Batch parentBatchSummary = null;
+        if(batches.size()==1){
+            parentBatchSummary = batch;
+        }else{
+            parentBatchSummary = getParentBatchSummary(batches);
         }
 
-        return response;
+
+        return getBatchSummary(parentBatchSummary, modes.toString());
     }
 
     private String createDetailsFile(List<Transfer> transfers) {

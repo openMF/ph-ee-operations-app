@@ -55,7 +55,7 @@ public class BatchAndSubBatchSummaryResponse {
 
     private String generatedAt;
 
-    private String totalSubBatches;
+    private Long totalSubBatches;
 
     private Long approvedTransactionCount;
 
