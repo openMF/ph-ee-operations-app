@@ -77,6 +77,8 @@ public class OperationsDetailedApi {
             @RequestParam(value = "currency", required = false) String currency,
             @RequestParam(value = "startFrom", required = false) String startFrom,
             @RequestParam(value = "startTo", required = false) String startTo,
+            @RequestParam(value = "acceptanceDateFrom", required = false) String acceptanceDateFrom,
+            @RequestParam(value = "acceptanceDateTo", required = false) String acceptanceDateTo,
             @RequestParam(value = "direction", required = false) String direction,
             @RequestParam(value = "sortedBy", required = false) String sortedBy,
             @RequestParam(value = "partyId", required = false) String _partyId,
@@ -88,7 +90,7 @@ public class OperationsDetailedApi {
                 .setEventLogLevel(EventLogLevel.INFO)
                 .setSourceModule("operations-app")
                 .setTenantId(TenantAwareHeaderFilter.tenant.get()), event ->
-                loadTransfers(Transfer.TransferType.TRANSFER, page, size, _payerPartyId, payerDfspId, _payeePartyId, payeeDfspId, transactionId, status, null, null, paymentStatus, currency, amountFrom, amountTo, startFrom, startTo, direction, sortedBy, _partyId, partyIdType, sortedOrder, endToEndIdentification))
+                loadTransfers(Transfer.TransferType.TRANSFER, page, size, _payerPartyId, payerDfspId, _payeePartyId, payeeDfspId, transactionId, status, null, null, paymentStatus, currency, amountFrom, amountTo, startFrom, startTo, acceptanceDateFrom, acceptanceDateTo, direction, sortedBy, _partyId, partyIdType, sortedOrder, endToEndIdentification))
                 .map(t -> modelMapper.map(t, TransferDto.class));
     }
 
@@ -110,6 +112,8 @@ public class OperationsDetailedApi {
             @RequestParam(value = "currency", required = false) String currency,
             @RequestParam(value = "startFrom", required = false) String startFrom,
             @RequestParam(value = "startTo", required = false) String startTo,
+            @RequestParam(value = "acceptanceDateFrom", required = false) String acceptanceDateFrom,
+            @RequestParam(value = "acceptanceDateTo", required = false) String acceptanceDateTo,
             @RequestParam(value = "direction", required = false) String direction,
             @RequestParam(value = "sortedBy", required = false) String sortedBy,
             @RequestParam(value = "partyId", required = false) String _partyId,
@@ -121,11 +125,11 @@ public class OperationsDetailedApi {
                 .setEventLogLevel(EventLogLevel.INFO)
                 .setSourceModule("operations-app")
                 .setTenantId(TenantAwareHeaderFilter.tenant.get()), event ->
-                loadTransfers(Transfer.TransferType.RECALL, page, size, _payerPartyId, payerDfspId, _payeePartyId, payeeDfspId, transactionId, status, recallStatus, recallDirection, paymentStatus, currency, amountFrom, amountTo, startFrom, startTo, direction, sortedBy, _partyId, partyIdType, sortedOrder, endToEndIdentification))
+                loadTransfers(Transfer.TransferType.RECALL, page, size, _payerPartyId, payerDfspId, _payeePartyId, payeeDfspId, transactionId, status, recallStatus, recallDirection, paymentStatus, currency, amountFrom, amountTo, startFrom, startTo, acceptanceDateFrom, acceptanceDateTo direction, sortedBy, _partyId, partyIdType, sortedOrder, endToEndIdentification))
                 .map(t -> modelMapper.map(t, TransferDto.class));
     }
 
-    private Page<Transfer> loadTransfers(Transfer.TransferType transferType, Integer page, Integer size, String _payerPartyId, String payerDfspId, String _payeePartyId, String payeeDfspId, String transactionId, String status, String recallStatus, String recallDirection, String paymentStatus, String currency, BigDecimal amountFrom, BigDecimal amountTo, String startFrom, String startTo, String direction, String sortedBy, String _partyId, String partyIdType, String sortedOrder, String endToEndIdentification) {
+    private Page<Transfer> loadTransfers(Transfer.TransferType transferType, Integer page, Integer size, String _payerPartyId, String payerDfspId, String _payeePartyId, String payeeDfspId, String transactionId, String status, String recallStatus, String recallDirection, String paymentStatus, String currency, BigDecimal amountFrom, BigDecimal amountTo, String startFrom, String startTo, String acceptanceDateFrom, String acceptanceDateTo, String direction, String sortedBy, String _partyId, String partyIdType, String sortedOrder, String endToEndIdentification) {
         String payerPartyId = _payerPartyId;
         String payeePartyId = _payeePartyId;
         String partyId = _partyId;
@@ -223,6 +227,18 @@ public class OperationsDetailedApi {
             }
         } catch (Exception e) {
             logger.warn("failed to parse dates {} / {}", startFrom, startTo);
+        }
+
+        try {
+            if (acceptanceDateFrom != null && acceptanceDateTo != null) {
+                specs.add(TransferSpecs.between(Transfer_.acceptanceDate, dateFormat().parse(acceptanceDateFrom), dateFormat().parse(acceptanceDateTo)));
+            } else if (acceptanceDateFrom != null) {
+                specs.add(TransferSpecs.later(Transfer_.acceptanceDate, dateFormat().parse(acceptanceDateFrom)));
+            } else if (acceptanceDateTo != null) {
+                specs.add(TransferSpecs.earlier(Transfer_.acceptanceDate, dateFormat().parse(acceptanceDateTo)));
+            }
+        } catch (Exception e) {
+            logger.warn("failed to parse dates {} / {}", acceptanceDateFrom, acceptanceDateTo);
         }
 
         if (StringUtils.isNotBlank(endToEndIdentification)) {
