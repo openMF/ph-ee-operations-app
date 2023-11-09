@@ -8,6 +8,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.DisposableBean;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.SpringApplication;
+import org.springframework.context.ApplicationContext;
 import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Component;
 
@@ -37,6 +39,9 @@ public class TenantsService implements DisposableBean {
     @Autowired
     private TenantDatabaseUpgradeService tenantDatabaseUpgradeService;
 
+    @Autowired
+    private ApplicationContext springContext;
+
     private Map<String, TenantConnectionProperties> tenantConnectionProperties;
 
     private Map<String, DataSource> tenantDataSources = new HashMap<>();
@@ -64,7 +69,7 @@ public class TenantsService implements DisposableBean {
             logger.info("Running in migration mode, migrating tenants: {}", tenantDataSources.keySet());
             tenantDatabaseUpgradeService.migrateTenants(tenantDataSources, tenantConnectionProperties);
             logger.info("Migration finished, exiting");
-            System.exit(0);
+            SpringApplication.exit(springContext, () -> 0);
         }
     }
 
