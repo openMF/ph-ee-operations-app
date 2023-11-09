@@ -19,6 +19,7 @@ public class TransferDto {
     private String transactionId;
     private Date startedAt;
     private Date completedAt;
+    private Date acceptanceDate;
     private TransferStatus status;
     private String statusDetail;
     private String payeeDfspId;

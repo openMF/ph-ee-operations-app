@@ -125,7 +125,7 @@ public class OperationsDetailedApi {
                 .setEventLogLevel(EventLogLevel.INFO)
                 .setSourceModule("operations-app")
                 .setTenantId(TenantAwareHeaderFilter.tenant.get()), event ->
-                loadTransfers(Transfer.TransferType.RECALL, page, size, _payerPartyId, payerDfspId, _payeePartyId, payeeDfspId, transactionId, status, recallStatus, recallDirection, paymentStatus, currency, amountFrom, amountTo, startFrom, startTo, acceptanceDateFrom, acceptanceDateTo direction, sortedBy, _partyId, partyIdType, sortedOrder, endToEndIdentification))
+                loadTransfers(Transfer.TransferType.RECALL, page, size, _payerPartyId, payerDfspId, _payeePartyId, payeeDfspId, transactionId, status, recallStatus, recallDirection, paymentStatus, currency, amountFrom, amountTo, startFrom, startTo, acceptanceDateFrom, acceptanceDateTo, direction, sortedBy, _partyId, partyIdType, sortedOrder, endToEndIdentification))
                 .map(t -> modelMapper.map(t, TransferDto.class));
     }
 
