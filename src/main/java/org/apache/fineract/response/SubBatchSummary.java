@@ -2,8 +2,10 @@ package org.apache.fineract.response;
 
 import lombok.Getter;
 import lombok.Setter;
+import org.apache.fineract.operations.Instruction;
 
 import java.math.BigDecimal;
+import java.util.Date;
 import java.util.List;
 import java.util.Set;
 
@@ -56,6 +58,14 @@ public class SubBatchSummary {
 
     private Set<String> payeeFspSet;
 
+    private List<Instruction> instructionList;
 
+    private String budgetAccount;
+
+    private String generatedBy;
+
+    private String generatedAt;
+
+    private Long totalInstructionCount;
 
 }
