@@ -5,16 +5,9 @@ import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.fineract.config.PaymentModeConfiguration;
 import org.apache.fineract.file.FileTransferService;
-import org.apache.fineract.operations.Batch;
-import org.apache.fineract.operations.BatchDTO;
-import org.apache.fineract.operations.BatchPaginatedResponse;
-import org.apache.fineract.operations.BatchRepository;
-import org.apache.fineract.operations.Transfer;
-import org.apache.fineract.operations.TransferRepository;
-import org.apache.fineract.operations.TransferStatus;
-import org.apache.fineract.operations.Variable;
-import org.apache.fineract.operations.VariableRepository;
+import org.apache.fineract.operations.*;
 import org.apache.fineract.response.BatchAndSubBatchSummaryResponse;
+import org.apache.fineract.response.SubBatchSummary;
 import org.apache.fineract.service.BatchDbService;
 import org.apache.fineract.service.BatchService;
 import org.apache.fineract.utils.DateUtil;
@@ -219,15 +212,56 @@ public class BatchApi {
         }
     }
     @GetMapping("/batches/{batchId}")
-    public ResponseEntity<BatchAndSubBatchSummaryResponse> getBatchAndSubBatchSummary(@PathVariable String batchId,
-                                                                                      @RequestHeader(name = "X-Correlation-ID") String clientCorrelationId){
-        BatchAndSubBatchSummaryResponse response = batchService.getBatchAndSubBatchSummary(batchId, clientCorrelationId);
+    public <T>ResponseEntity<T> getBatchAndSubBatchSummary(@PathVariable String batchId,
+                                                                                      @RequestHeader(name = "X-Correlation-ID") String clientCorrelationId,
+                                                                                      @RequestParam(value = "offset", required = false, defaultValue = "0")
+                                                                                          Integer offset,
+                                                                                      @RequestParam(value = "limit", required = false, defaultValue = "10")
+                                                                                          Integer limit,
+                                                                                      @RequestParam(value = "associations", required = false)
+                                                                                          String associations,
+                                                                                      @RequestParam(value = "orderBy", required = false, defaultValue = "instructionId")
+                                                                                          String orderBy,
+                                                                                      @RequestParam(value = "sortBy", required = false, defaultValue = "asc")
+                                                                                          String sortBy){
 
-        if(ObjectUtils.isEmpty(response)){
+        if (associations!=null && associations.equals("all")) {
+            PaymentBatchDetail response = batchService.getPaymentBathDetail(batchId, clientCorrelationId, offset, limit, orderBy, sortBy);
+            if (ObjectUtils.isEmpty(response)) {
+                return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+            }
+
+            return (ResponseEntity<T>) new ResponseEntity<>(response, HttpStatus.OK);
+
+        } else {
+            BatchAndSubBatchSummaryResponse response = batchService.getBatchAndSubBatchSummary(batchId, clientCorrelationId);
+
+            if (ObjectUtils.isEmpty(response)) {
+                return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+            }
+
+            return (ResponseEntity<T>) new ResponseEntity<>(response, HttpStatus.OK);
+        }
+    }
+    @GetMapping("/batches/{batchId}/subBatches/{subBatchId}")
+    public <T>ResponseEntity<T> getSubBatchPaymentDetail(@PathVariable String batchId, @PathVariable String subBatchId,
+                                                           @RequestHeader(name = "X-Correlation-ID") String clientCorrelationId,
+                                                           @RequestParam(value = "offset", required = false, defaultValue = "0")
+                                                           Integer offset,
+                                                           @RequestParam(value = "limit", required = false, defaultValue = "10")
+                                                           Integer limit,
+                                                         @RequestParam(value = "orderBy", required = false, defaultValue = "instructionId")
+                                                             String orderBy,
+                                                         @RequestParam(value = "sortBy", required = false, defaultValue = "asc")
+                                                             String sortBy){
+
+        SubBatchSummary response = batchService.getPaymentSubBatchDetail(batchId, subBatchId, clientCorrelationId, offset, limit, orderBy, sortBy);
+
+        if (ObjectUtils.isEmpty(response)) {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         }
 
-        return new ResponseEntity<>(response, HttpStatus.OK);
+        return (ResponseEntity<T>) new ResponseEntity<>(response, HttpStatus.OK);
     }
     private void saveBatch(Batch batch,Long completed,Long ongoing,Long failed,
                            Long totalTransfers,Long totalAmount,Long totalCompletedAmount,

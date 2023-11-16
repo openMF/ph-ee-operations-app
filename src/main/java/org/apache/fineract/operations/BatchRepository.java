@@ -19,6 +19,7 @@ public interface BatchRepository extends JpaRepository<Batch, Long>, JpaSpecific
     List<Batch> findAllSubBatchId(String batchId);
 
     List<Batch> findAllByBatchId(String batchId);
+    Batch findBySubBatchId(String subBatchId);
 
     @Query("SELECT bt FROM Batch bt " +
             "WHERE bt.registeringInstitutionId LIKE :registeringInstituteId AND bt.payerFsp LIKE :payerFsp AND " +
