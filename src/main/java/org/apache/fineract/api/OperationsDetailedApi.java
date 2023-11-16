@@ -72,6 +72,7 @@ public class OperationsDetailedApi {
             @RequestParam(value = "transactionId", required = false) String transactionId,
             @RequestParam(value = "status", required = false) String status,
             @RequestParam(value = "paymentStatus", required = false) String paymentStatus,
+            @RequestParam(value = "paymentScheme", required = false) String paymentScheme,
             @RequestParam(value = "amountFrom", required = false) BigDecimal amountFrom,
             @RequestParam(value = "amountTo", required = false) BigDecimal amountTo,
             @RequestParam(value = "currency", required = false) String currency,
@@ -90,7 +91,7 @@ public class OperationsDetailedApi {
                 .setEventLogLevel(EventLogLevel.INFO)
                 .setSourceModule("operations-app")
                 .setTenantId(TenantAwareHeaderFilter.tenant.get()), event ->
-                loadTransfers(Transfer.TransferType.TRANSFER, page, size, _payerPartyId, payerDfspId, _payeePartyId, payeeDfspId, transactionId, status, null, null, paymentStatus, currency, amountFrom, amountTo, startFrom, startTo, acceptanceDateFrom, acceptanceDateTo, direction, sortedBy, _partyId, partyIdType, sortedOrder, endToEndIdentification))
+                loadTransfers(Transfer.TransferType.TRANSFER, page, size, _payerPartyId, payerDfspId, _payeePartyId, payeeDfspId, transactionId, status, null, null, paymentStatus, paymentScheme, currency, amountFrom, amountTo, startFrom, startTo, acceptanceDateFrom, acceptanceDateTo, direction, sortedBy, _partyId, partyIdType, sortedOrder, endToEndIdentification))
                 .map(t -> modelMapper.map(t, TransferDto.class));
     }
 
@@ -107,6 +108,7 @@ public class OperationsDetailedApi {
             @RequestParam(value = "recallStatus", required = false) String recallStatus,
             @RequestParam(value = "recallDirection", required = false) String recallDirection,
             @RequestParam(value = "paymentStatus", required = false) String paymentStatus,
+            @RequestParam(value = "paymentScheme", required = false) String paymentScheme,
             @RequestParam(value = "amountFrom", required = false) BigDecimal amountFrom,
             @RequestParam(value = "amountTo", required = false) BigDecimal amountTo,
             @RequestParam(value = "currency", required = false) String currency,
@@ -125,11 +127,11 @@ public class OperationsDetailedApi {
                 .setEventLogLevel(EventLogLevel.INFO)
                 .setSourceModule("operations-app")
                 .setTenantId(TenantAwareHeaderFilter.tenant.get()), event ->
-                loadTransfers(Transfer.TransferType.RECALL, page, size, _payerPartyId, payerDfspId, _payeePartyId, payeeDfspId, transactionId, status, recallStatus, recallDirection, paymentStatus, currency, amountFrom, amountTo, startFrom, startTo, acceptanceDateFrom, acceptanceDateTo, direction, sortedBy, _partyId, partyIdType, sortedOrder, endToEndIdentification))
+                loadTransfers(Transfer.TransferType.RECALL, page, size, _payerPartyId, payerDfspId, _payeePartyId, payeeDfspId, transactionId, status, recallStatus, recallDirection, paymentStatus, paymentScheme, currency, amountFrom, amountTo, startFrom, startTo, acceptanceDateFrom, acceptanceDateTo, direction, sortedBy, _partyId, partyIdType, sortedOrder, endToEndIdentification))
                 .map(t -> modelMapper.map(t, TransferDto.class));
     }
 
-    private Page<Transfer> loadTransfers(Transfer.TransferType transferType, Integer page, Integer size, String _payerPartyId, String payerDfspId, String _payeePartyId, String payeeDfspId, String transactionId, String status, String recallStatus, String recallDirection, String paymentStatus, String currency, BigDecimal amountFrom, BigDecimal amountTo, String startFrom, String startTo, String acceptanceDateFrom, String acceptanceDateTo, String direction, String sortedBy, String _partyId, String partyIdType, String sortedOrder, String endToEndIdentification) {
+    private Page<Transfer> loadTransfers(Transfer.TransferType transferType, Integer page, Integer size, String _payerPartyId, String payerDfspId, String _payeePartyId, String payeeDfspId, String transactionId, String status, String recallStatus, String recallDirection, String paymentStatus, String paymentScheme, String currency, BigDecimal amountFrom, BigDecimal amountTo, String startFrom, String startTo, String acceptanceDateFrom, String acceptanceDateTo, String direction, String sortedBy, String _partyId, String partyIdType, String sortedOrder, String endToEndIdentification) {
         String payerPartyId = _payerPartyId;
         String payeePartyId = _payeePartyId;
         String partyId = _partyId;
@@ -201,14 +203,30 @@ public class OperationsDetailedApi {
         }
         if (StringUtils.isNotBlank(direction)) {
             if (Transfer.TransferType.TRANSFER.equals(transferType)) {
-                specs.add((Specification<Transfer>) (root, query, cb) -> {
-                    Join<Transfer, Variable> transferVariables = root.join(Transfer_.variables);
-                    transferVariables.on(cb.equal(transferVariables.get(Variable_.name), "paymentScheme"));
-                    return cb.or(cb.equal(transferVariables.get(Variable_.value), "ON_US"), cb.equal(root.get("direction"), direction));
-                });
+                if (StringUtils.isNotBlank(paymentScheme)) {
+                    specs.add(TransferSpecs.match(Transfer_.direction, direction));
+                    specs.add((Specification<Transfer>) (root, query, cb) -> {
+                        Join<Transfer, Variable> transferVariables = root.join(Transfer_.variables);
+                        transferVariables.on(cb.equal(transferVariables.get(Variable_.name), "paymentScheme"));
+                        return cb.equal(transferVariables.get(Variable_.value), paymentScheme);
+                    });
+                } else {
+                    specs.add((Specification<Transfer>) (root, query, cb) -> {
+                        Join<Transfer, Variable> transferVariables = root.join(Transfer_.variables);
+                        transferVariables.on(cb.equal(transferVariables.get(Variable_.name), "paymentScheme"));
+                        return cb.or(cb.equal(transferVariables.get(Variable_.value), "ON_US"), cb.equal(root.get("direction"), direction));
+                    });
+                }
             } else {
                 specs.add(TransferSpecs.match(Transfer_.direction, direction));
             }
+        }
+        if (StringUtils.isNotBlank(paymentScheme) && Transfer.TransferType.RECALL.equals(transferType)) {
+            specs.add((Specification<Transfer>) (root, query, cb) -> {
+                Join<Transfer, Variable> transferVariables = root.join(Transfer_.variables);
+                transferVariables.on(cb.equal(transferVariables.get(Variable_.name), "paymentScheme"));
+                return cb.equal(transferVariables.get(Variable_.value), paymentScheme);
+            });
         }
         if (StringUtils.isNotBlank(partyIdType)) {
             specs.add(TransferSpecs.multiMatch(Transfer_.payeePartyIdType, Transfer_.payerPartyIdType, partyIdType));
