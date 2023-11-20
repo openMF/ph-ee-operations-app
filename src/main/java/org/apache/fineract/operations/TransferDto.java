@@ -17,9 +17,9 @@ public class TransferDto {
 
     private Long workflowInstanceKey;
     private String transactionId;
-    private Date startedAt;
-    private Date completedAt;
-    private Date acceptanceDate;
+    private String startedAt;
+    private String completedAt;
+    private String acceptanceDate;
     private TransferStatus status;
     private String statusDetail;
     private String payeeDfspId;

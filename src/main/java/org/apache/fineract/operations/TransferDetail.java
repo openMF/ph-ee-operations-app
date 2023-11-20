@@ -13,7 +13,7 @@ import java.util.List;
 @NoArgsConstructor
 public class TransferDetail {
     private TransferDto transfer;
-    private List<Task> tasks;
+    private List<TaskDto> tasks;
     private List<VariableDto> variables;
 
 }

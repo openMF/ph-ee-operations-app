@@ -10,6 +10,7 @@ import org.apache.fineract.core.service.CamundaService;
 import org.apache.fineract.core.service.TenantAwareHeaderFilter;
 import org.apache.fineract.operations.*;
 import org.apache.fineract.operations.TransferDto;
+import org.apache.fineract.operations.converter.TimestampToStringConverter;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.modelmapper.ModelMapper;
@@ -198,7 +199,10 @@ public class OperationsApi {
             });
             return new TransferDetail(
                     modelMapper.map(transfer, TransferDto.class),
-                    tasks,
+                    tasks.stream().map(t -> {
+                        modelMapper.addConverter(new TimestampToStringConverter());
+                        return modelMapper.map(t, TaskDto.class);
+                    }).collect(Collectors.toList()),
                     variables.stream().map(v -> modelMapper.map(v, VariableDto.class)).collect(Collectors.toList())
             );
         });

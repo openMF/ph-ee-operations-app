@@ -24,6 +24,8 @@ import org.apache.fineract.auth.TenantAuthenticationProvider;
 import org.apache.fineract.config.RsaKeyProperties;
 import org.apache.fineract.core.service.TenantAwareHeaderFilter;
 import org.apache.fineract.core.tenants.TenantsService;
+import org.apache.fineract.operations.converter.DateToStringConverter;
+import org.apache.fineract.operations.converter.TimestampToStringConverter;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -82,7 +84,11 @@ public class ServerApplication {
     }
 
     @Bean
-    public ModelMapper modelMapper() { return new ModelMapper(); }
+    public ModelMapper modelMapper() {
+        ModelMapper mapper = new ModelMapper();
+        mapper.addConverter(new DateToStringConverter());
+        return mapper;
+    }
 
     @Bean
     public TenantAuthenticationProvider customAuthenticationProvider(PasswordEncoder passwordEncoder,

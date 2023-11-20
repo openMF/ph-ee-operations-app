@@ -11,6 +11,9 @@ import static org.springframework.data.jpa.domain.Specification.where;
 
 public class TransferSpecs {
 
+    private static final String DATE_TRUNC = "DATE_TRUNC";
+    private static final String SEC = "second";
+
     public static Specification<Transfer> greaterThanOrEqualTo(SingularAttribute<Transfer, BigDecimal> attribute, BigDecimal input) {
         return where((root, query, builder) -> builder.greaterThanOrEqualTo(root.get(attribute), input));
     }
@@ -21,17 +24,17 @@ public class TransferSpecs {
 
     public static Specification<Transfer> between(SingularAttribute<Transfer, Date> attribute, Date from, Date to) {
         return where((root, query, builder) -> builder.and(
-                builder.greaterThanOrEqualTo(root.get(attribute), from),
-                builder.lessThanOrEqualTo(root.get(attribute), to)
+                builder.greaterThanOrEqualTo(builder.function(DATE_TRUNC, Date.class, builder.literal(SEC), root.get(attribute)), from),
+                builder.lessThanOrEqualTo(builder.function(DATE_TRUNC, Date.class, builder.literal(SEC), root.get(attribute)), to)
         ));
     }
 
     public static Specification<Transfer> later(SingularAttribute<Transfer, Date> attribute, Date from) {
-        return where((root, query, builder) -> builder.greaterThanOrEqualTo(root.get(attribute), from));
+        return where((root, query, builder) -> builder.greaterThanOrEqualTo(builder.function(DATE_TRUNC, Date.class, builder.literal(SEC), root.get(attribute)), from));
     }
 
     public static Specification<Transfer> earlier(SingularAttribute<Transfer, Date> attribute, Date to) {
-        return where((root, query, builder) -> builder.lessThanOrEqualTo(root.get(attribute), to));
+        return where((root, query, builder) -> builder.lessThanOrEqualTo(builder.function(DATE_TRUNC, Date.class, builder.literal(SEC), root.get(attribute)), to));
     }
 
     public static <T> Specification<Transfer> match(SingularAttribute<Transfer, T> attribute, T input) {
