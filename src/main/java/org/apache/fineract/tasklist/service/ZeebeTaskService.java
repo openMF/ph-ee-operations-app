@@ -21,12 +21,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Component
@@ -265,26 +260,5 @@ public class ZeebeTaskService {
             }
         });
         return variableMap;
-    }
-
-    public static final String TASK_FORM = "[\n" +
-            "  {\n" +
-            "    \"type\": \"input\",\n" +
-            "    \"label\": \"Additional information\",\n" +
-            "    \"name\": \"additionalInformation2\",\n" +
-            "    \"inputType\": \"text\",\n" +
-            "    \"outputVariableType\": \"string\"\n" +
-            "  }\n" +
-            "]";
-
-    public static void main(String[] args) {
-
-        ZeebeTaskEntity zeebeTaskEntity = new ZeebeTaskEntity();
-        zeebeTaskEntity.setTaskForm(TASK_FORM);
-        String variablesJson = "{\"acceptRecall1\":false,\"rejectionReasonCode1\":\"AC04\",\"additionalInformation1\":null}";
-
-        Map<String, Object> variablesMap = createVariablesMap(variablesJson, zeebeTaskEntity);
-        System.out.println();
-
     }
 }
