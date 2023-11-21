@@ -258,10 +258,33 @@ public class ZeebeTaskService {
                 } else if ("string".equals(variableType)) {
                     variableMap.put(s, value);
                 }
+            } else if (variables.isNull(s)) {
+                variableMap.put(s, "");
             } else {
                 variableMap.put(s, variables.get(s));
             }
         });
         return variableMap;
+    }
+
+    public static final String TASK_FORM = "[\n" +
+            "  {\n" +
+            "    \"type\": \"input\",\n" +
+            "    \"label\": \"Additional information\",\n" +
+            "    \"name\": \"additionalInformation2\",\n" +
+            "    \"inputType\": \"text\",\n" +
+            "    \"outputVariableType\": \"string\"\n" +
+            "  }\n" +
+            "]";
+
+    public static void main(String[] args) {
+
+        ZeebeTaskEntity zeebeTaskEntity = new ZeebeTaskEntity();
+        zeebeTaskEntity.setTaskForm(TASK_FORM);
+        String variablesJson = "{\"acceptRecall1\":false,\"rejectionReasonCode1\":\"AC04\",\"additionalInformation1\":null}";
+
+        Map<String, Object> variablesMap = createVariablesMap(variablesJson, zeebeTaskEntity);
+        System.out.println();
+
     }
 }
