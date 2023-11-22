@@ -58,7 +58,7 @@ public class CamundaService {
             variables.put("recallAdditionalInformation", recallAdditionalInformation);
         } else {
             bpmn = recallBpmnBatch;
-            variables.put("originalPacs008", getTransferVariable(transfer, "generatedPacs008Fragment"));
+            variables.put("originalPacs008Fragment", getTransferVariable(transfer, "pacs008Fragment"));
             variables.put("paymentScheme", "IG2:RECALL");
             variables.put("originalFileMetadata", getTransferVariable(transfer, "fileMetadata"));
         }
