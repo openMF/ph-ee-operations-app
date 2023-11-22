@@ -93,10 +93,11 @@ public class ZeebeTaskController {
                                            @RequestParam(required = false) String assignee,
                                            @RequestParam(required = false) String candidateRole,
                                            @RequestParam(required = false) String previousSubmitter,
-                                           @RequestParam(required = false) String name) {
+                                           @RequestParam(required = false) String name,
+                                           @RequestParam(required = false) String businessKey) {
 
         String username = getUsername(jwtToken);
-        return zeebeTaskService.getTasks(pageable, taskState, assignee, candidateRole, previousSubmitter, name, username);
+        return zeebeTaskService.getTasks(pageable, taskState, assignee, candidateRole, previousSubmitter, name, businessKey, username);
     }
 
 
