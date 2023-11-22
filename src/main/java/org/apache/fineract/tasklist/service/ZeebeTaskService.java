@@ -61,17 +61,17 @@ public class ZeebeTaskService {
     }
 
     @Transactional
-    public Page<ZeebeTaskListDto> getTasks(Pageable pageable, String taskState, String assignee, String candidateRole, String previousSubmitter, String name, String username) {
+    public Page<ZeebeTaskListDto> getTasks(Pageable pageable, String taskState, String assignee, String candidateRole, String previousSubmitter, String name, String businessKey, String username) {
         AppUser appUser = appUserRepository.findAppUserByName(username);
         final List<String> roles = appUser.getRoles().stream().map(Role::getName).toList();
         Page<ZeebeTaskEntity> tasks;
         if (StringUtils.isEmpty(taskState) || "ALL".equals(taskState)) {
-            tasks = zeebeTaskRepository.findAll(assignee, candidateRole, previousSubmitter, name, pageable);
+            tasks = zeebeTaskRepository.findAll(assignee, candidateRole, previousSubmitter, name, businessKey, pageable);
         } else {
             if (roles.isEmpty()) {
-                tasks = zeebeTaskRepository.findAllClaimableTask(username, assignee, candidateRole, previousSubmitter, name, pageable);
+                tasks = zeebeTaskRepository.findAllClaimableTask(username, assignee, candidateRole, previousSubmitter, name, businessKey, pageable);
             } else {
-                tasks = zeebeTaskRepository.findAllClaimableTask(username, roles, assignee, candidateRole, previousSubmitter, name, pageable);
+                tasks = zeebeTaskRepository.findAllClaimableTask(username, roles, assignee, candidateRole, previousSubmitter, name, businessKey, pageable);
             }
         }
         return tasks.map(zeebeTaskEntity -> mapTaskEntityToDto(zeebeTaskEntity, username, roles));

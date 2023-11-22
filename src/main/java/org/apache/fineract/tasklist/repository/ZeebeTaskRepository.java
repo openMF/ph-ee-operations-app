@@ -46,12 +46,14 @@ public interface ZeebeTaskRepository extends PagingAndSortingRepository<ZeebeTas
             "WHERE (:assignee IS NULL OR task.assignee = :assignee) " +
             "AND (:candidateRole IS NULL OR role.id.roleName = :candidateRole) " +
             "AND (:previousSubmitter IS NULL OR submitter.id.userName = :previousSubmitter) " +
-            "AND (:name IS NULL OR task.name = :name)"
+            "AND (:name IS NULL OR task.name = :name) " +
+            "AND (:businessKey IS NULL OR task.businessKey = :businessKey)"
     )
     Page<ZeebeTaskEntity> findAll(@Param("assignee") String assignee,
                                   @Param("candidateRole") String candidateRole,
                                   @Param("previousSubmitter") String previousSubmitter,
                                   @Param("name") String name,
+                                  @Param("businessKey") String businessKey,
                                   Pageable pageable);
 
     @Query("SELECT DISTINCT task FROM zeebe_task task " +
@@ -63,7 +65,8 @@ public interface ZeebeTaskRepository extends PagingAndSortingRepository<ZeebeTas
             "AND (:assignee IS NULL OR task.assignee = :assignee) " +
             "AND (:candidateRole IS NULL OR role.id.roleName = :candidateRole) " +
             "AND (:previousSubmitter IS NULL OR submitter.id.userName = :previousSubmitter) " +
-            "AND (:name IS NULL OR task.name = :name)"
+            "AND (:name IS NULL OR task.name = :name) " +
+            "AND (:businessKey IS NULL OR task.businessKey = :businessKey)"
     )
     Page<ZeebeTaskEntity> findAllClaimableTask(@Param("userName") String userName,
                                                @Param("roles") Collection<String> roles,
@@ -71,6 +74,7 @@ public interface ZeebeTaskRepository extends PagingAndSortingRepository<ZeebeTas
                                                @Param("candidateRole") String candidateRole,
                                                @Param("previousSubmitter") String previousSubmitter,
                                                @Param("name") String name,
+                                               @Param("businessKey") String businessKey,
                                                Pageable pageable);
 
     @Query("SELECT DISTINCT task FROM zeebe_task task " +
@@ -82,13 +86,15 @@ public interface ZeebeTaskRepository extends PagingAndSortingRepository<ZeebeTas
             "AND (:assignee IS NULL OR task.assignee = :assignee) " +
             "AND (:candidateRole IS NULL OR role.id.roleName = :candidateRole) " +
             "AND (:previousSubmitter IS NULL OR submitter.id.userName = :previousSubmitter) " +
-            "AND (:name IS NULL OR task.name = :name)"
+            "AND (:name IS NULL OR task.name = :name) " +
+            "AND (:businessKey IS NULL OR task.businessKey = :businessKey)"
     )
     Page<ZeebeTaskEntity> findAllClaimableTask(@Param("userName") String userName,
                                                @Param("assignee") String assignee,
                                                @Param("candidateRole") String candidateRole,
                                                @Param("previousSubmitter") String previousSubmitter,
                                                @Param("name") String name,
+                                               @Param("businessKey") String businessKey,
                                                Pageable pageable);
 
 
