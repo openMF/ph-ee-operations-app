@@ -39,7 +39,8 @@ public class CamundaService {
         String tenantIdentifier = getTransferVariable(transfer, "tenantIdentifier");
         String transactionGroupId = getTransferVariable(transfer, "transactionGroupId");
         String debtorIban = getTransferVariable(transfer, "debtorIban");
-        String transactionId = getTransferVariable(transfer, "transactionId");
+        String transactionId = getTransferVariable(transfer, "transactionId");  // without prefix
+        String internalCorrelationId = transfer.getTransactionId();// has BIC code as prefix
         Map<String, String> variables = new HashMap<>();
         String bpmn;
         String comment = null;
@@ -65,7 +66,7 @@ public class CamundaService {
         variables.put("iban", iban);
         variables.put("creditorIban", debtorIban);
         variables.put("transactionGroupId", transactionGroupId);
-        variables.put("internalCorrelationId", transactionId);
+        variables.put("internalCorrelationId", internalCorrelationId);
         variables.put("tenantIdentifier", tenantIdentifier);
         variables.put("originalPacs008TransactionIdentification", transactionId);
         variables.put("recallReason", comment);
