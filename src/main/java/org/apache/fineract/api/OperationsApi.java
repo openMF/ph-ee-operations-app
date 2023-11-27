@@ -163,8 +163,10 @@ public class OperationsApi {
                 .collect(Collectors.toList());
     }
 
-    @GetMapping("/variables/{workflowInstanceKey}")
-    public List<Variable> variablesList( @PathVariable Long workflowInstanceKey) {
+    @GetMapping("/variables/{transactionId}")
+    public List<Variable> variablesList( @PathVariable String transactionId) {
+
+        Long workflowInstanceKey = transferRepository.findFirstByTransactionId(transactionId).getWorkflowInstanceKey();
         return variableRepository.findByWorkflowInstanceKeyOrderByTimestamp(workflowInstanceKey);
     }
 

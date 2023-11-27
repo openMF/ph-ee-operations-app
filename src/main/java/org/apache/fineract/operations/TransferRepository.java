@@ -16,6 +16,8 @@ public interface TransferRepository extends JpaRepository<Transfer, Long>, JpaSp
 
     Transfer findFirstByTransactionIdAndDirection(String transactionId, String direction);
 
+    Transfer findFirstByTransactionId(String transactionId);
+
     List<Transfer> findAllByBatchId(String batchId);
 
     Page<Transfer> findAllByBatchIdAndStatus(String batchId, String status, Pageable pageable);
