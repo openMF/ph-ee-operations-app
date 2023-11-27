@@ -9,6 +9,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import java.util.List;
+import java.util.Optional;
 
 public interface TransferRepository extends JpaRepository<Transfer, Long>, JpaSpecificationExecutor {
 
@@ -16,7 +17,7 @@ public interface TransferRepository extends JpaRepository<Transfer, Long>, JpaSp
 
     Transfer findFirstByTransactionIdAndDirection(String transactionId, String direction);
 
-    Transfer findFirstByTransactionId(String transactionId);
+    Optional<Transfer> findFirstByTransactionId(String transactionId);
 
     List<Transfer> findAllByBatchId(String batchId);
 
