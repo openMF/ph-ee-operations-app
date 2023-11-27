@@ -163,6 +163,11 @@ public class OperationsApi {
                 .collect(Collectors.toList());
     }
 
+    @GetMapping("/variables/{workflowInstanceKey}")
+    public List<Variable> variablesList( @PathVariable Long workflowInstanceKey) {
+        return variableRepository.findByWorkflowInstanceKeyOrderByTimestamp(workflowInstanceKey);
+    }
+
     @GetMapping("/tasks")
     public List<List<Task>> tasks(
             @RequestParam(value = "businessKey") String businessKey,
