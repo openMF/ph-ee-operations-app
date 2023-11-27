@@ -1,6 +1,7 @@
 package org.apache.fineract.api;
 
 
+import com.amazonaws.services.fms.model.InvalidInputException;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import org.apache.fineract.operations.BatchRepository;
 import org.apache.fineract.operations.BusinessKey;
@@ -37,8 +38,8 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.client.RestTemplate;
 
 import javax.servlet.http.HttpServletResponse;
-import java.util.List;
-import java.util.stream.Collectors;
+import java.util.HashMap;import java.util.List;
+import java.util.Map;import java.util.stream.Collectors;
 
 @RestController
 @SecurityRequirement(name = "auth")
@@ -161,6 +162,18 @@ public class OperationsApi {
         return loadTransfers(businessKey, businessKeyType).stream()
                 .map(transfer -> variableRepository.findByWorkflowInstanceKeyOrderByTimestamp(transfer.getWorkflowInstanceKey()))
                 .collect(Collectors.toList());
+    }
+
+    @GetMapping("/variables/{transactionId}")
+    public Map<String, String> variablesList( @PathVariable String transactionId) {
+        Long workflowInstanceKey = (transferRepository.findFirstByTransactionId(transactionId)
+        .orElseThrow(() -> new InvalidInputException("Transaction Id does not existy")))
+        .getWorkflowInstanceKey();
+        HashMap<String, String> variables = new HashMap<>();
+        variableRepository.findByWorkflowInstanceKeyOrderByTimestamp(workflowInstanceKey).forEach(variable -> {
+            variables.put(variable.getName(), variable.getValue());
+        });
+        return variables;
     }
 
     @GetMapping("/tasks")
