@@ -166,9 +166,11 @@ public class OperationsApi {
 
     @GetMapping("/variables/{transactionId}")
     public Map<String, String> variablesList( @PathVariable String transactionId) {
-        Long workflowInstanceKey = (transferRepository.findFirstByTransactionId(transactionId)
-        .orElseThrow(() -> new InvalidInputException("Transaction Id does not existy")))
-        .getWorkflowInstanceKey();
+        Long workflowInstanceKey = transferRepository.findFirstByTransactionId(transactionId)
+                .map(Transfer::getWorkflowInstanceKey)
+                .orElseGet(() -> Long.valueOf(transactionRequestRepository.findFirstByTransactionId(transactionId)
+                        .map(TransactionRequest::getWorkflowInstanceKey)
+                        .orElseThrow(() -> new InvalidInputException("Transaction Id does not exist"))));
         HashMap<String, String> variables = new HashMap<>();
         variableRepository.findByWorkflowInstanceKeyOrderByTimestamp(workflowInstanceKey).forEach(variable -> {
             variables.put(variable.getName(), variable.getValue());

@@ -6,6 +6,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import java.util.List;
+import java.util.Optional;
 
 public interface TransactionRequestRepository extends JpaRepository<TransactionRequest, Long>, JpaSpecificationExecutor {
 
@@ -16,4 +17,5 @@ public interface TransactionRequestRepository extends JpaRepository<TransactionR
             " WHERE v.name=\"errorDescription\" and v.value IN :errorDescription")
     List<TransactionRequest> filterByErrorDescription(@Param("errorDescription") List<String> errorDescription);
 
+    Optional<TransactionRequest> findFirstByTransactionId(String transactionId);
 }
