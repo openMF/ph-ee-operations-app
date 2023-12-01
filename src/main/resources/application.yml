@@ -102,6 +102,8 @@ management:
     health:
       show-details: always
       probes:
+  endpoints:
+    web.exposure.include: health,info,metrics,prometheus
 
 baasflow:
   events:
