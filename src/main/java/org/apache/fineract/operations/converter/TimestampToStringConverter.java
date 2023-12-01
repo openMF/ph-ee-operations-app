@@ -6,14 +6,14 @@ import org.modelmapper.spi.MappingContext;
 
 import java.util.Date;
 
-import static org.apache.fineract.core.service.OperatorUtils.dateFormat;
+import static org.apache.fineract.core.service.OperatorUtils.formatDate;
 
 public class TimestampToStringConverter implements Converter<Long, String> {
 
     @Override
     public String convert(MappingContext<Long, String> mappingContext) {
-        if (mappingContext.getMapping().getLastDestinationProperty().getName().equals(Task_.timestamp.getName()) && mappingContext.getSource() != null) {
-            return dateFormat().format(new Date(mappingContext.getSource()));
+        if (mappingContext.getMapping().getLastDestinationProperty().getName().equals(Task_.timestamp.getName())) {
+            return formatDate(new Date(mappingContext.getSource()));
         }
         return null;
     }

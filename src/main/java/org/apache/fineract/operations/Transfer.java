@@ -4,6 +4,7 @@ package org.apache.fineract.operations;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import jakarta.persistence.*;
 import lombok.Data;
+import org.eclipse.persistence.annotations.JoinFetch;
 
 import java.math.BigDecimal;
 import java.util.Date;
@@ -96,6 +97,13 @@ public class Transfer {
 
     @OneToMany(cascade = CascadeType.ALL, mappedBy = "transfer", fetch = FetchType.LAZY)
     private List<Variable> variables;
+
+    @ManyToOne
+    @JoinColumn(name = "TRANSACTION_ID", referencedColumnName = "TRANSACTION_ID", updatable = false, insertable = false)
+    private Transfer parent;
+
+    @OneToMany(mappedBy = "parent")
+    private List<Transfer> recalls;
 
     public Transfer() {
     }

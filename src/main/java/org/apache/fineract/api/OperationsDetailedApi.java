@@ -4,7 +4,9 @@ import com.baasflow.commons.events.EventLogLevel;
 import com.baasflow.commons.events.EventService;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import jakarta.persistence.criteria.Join;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.Tuple;
+import jakarta.persistence.criteria.*;
 import jakarta.servlet.http.HttpServletResponse;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.fineract.core.service.TenantAwareHeaderFilter;
@@ -13,12 +15,14 @@ import org.apache.fineract.exception.WriteToCsvException;
 import org.apache.fineract.operations.*;
 import org.apache.fineract.operations.TransferDto;
 import org.apache.fineract.utils.CsvUtility;
+import org.apache.fineract.utils.SortOrder;
 import org.modelmapper.ModelMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
@@ -29,9 +33,9 @@ import java.io.UnsupportedEncodingException;
 import java.math.BigDecimal;
 import java.net.URLDecoder;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import static org.apache.fineract.core.service.OperatorUtils.dateFormat;
 
@@ -56,6 +60,9 @@ public class OperationsDetailedApi {
 
     @Autowired
     private EventService eventService;
+
+    @Autowired
+    private EntityManager entityManager;
 
     @Autowired
     private ModelMapper modelMapper;
@@ -91,9 +98,7 @@ public class OperationsDetailedApi {
                 .setEvent("transfers list invoked")
                 .setEventLogLevel(EventLogLevel.INFO)
                 .setSourceModule("operations-app")
-                .setTenantId(TenantAwareHeaderFilter.tenant.get()), event ->
-                loadTransfers(Transfer.TransferType.TRANSFER, page, size, _payerPartyId, payerDfspId, _payeePartyId, payeeDfspId, transactionId, status, null, null, paymentStatus, paymentScheme, currency, amountFrom, amountTo, startFrom, startTo, acceptanceDateFrom, acceptanceDateTo, direction, sortedBy, _partyId, partyIdType, sortedOrder, endToEndIdentification))
-                .map(t -> modelMapper.map(t, TransferDto.class));
+                .setTenantId(TenantAwareHeaderFilter.tenant.get()), event -> loadTransfers(Transfer.TransferType.TRANSFER, page, size, _payerPartyId, payerDfspId, _payeePartyId, payeeDfspId, transactionId, status, null, null, paymentStatus, paymentScheme, currency, amountFrom, amountTo, startFrom, startTo, acceptanceDateFrom, acceptanceDateTo, direction, sortedBy, _partyId, partyIdType, sortedOrder, endToEndIdentification));
     }
 
     @GetMapping("/recalls")
@@ -128,11 +133,10 @@ public class OperationsDetailedApi {
                 .setEventLogLevel(EventLogLevel.INFO)
                 .setSourceModule("operations-app")
                 .setTenantId(TenantAwareHeaderFilter.tenant.get()), event ->
-                loadTransfers(Transfer.TransferType.RECALL, page, size, _payerPartyId, payerDfspId, _payeePartyId, payeeDfspId, transactionId, status, recallStatus, recallDirection, paymentStatus, paymentScheme, currency, amountFrom, amountTo, startFrom, startTo, acceptanceDateFrom, acceptanceDateTo, direction, sortedBy, _partyId, partyIdType, sortedOrder, endToEndIdentification))
-                .map(t -> modelMapper.map(t, TransferDto.class));
+                loadTransfers(Transfer.TransferType.RECALL, page, size, _payerPartyId, payerDfspId, _payeePartyId, payeeDfspId, transactionId, status, recallStatus, recallDirection, paymentStatus, paymentScheme, currency, amountFrom, amountTo, startFrom, startTo, acceptanceDateFrom, acceptanceDateTo, direction, sortedBy, _partyId, partyIdType, sortedOrder, endToEndIdentification));
     }
 
-    private Page<Transfer> loadTransfers(Transfer.TransferType transferType, Integer page, Integer size, String _payerPartyId, String payerDfspId, String _payeePartyId, String payeeDfspId, String transactionId, String status, String recallStatus, String recallDirection, String paymentStatus, String paymentScheme, String currency, BigDecimal amountFrom, BigDecimal amountTo, String startFrom, String startTo, String acceptanceDateFrom, String acceptanceDateTo, String direction, String sortedBy, String _partyId, String partyIdType, String sortedOrder, String endToEndIdentification) {
+    private Page<TransferDto> loadTransfers(Transfer.TransferType transferType, Integer page, Integer size, String _payerPartyId, String payerDfspId, String _payeePartyId, String payeeDfspId, String transactionId, String status, String recallStatus, String recallDirection, String paymentStatus, String paymentScheme, String currency, BigDecimal amountFrom, BigDecimal amountTo, String startFrom, String startTo, String acceptanceDateFrom, String acceptanceDateTo, String direction, String sortedBy, String _partyId, String partyIdType, String sortedOrder, String endToEndIdentification) {
         String payerPartyId = _payerPartyId;
         String payeePartyId = _payeePartyId;
         String partyId = _partyId;
@@ -207,13 +211,13 @@ public class OperationsDetailedApi {
                 if (StringUtils.isNotBlank(paymentScheme)) {
                     specs.add(TransferSpecs.match(Transfer_.direction, direction));
                     specs.add((Specification<Transfer>) (root, query, cb) -> {
-                        Join<Transfer, Variable> transferVariables = root.join(Transfer_.variables);
+                        Join<Transfer, Variable> transferVariables = root.join(Transfer_.variables, JoinType.LEFT);
                         transferVariables.on(cb.equal(transferVariables.get(Variable_.name), "paymentScheme"));
                         return cb.equal(transferVariables.get(Variable_.value), paymentScheme);
                     });
                 } else {
                     specs.add((Specification<Transfer>) (root, query, cb) -> {
-                        Join<Transfer, Variable> transferVariables = root.join(Transfer_.variables);
+                        Join<Transfer, Variable> transferVariables = root.join(Transfer_.variables, JoinType.LEFT);
                         transferVariables.on(cb.equal(transferVariables.get(Variable_.name), "paymentScheme"));
                         return cb.or(cb.equal(transferVariables.get(Variable_.value), "ON_US"), cb.equal(root.get("direction"), direction));
                     });
@@ -224,7 +228,7 @@ public class OperationsDetailedApi {
         }
         if (StringUtils.isNotBlank(paymentScheme) && Transfer.TransferType.RECALL.equals(transferType)) {
             specs.add((Specification<Transfer>) (root, query, cb) -> {
-                Join<Transfer, Variable> transferVariables = root.join(Transfer_.variables);
+                Join<Transfer, Variable> transferVariables = root.join(Transfer_.variables, JoinType.LEFT);
                 transferVariables.on(cb.equal(transferVariables.get(Variable_.name), "paymentScheme"));
                 return cb.equal(transferVariables.get(Variable_.value), paymentScheme);
             });
@@ -264,23 +268,66 @@ public class OperationsDetailedApi {
             specs.add(TransferSpecs.match(Transfer_.endToEndIdentification, endToEndIdentification));
         }
 
-        PageRequest pager;
-        if (sortedBy == null || "startedAt".equals(sortedBy)) {
-            pager = PageRequest.of(page, size, Sort.by(Sort.Direction.fromString(sortedOrder), "startedAt"));
-        } else {
-            pager = PageRequest.of(page, size, Sort.by(Sort.Direction.fromString(sortedOrder), sortedBy));
+        logger.info("finding transfers based on {} specs", specs.size());
+
+        Specification<Transfer> combinedSpec = Specification.where(null);
+
+        for (Specification<Transfer> spec : specs) {
+            combinedSpec = combinedSpec.and(spec);
         }
 
-        logger.info("finding transfers based on {} specs", specs.size());
-        if (!specs.isEmpty()) {
-            Specification<Transfer> compiledSpecs = specs.get(0);
-            for (int i = 1; i < specs.size(); i++) {
-                compiledSpecs = compiledSpecs.and(specs.get(i));
-            }
+        CriteriaBuilder cb = entityManager.getCriteriaBuilder();
+        CriteriaQuery<Tuple> cq = cb.createQuery(Tuple.class);
+        Root<Transfer> root = cq.from(Transfer.class);
 
-            return transferRepository.findAll(compiledSpecs, pager);
+        List<Selection<?>> tupleList = new ArrayList<>();
+        tupleList.add(root.get(Transfer_.workflowInstanceKey).alias(Transfer_.workflowInstanceKey.getName()));
+        tupleList.add(root.get(Transfer_.startedAt).alias(Transfer_.startedAt.getName()));
+        tupleList.add(root.get(Transfer_.completedAt).alias(Transfer_.completedAt.getName()));
+        tupleList.add(root.get(Transfer_.acceptanceDate).alias(Transfer_.acceptanceDate.getName()));
+        tupleList.add(root.get(Transfer_.transactionId).alias(Transfer_.transactionId.getName()));
+        tupleList.add(root.get(Transfer_.payerPartyId).alias(Transfer_.payerPartyId.getName()));
+        tupleList.add(root.get(Transfer_.payeePartyId).alias(Transfer_.payeePartyId.getName()));
+        tupleList.add(root.get(Transfer_.payerDfspId).alias(Transfer_.payerDfspId.getName()));
+        tupleList.add(root.get(Transfer_.amount).alias(Transfer_.amount.getName()));
+        tupleList.add(root.get(Transfer_.currency).alias(Transfer_.currency.getName()));
+        tupleList.add(root.get(Transfer_.status).alias(Transfer_.status.getName()));
+        tupleList.add(root.get(Transfer_.recallStatus).alias(Transfer_.recallStatus.getName()));
+        tupleList.add(root.get(Transfer_.recallDirection).alias(Transfer_.recallDirection.getName()));
+
+        if (Transfer.TransferType.TRANSFER.equals(transferType)) {
+            Join<Transfer, Transfer> transferRecalls = root.join(Transfer_.recalls, JoinType.LEFT);
+            transferRecalls.on(cb.isNotNull(transferRecalls.get(Transfer_.recallDirection)));
+            tupleList.add(cb.count(transferRecalls).alias(Transfer_.recalls.getName()));
+            cq.groupBy(root.get(Transfer_.workflowInstanceKey), transferRecalls.get(Transfer_.transactionId));
+        }
+
+        if (StringUtils.isEmpty(sortedBy)) {
+            sortedBy = Transfer_.startedAt.getName();
+        }
+
+        cq.select(cb.tuple((tupleList.toArray(new Selection[]{}))))
+                .where(combinedSpec.toPredicate(root, cq, cb))
+                .orderBy(getSortDirection(cb, root, sortedOrder, sortedBy));
+
+        List<Tuple> resultList = entityManager.createQuery(cq)
+                .setFirstResult(page * size)
+                .setMaxResults(size)
+                .getResultList();
+
+        CriteriaQuery<Long> cqCount = cb.createQuery(Long.class);
+        Root<Transfer> countRoot = cqCount.from(Transfer.class);
+        Long count = entityManager.createQuery(cqCount.select(cb.count(countRoot)).where(combinedSpec.toPredicate(countRoot, cqCount, cb))).getSingleResult();
+
+        return new PageImpl<>(resultList.stream()
+                .map(t -> new TransferDto(t)).collect(Collectors.toList()), PageRequest.of(page, size, Sort.by(Sort.Direction.fromString(sortedOrder), sortedBy)), count);
+    }
+
+    private Order getSortDirection(CriteriaBuilder cb, Root<?> root, String direction, String sortedBy) {
+        if (SortOrder.DESC.name().equalsIgnoreCase(direction)) {
+            return cb.desc(root.get(sortedBy));
         } else {
-            return transferRepository.findAll(pager);
+            return cb.asc(root.get(sortedBy));
         }
     }
 
