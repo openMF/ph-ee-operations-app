@@ -14,9 +14,9 @@ import java.math.BigDecimal;
 @NoArgsConstructor
 public class BatchDTO {
 
-    private String batch_id;
+    private String batchId;
 
-    private String request_id;
+    private String requestId;
 
     private Long total;
 
@@ -38,7 +38,7 @@ public class BatchDTO {
 
     private String notes;
 
-    private String created_at;
+    private String createdAt;
 
     private String status;
 
@@ -60,8 +60,8 @@ public class BatchDTO {
                     Long completed, BigDecimal total_amount, BigDecimal completed_amount, BigDecimal ongoing_amount,
                     BigDecimal failed_amount, String result_file, String note, String failPercentage,
                     String successPercentage, String registeringInstitutionId, String payerFsp, String correlationId) {
-        this.batch_id = batchId;
-        this.request_id = requestId;
+        this.batchId = batchId;
+        this.requestId = requestId;
         this.total = totalTransactions;
         this.ongoing = ongoing;
         this.failed = failed;
