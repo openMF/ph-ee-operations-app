@@ -294,7 +294,7 @@ public class BatchApi {
                 batchFailedPercent.toString(),batchCompletedPercent.toString(), batch.getRegisteringInstitutionId(),
                 batch.getPayerFsp(), batch.getCorrelationId());
 
-        response.setCreated_at("" + batch.getStartedAt());
+        response.setCreatedAt("" + batch.getStartedAt());
         response.setModes(modes);
         response.setPurpose("Unknown purpose");
         System.out.println("Batch details generated for batchId: " + response.getSuccessPercentage());
