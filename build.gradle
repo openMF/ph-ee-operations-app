@@ -20,6 +20,9 @@ repositories {
     }
 }
 
+ext {
+    springBootVersion = '2.6.2'
+}
 dependencies {
     implementation 'org.springframework.security:spring-security-jwt:1.1.0.RELEASE'
     implementation 'org.springframework.boot:spring-boot-starter-web'
@@ -29,6 +32,7 @@ dependencies {
     implementation 'org.springframework.security.oauth:spring-security-oauth2:2.4.1.RELEASE'
     implementation 'org.json:json:20190722'
     implementation 'org.eclipse.persistence:org.eclipse.persistence.jpa:2.7.6'
+    implementation "org.springframework.boot:spring-boot-starter-actuator:$springBootVersion"
     implementation 'org.hibernate:hibernate-jpamodelgen:5.4.17.Final'
     annotationProcessor 'org.hibernate:hibernate-jpamodelgen:5.4.17.Final'
     implementation 'joda-time:joda-time:2.10.6'
