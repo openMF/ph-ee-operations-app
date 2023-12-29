@@ -20,6 +20,10 @@ repositories {
     }
 }
 
+ext {
+    springBootVersion = '2.1.9.RELEASE'
+}
+
 dependencies {
     implementation 'org.springframework.security:spring-security-jwt:1.1.0.RELEASE'
     implementation 'org.springframework.boot:spring-boot-starter-web'
@@ -46,6 +50,10 @@ dependencies {
     annotationProcessor 'org.projectlombok:lombok:1.18.24'
     implementation "org.springdoc:springdoc-openapi-ui:1.6.11"
     implementation 'org.mifos:ph-ee-connector-common:1.4.1-SNAPSHOT'
+    implementation "org.springframework.boot:spring-boot-starter:$springBootVersion"
+    implementation "org.springframework.boot:spring-boot-starter-web:$springBootVersion"
+    implementation "org.springframework.boot:spring-boot-starter-actuator:$springBootVersion"
+
 }
 
 group = 'org.apache.fineract'

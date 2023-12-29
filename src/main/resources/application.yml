@@ -90,3 +90,18 @@ application:
 channel-connector:
   url: http://bb-connector-channel.mifos.io
   transfer-path: /channel/transfer
+
+management:
+#  server:
+#    port: 5000
+  endpoint:
+    health:
+      probes:
+        enabled: true
+      liveness:
+        enabled: true
+      readiness:
+        enabled: true
+#      show-details: always
+
+
