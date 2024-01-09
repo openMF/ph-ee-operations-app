@@ -12,8 +12,6 @@
             <img class="img-fluid" th:src="@{/images/mifos-logo-flat.png}" />
         </div>
         <h3>Payment Hub EE - Operations Management</h3>
-        <!--div class="error" th:if="${param.error}">
-            Invalid username and password.</div-->
         <div th:if="${param.error != null}" class="error" th:utext="${session[SPRING_SECURITY_LAST_EXCEPTION].message}">error</div>
         <div class="error" th:if="${param.logout}">
             You have been logged out.</div>
@@ -30,7 +28,7 @@
             </div>
             <div class="remember">
                 <label>
-                    <input type="checkbox" id="rememberMe" value="true">
+                    <input type="checkbox" id="rememberMe" name="rememberMe" value="true">
                     Remember me
                 </label>
             </div>
