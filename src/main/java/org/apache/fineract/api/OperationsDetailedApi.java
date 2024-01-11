@@ -289,6 +289,7 @@ public class OperationsDetailedApi {
         tupleList.add(root.get(Transfer_.payerPartyId).alias(Transfer_.payerPartyId.getName()));
         tupleList.add(root.get(Transfer_.payeePartyId).alias(Transfer_.payeePartyId.getName()));
         tupleList.add(root.get(Transfer_.payerDfspId).alias(Transfer_.payerDfspId.getName()));
+        tupleList.add(root.get(Transfer_.payeeDfspId).alias(Transfer_.payeeDfspId.getName()));
         tupleList.add(root.get(Transfer_.amount).alias(Transfer_.amount.getName()));
         tupleList.add(root.get(Transfer_.currency).alias(Transfer_.currency.getName()));
         tupleList.add(root.get(Transfer_.status).alias(Transfer_.status.getName()));

@@ -56,6 +56,7 @@ public class TransferDto {
         this.payerPartyId = tuple.get(Transfer_.payerPartyId.getName(), String.class);
         this.payeePartyId = tuple.get(Transfer_.payeePartyId.getName(), String.class);
         this.payerDfspId = tuple.get(Transfer_.payerDfspId.getName(), String.class);
+        this.payeeDfspId = tuple.get(Transfer_.payeeDfspId.getName(), String.class);
         this.amount = tuple.get(Transfer_.amount.getName(), BigDecimal.class);
         this.currency = tuple.get(Transfer_.currency.getName(), String.class);
         this.status = tuple.get(Transfer_.status.getName(), TransferStatus.class);
