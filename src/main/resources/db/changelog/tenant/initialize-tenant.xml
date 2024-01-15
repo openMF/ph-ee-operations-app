@@ -38,4 +38,5 @@
     <include file="parts/0009_add_payment_status.xml" relativeToChangelogFile="true"/>
     <include file="parts/0010_add_acceptance_date.xml" relativeToChangelogFile="true"/>
     <include file="parts/0011_admin_role.xml" relativeToChangelogFile="true"/>
+    <include file="parts/0012_rtp_direction.xml" relativeToChangelogFile="true"/>
 </databaseChangeLog>

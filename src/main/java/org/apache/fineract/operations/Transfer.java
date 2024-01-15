@@ -16,7 +16,8 @@ import java.util.List;
 public class Transfer {
     public enum TransferType {
         TRANSFER,
-        RECALL
+        RECALL,
+        REQUEST_TO_PAY
     }
 
 
@@ -76,6 +77,9 @@ public class Transfer {
 
     @Column(name = "direction")
     private String direction;
+
+    @Column(name = "rtp_direction")
+    private String rtpDirection;
 
     @Column(name = "error_information")
     private String errorInformation;

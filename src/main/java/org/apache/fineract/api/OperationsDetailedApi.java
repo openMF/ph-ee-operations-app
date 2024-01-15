@@ -98,7 +98,7 @@ public class OperationsDetailedApi {
                 .setEvent("transfers list invoked")
                 .setEventLogLevel(EventLogLevel.INFO)
                 .setSourceModule("operations-app")
-                .setTenantId(TenantAwareHeaderFilter.tenant.get()), event -> loadTransfers(Transfer.TransferType.TRANSFER, page, size, _payerPartyId, payerDfspId, _payeePartyId, payeeDfspId, transactionId, status, null, null, paymentStatus, paymentScheme, currency, amountFrom, amountTo, startFrom, startTo, acceptanceDateFrom, acceptanceDateTo, direction, sortedBy, _partyId, partyIdType, sortedOrder, endToEndIdentification));
+                .setTenantId(TenantAwareHeaderFilter.tenant.get()), event -> loadTransfers(Transfer.TransferType.TRANSFER, page, size, _payerPartyId, payerDfspId, _payeePartyId, payeeDfspId, transactionId, status, null, null, paymentStatus, paymentScheme, currency, amountFrom, amountTo, startFrom, startTo, acceptanceDateFrom, acceptanceDateTo, direction, sortedBy, _partyId, partyIdType, sortedOrder, endToEndIdentification, null));
     }
 
     @GetMapping("/recalls")
@@ -133,10 +133,38 @@ public class OperationsDetailedApi {
                 .setEventLogLevel(EventLogLevel.INFO)
                 .setSourceModule("operations-app")
                 .setTenantId(TenantAwareHeaderFilter.tenant.get()), event ->
-                loadTransfers(Transfer.TransferType.RECALL, page, size, _payerPartyId, payerDfspId, _payeePartyId, payeeDfspId, transactionId, status, recallStatus, recallDirection, paymentStatus, paymentScheme, currency, amountFrom, amountTo, startFrom, startTo, acceptanceDateFrom, acceptanceDateTo, direction, sortedBy, _partyId, partyIdType, sortedOrder, endToEndIdentification));
+                loadTransfers(Transfer.TransferType.RECALL, page, size, _payerPartyId, payerDfspId, _payeePartyId, payeeDfspId, transactionId, status, recallStatus, recallDirection, paymentStatus, paymentScheme, currency, amountFrom, amountTo, startFrom, startTo, acceptanceDateFrom, acceptanceDateTo, direction, sortedBy, _partyId, partyIdType, sortedOrder, endToEndIdentification, null));
     }
 
-    private Page<TransferDto> loadTransfers(Transfer.TransferType transferType, Integer page, Integer size, String _payerPartyId, String payerDfspId, String _payeePartyId, String payeeDfspId, String transactionId, String status, String recallStatus, String recallDirection, String paymentStatus, String paymentScheme, String currency, BigDecimal amountFrom, BigDecimal amountTo, String startFrom, String startTo, String acceptanceDateFrom, String acceptanceDateTo, String direction, String sortedBy, String _partyId, String partyIdType, String sortedOrder, String endToEndIdentification) {
+    @GetMapping("/transactionRequests")
+    public Page<TransferDto> transactionRequests(
+            @RequestParam(value = "page") Integer page,
+            @RequestParam(value = "size") Integer size,
+            @RequestParam(value = "payerPartyId", required = false) String _payerPartyId,
+            @RequestParam(value = "payeePartyId", required = false) String _payeePartyId,
+            @RequestParam(value = "payeeDfspId", required = false) String payeeDfspId,
+            @RequestParam(value = "payerDfspId", required = false) String payerDfspId,
+            @RequestParam(value = "transactionId", required = false) String transactionId,
+            @RequestParam(value = "status", required = false) String status,
+            @RequestParam(value = "state", required = false) String state,
+            @RequestParam(value = "amountFrom", required = false) BigDecimal amountFrom,
+            @RequestParam(value = "amountTo", required = false) BigDecimal amountTo,
+            @RequestParam(value = "currency", required = false) String currency,
+            @RequestParam(value = "startFrom", required = false) String startFrom,
+            @RequestParam(value = "startTo", required = false) String startTo,
+            @RequestParam(value = "direction", required = false) String direction,
+            @RequestParam(value = "rtpDirection", required = false) String rtpDirection,
+            @RequestParam(value = "sortedBy", required = false) String sortedBy,
+            @RequestParam(value = "sortedOrder", required = false, defaultValue = "DESC") String sortedOrder) {
+        return eventService.auditedEvent(event -> event
+                .setEvent("recalls list invoked")
+                .setEventLogLevel(EventLogLevel.INFO)
+                .setSourceModule("operations-app")
+                .setTenantId(TenantAwareHeaderFilter.tenant.get()), event ->
+                loadTransfers(Transfer.TransferType.REQUEST_TO_PAY, page, size, _payerPartyId, payerDfspId, _payeePartyId, payeeDfspId, transactionId, status, null, null, null, null, currency, amountFrom, amountTo, startFrom, startTo, null, null, direction, sortedBy, null, null, sortedOrder, null, rtpDirection));
+    }
+
+    private Page<TransferDto> loadTransfers(Transfer.TransferType transferType, Integer page, Integer size, String _payerPartyId, String payerDfspId, String _payeePartyId, String payeeDfspId, String transactionId, String status, String recallStatus, String recallDirection, String paymentStatus, String paymentScheme, String currency, BigDecimal amountFrom, BigDecimal amountTo, String startFrom, String startTo, String acceptanceDateFrom, String acceptanceDateTo, String direction, String sortedBy, String _partyId, String partyIdType, String sortedOrder, String endToEndIdentification, String rtpDirection) {
         String payerPartyId = _payerPartyId;
         String payeePartyId = _payeePartyId;
         String partyId = _partyId;
@@ -144,8 +172,9 @@ public class OperationsDetailedApi {
         List<Specification<Transfer>> specs = new ArrayList<>();
 
         specs.add((Specification<Transfer>) (root, query, cb) -> switch (transferType) {
-            case TRANSFER -> cb.isNull(root.get("recallDirection"));
-            case RECALL -> cb.isNotNull(root.get("recallDirection"));
+            case TRANSFER -> cb.and(cb.isNull(root.get(Transfer_.recallDirection)), cb.isNull(root.get(Transfer_.rtpDirection)));
+            case RECALL -> cb.and(cb.isNotNull(root.get(Transfer_.recallDirection)), cb.isNull(root.get(Transfer_.rtpDirection)));
+            case REQUEST_TO_PAY -> cb.and(cb.isNull(root.get(Transfer_.recallDirection)), cb.equal(root.get(Transfer_.rtpDirection), rtpDirection));
         });
 
         if (StringUtils.isNotBlank(payerPartyId)) {
@@ -342,90 +371,6 @@ public class OperationsDetailedApi {
             }
         }
         return variable;
-    }
-
-    @GetMapping("/transactionRequests")
-    public Page<TransactionRequest> transactionRequests(
-            @RequestParam(value = "page", required = false, defaultValue = "0") Integer page,
-            @RequestParam(value = "size", required = false, defaultValue = "20") Integer size,
-            @RequestParam(value = "payerPartyId", required = false) String payerPartyId,
-            @RequestParam(value = "payeePartyId", required = false) String payeePartyId,
-            @RequestParam(value = "payeeDfspId", required = false) String payeeDfspId,
-            @RequestParam(value = "payerDfspId", required = false) String payerDfspId,
-            @RequestParam(value = "transactionId", required = false) String transactionId,
-            @RequestParam(value = "state", required = false) String state,
-            @RequestParam(value = "amount", required = false) BigDecimal amount,
-            @RequestParam(value = "currency", required = false) String currency,
-            @RequestParam(value = "startFrom", required = false) String startFrom,
-            @RequestParam(value = "startTo", required = false) String startTo,
-            @RequestParam(value = "direction", required = false) String direction,
-            @RequestParam(value = "sortedBy", required = false) String sortedBy,
-            @RequestParam(value = "sortedOrder", required = false, defaultValue = "DESC") String sortedOrder) {
-
-        return eventService.auditedEvent(event -> event
-                .setEvent("transaction request list invoked")
-                .setEventLogLevel(EventLogLevel.INFO)
-                .setSourceModule("operations-app")
-                .setTenantId(TenantAwareHeaderFilter.tenant.get()), event -> {
-
-            List<Specification<TransactionRequest>> specs = new ArrayList<>();
-            if (payerPartyId != null) {
-                specs.add(TransactionRequestSpecs.match(TransactionRequest_.payerPartyId, payerPartyId));
-            }
-            if (payeePartyId != null) {
-                specs.add(TransactionRequestSpecs.match(TransactionRequest_.payeePartyId, payeePartyId));
-            }
-            if (payeeDfspId != null) {
-                specs.add(TransactionRequestSpecs.match(TransactionRequest_.payeeDfspId, payeeDfspId));
-            }
-            if (payerDfspId != null) {
-                specs.add(TransactionRequestSpecs.match(TransactionRequest_.payerDfspId, payerDfspId));
-            }
-            if (transactionId != null) {
-                specs.add(TransactionRequestSpecs.match(TransactionRequest_.transactionId, transactionId));
-            }
-            if (state != null && parseState(state) != null) {
-                specs.add(TransactionRequestSpecs.match(TransactionRequest_.state, parseState(state)));
-            }
-            if (amount != null) {
-                specs.add(TransactionRequestSpecs.match(TransactionRequest_.amount, amount));
-            }
-            if (currency != null) {
-                specs.add(TransactionRequestSpecs.match(TransactionRequest_.currency, currency));
-            }
-            if (direction != null) {
-                specs.add(TransactionRequestSpecs.match(TransactionRequest_.direction, direction));
-            }
-            try {
-                if (startFrom != null && startTo != null) {
-                    specs.add(TransactionRequestSpecs.between(TransactionRequest_.startedAt, dateFormat().parse(startFrom), dateFormat().parse(startTo)));
-                } else if (startFrom != null) {
-                    specs.add(TransactionRequestSpecs.later(TransactionRequest_.startedAt, dateFormat().parse(startFrom)));
-                } else if (startTo != null) {
-                    specs.add(TransactionRequestSpecs.earlier(TransactionRequest_.startedAt, dateFormat().parse(startTo)));
-                }
-            } catch (Exception e) {
-                logger.warn("failed to parse dates {} / {}", startFrom, startTo);
-            }
-
-            PageRequest pager;
-            if (sortedBy == null || "startedAt".equals(sortedBy)) {
-                pager = PageRequest.of(page, size, Sort.by(Sort.Direction.valueOf(sortedOrder), "startedAt"));
-            } else {
-                pager = PageRequest.of(page, size, Sort.by(Sort.Direction.valueOf(sortedOrder), sortedBy));
-            }
-
-            if (specs.size() > 0) {
-                Specification<TransactionRequest> compiledSpecs = specs.get(0);
-                for (int i = 1; i < specs.size(); i++) {
-                    compiledSpecs = compiledSpecs.and(specs.get(i));
-                }
-
-                return transactionRequestRepository.findAll(compiledSpecs, pager);
-            } else {
-                return transactionRequestRepository.findAll(pager);
-            }
-        });
     }
 
     /**
