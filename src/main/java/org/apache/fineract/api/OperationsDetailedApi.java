@@ -173,8 +173,8 @@ public class OperationsDetailedApi {
 
         specs.add((Specification<Transfer>) (root, query, cb) -> switch (transferType) {
             case TRANSFER -> cb.and(cb.isNull(root.get(Transfer_.recallDirection)), cb.isNull(root.get(Transfer_.rtpDirection)));
-            case RECALL -> cb.and(cb.isNotNull(root.get(Transfer_.recallDirection)), cb.isNull(root.get(Transfer_.rtpDirection)));
-            case REQUEST_TO_PAY -> cb.and(cb.isNull(root.get(Transfer_.recallDirection)), cb.equal(root.get(Transfer_.rtpDirection), rtpDirection));
+            case RECALL -> cb.and(cb.equal(root.get(Transfer_.recallDirection), recallDirection), cb.isNull(root.get(Transfer_.rtpDirection)));
+            case REQUEST_TO_PAY -> cb.equal(root.get(Transfer_.rtpDirection), rtpDirection);
         });
 
         if (StringUtils.isNotBlank(payerPartyId)) {
@@ -219,9 +219,6 @@ public class OperationsDetailedApi {
         }
         if (StringUtils.isNotBlank(recallStatus)) {
             specs.add(TransferSpecs.match(Transfer_.recallStatus, recallStatus));
-        }
-        if (StringUtils.isNotBlank(recallDirection)) {
-            specs.add(TransferSpecs.match(Transfer_.recallDirection, recallDirection));
         }
         if (StringUtils.isNotBlank(paymentStatus)) {
             specs.add(TransferSpecs.match(Transfer_.paymentStatus, paymentStatus));
