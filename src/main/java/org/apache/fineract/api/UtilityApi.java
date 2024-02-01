@@ -7,8 +7,10 @@ import org.apache.commons.codec.digest.DigestUtils;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 import javax.crypto.BadPaddingException;
@@ -36,26 +38,32 @@ import java.util.stream.Collectors;
 @Tag(name = "Users API")
 public class UtilityApi {
 
-    @PostMapping("/signature")
+    @PostMapping("/util/x-signature")
     public ResponseEntity<String> uploadFile(
             @RequestHeader("X-CorrelationID") String correlationId,
             @RequestHeader("Platform-TenantId") String tenantId,
-            MultipartFile data
+            @RequestParam(required = false) MultipartFile data,
+            @RequestBody(required = false) String rawData
     )throws NoSuchPaddingException, IllegalBlockSizeException, NoSuchAlgorithmException, BadPaddingException, InvalidKeySpecException, InvalidKeyException, IOException {
-        if (data.isEmpty()) {
-            return new ResponseEntity<>("File is empty", HttpStatus.BAD_REQUEST);
-        }
 
-        // Read content of file into a String
-        String fileContent;
-        try {
-            fileContent = readInputStreamToString(data.getInputStream());
-        } catch (IOException e) {
-            e.printStackTrace();
-            return new ResponseEntity<>("Failed to read file content", HttpStatus.INTERNAL_SERVER_ERROR);
+        String tobeHashed = "";
+        
+        if(data != null && !data.isEmpty()) {
+            String fileContent;
+            try {
+                fileContent = readInputStreamToString(data.getInputStream());
+            } catch (IOException e) {
+                e.printStackTrace();
+                return new ResponseEntity<>("Failed to read file content", HttpStatus.INTERNAL_SERVER_ERROR);
+            }
+            tobeHashed = correlationId+":"+tenantId+":"+fileContent;            
         }
-
-        String tobeHashed = correlationId+":"+tenantId+":"+fileContent;
+        else if(rawData != null && !rawData.isEmpty()){
+            tobeHashed = correlationId+":"+tenantId+":"+rawData;
+        }
+        else {
+            return new ResponseEntity<>("No file or raw data provided", HttpStatus.BAD_REQUEST);
+        }
         return getSignature(tobeHashed);
     }
 
