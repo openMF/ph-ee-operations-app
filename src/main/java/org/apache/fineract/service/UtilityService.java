@@ -11,5 +11,5 @@ import java.security.spec.InvalidKeySpecException;
 @Service
 public interface UtilityService {
 
-    String getSignature(String toBeHashed)throws NoSuchPaddingException, NoSuchAlgorithmException, InvalidKeySpecException, IllegalBlockSizeException, BadPaddingException, InvalidKeyException;
+    String getSignature(String toBeHashed, String privateKeyString)throws NoSuchPaddingException, NoSuchAlgorithmException, InvalidKeySpecException, IllegalBlockSizeException, BadPaddingException, InvalidKeyException;
 }

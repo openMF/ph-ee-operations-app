@@ -39,6 +39,7 @@ public class UtilityApi {
     public ResponseEntity<String> getXSignature(
             @RequestHeader("X-CorrelationID") String correlationId,
             @RequestHeader("Platform-TenantId") String tenantId,
+            @RequestHeader("privateKey") String privateKey,
             @RequestParam(required = false) MultipartFile data,
             @RequestBody(required = false) String rawData
     )throws NoSuchPaddingException, IllegalBlockSizeException, NoSuchAlgorithmException, BadPaddingException, InvalidKeySpecException, InvalidKeyException, IOException {
@@ -62,7 +63,7 @@ public class UtilityApi {
             return new ResponseEntity<>("No file or raw data provided", HttpStatus.BAD_REQUEST);
         }
 
-        return new ResponseEntity<>(utilityService.getSignature(tobeHashed), HttpStatus.OK);
+        return new ResponseEntity<>(utilityService.getSignature(tobeHashed, privateKey), HttpStatus.OK);
     }
 
     private String readInputStreamToString(InputStream inputStream) throws IOException {
