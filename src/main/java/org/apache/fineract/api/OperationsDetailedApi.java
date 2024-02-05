@@ -79,7 +79,7 @@ public class OperationsDetailedApi {
             @RequestParam(value = "payeeDfspId", required = false) String payeeDfspId,
             @RequestParam(value = "transactionId", required = false) String transactionId,
             @RequestParam(value = "status", required = false) String status,
-            @RequestParam(value = "paymentStatus", required = false) String paymentStatus,
+            @RequestParam(value = "businessProcessStatus", required = false) String businessProcessStatus,
             @RequestParam(value = "paymentScheme", required = false) String paymentScheme,
             @RequestParam(value = "amountFrom", required = false) BigDecimal amountFrom,
             @RequestParam(value = "amountTo", required = false) BigDecimal amountTo,
@@ -98,7 +98,7 @@ public class OperationsDetailedApi {
                 .setEvent("transfers list invoked")
                 .setEventLogLevel(EventLogLevel.INFO)
                 .setSourceModule("operations-app")
-                .setTenantId(TenantAwareHeaderFilter.tenant.get()), event -> loadTransfers(Transfer.TransferType.TRANSFER, page, size, _payerPartyId, payerDfspId, _payeePartyId, payeeDfspId, transactionId, status, null, null, paymentStatus, paymentScheme, currency, amountFrom, amountTo, startFrom, startTo, acceptanceDateFrom, acceptanceDateTo, direction, sortedBy, _partyId, partyIdType, sortedOrder, endToEndIdentification, null));
+                .setTenantId(TenantAwareHeaderFilter.tenant.get()), event -> loadTransfers(Transfer.TransferType.TRANSFER, page, size, _payerPartyId, payerDfspId, _payeePartyId, payeeDfspId, transactionId, status, null, null, businessProcessStatus, paymentScheme, currency, amountFrom, amountTo, startFrom, startTo, acceptanceDateFrom, acceptanceDateTo, direction, sortedBy, _partyId, partyIdType, sortedOrder, endToEndIdentification, null));
     }
 
     @GetMapping("/recalls")
@@ -113,7 +113,7 @@ public class OperationsDetailedApi {
             @RequestParam(value = "status", required = false) String status,
             @RequestParam(value = "recallStatus", required = false) String recallStatus,
             @RequestParam(value = "recallDirection", required = false) String recallDirection,
-            @RequestParam(value = "paymentStatus", required = false) String paymentStatus,
+            @RequestParam(value = "businessProcessStatus", required = false) String businessProcessStatus,
             @RequestParam(value = "paymentScheme", required = false) String paymentScheme,
             @RequestParam(value = "amountFrom", required = false) BigDecimal amountFrom,
             @RequestParam(value = "amountTo", required = false) BigDecimal amountTo,
@@ -133,7 +133,7 @@ public class OperationsDetailedApi {
                 .setEventLogLevel(EventLogLevel.INFO)
                 .setSourceModule("operations-app")
                 .setTenantId(TenantAwareHeaderFilter.tenant.get()), event ->
-                loadTransfers(Transfer.TransferType.RECALL, page, size, _payerPartyId, payerDfspId, _payeePartyId, payeeDfspId, transactionId, status, recallStatus, recallDirection, paymentStatus, paymentScheme, currency, amountFrom, amountTo, startFrom, startTo, acceptanceDateFrom, acceptanceDateTo, direction, sortedBy, _partyId, partyIdType, sortedOrder, endToEndIdentification, null));
+                loadTransfers(Transfer.TransferType.RECALL, page, size, _payerPartyId, payerDfspId, _payeePartyId, payeeDfspId, transactionId, status, recallStatus, recallDirection, businessProcessStatus, paymentScheme, currency, amountFrom, amountTo, startFrom, startTo, acceptanceDateFrom, acceptanceDateTo, direction, sortedBy, _partyId, partyIdType, sortedOrder, endToEndIdentification, null));
     }
 
     @GetMapping("/transactionRequests")
@@ -164,7 +164,7 @@ public class OperationsDetailedApi {
                 loadTransfers(Transfer.TransferType.REQUEST_TO_PAY, page, size, _payerPartyId, payerDfspId, _payeePartyId, payeeDfspId, transactionId, status, null, null, null, null, currency, amountFrom, amountTo, startFrom, startTo, null, null, direction, sortedBy, null, null, sortedOrder, null, rtpDirection));
     }
 
-    private Page<TransferDto> loadTransfers(Transfer.TransferType transferType, Integer page, Integer size, String _payerPartyId, String payerDfspId, String _payeePartyId, String payeeDfspId, String transactionId, String status, String recallStatus, String recallDirection, String paymentStatus, String paymentScheme, String currency, BigDecimal amountFrom, BigDecimal amountTo, String startFrom, String startTo, String acceptanceDateFrom, String acceptanceDateTo, String direction, String sortedBy, String _partyId, String partyIdType, String sortedOrder, String endToEndIdentification, String rtpDirection) {
+    private Page<TransferDto> loadTransfers(Transfer.TransferType transferType, Integer page, Integer size, String _payerPartyId, String payerDfspId, String _payeePartyId, String payeeDfspId, String transactionId, String status, String recallStatus, String recallDirection, String businessProcessStatus, String paymentScheme, String currency, BigDecimal amountFrom, BigDecimal amountTo, String startFrom, String startTo, String acceptanceDateFrom, String acceptanceDateTo, String direction, String sortedBy, String _partyId, String partyIdType, String sortedOrder, String endToEndIdentification, String rtpDirection) {
         String payerPartyId = _payerPartyId;
         String payeePartyId = _payeePartyId;
         String partyId = _partyId;
@@ -220,8 +220,8 @@ public class OperationsDetailedApi {
         if (StringUtils.isNotBlank(recallStatus)) {
             specs.add(TransferSpecs.match(Transfer_.recallStatus, recallStatus));
         }
-        if (StringUtils.isNotBlank(paymentStatus)) {
-            specs.add(TransferSpecs.match(Transfer_.paymentStatus, paymentStatus));
+        if (StringUtils.isNotBlank(businessProcessStatus)) {
+            specs.add(TransferSpecs.match(Transfer_.businessProcessStatus, businessProcessStatus));
         }
         if (amountFrom != null) {
             specs.add(TransferSpecs.greaterThanOrEqualTo(Transfer_.amount, amountFrom));
