@@ -2,12 +2,24 @@
 <configuration scan="true">
     <include resource="org/springframework/boot/logging/logback/defaults.xml"/>
 
-    <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
-        <encoder>
-            <pattern>${CONSOLE_LOG_PATTERN}</pattern>
-            <charset>utf8</charset>
-        </encoder>
-    </appender>
+    <springProperty name="jsonLoggingEnabled" source="logging.json.enabled" defaultValue="false"/>
+
+    <if condition="${jsonLoggingEnabled:-false} == true">
+        <then>
+            <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+                <encoder class="ch.qos.logback.classic.encoder.JsonEncoder">
+                </encoder>
+            </appender>
+        </then>
+        <else>
+            <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+                <encoder>
+                    <pattern>${CONSOLE_LOG_PATTERN}</pattern>
+                    <charset>utf8</charset>
+                </encoder>
+            </appender>
+        </else>
+    </if>
 
     <appender name="LOG_FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
         <file>logs/console.log</file>
