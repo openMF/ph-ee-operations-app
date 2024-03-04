@@ -226,7 +226,7 @@ public class OperationsDetailedApi {
             specs.add(TransferSpecs.match(Transfer_.payerDfspId, payerDfspId));
         }
         if (StringUtils.isNotBlank(transactionId)) {
-            specs.add(TransferSpecs.match(Transfer_.transactionId, transactionId));
+            specs.add(TransferSpecs.like(Transfer_.transactionId, createLikeExpression(transactionId)));
         }
         if (status != null && parseStatus(status) != null) {
             specs.add(TransferSpecs.match(Transfer_.status, parseStatus(status)));
@@ -305,7 +305,7 @@ public class OperationsDetailedApi {
         }
 
         if (StringUtils.isNotBlank(endToEndIdentification)) {
-            specs.add(TransferSpecs.match(Transfer_.endToEndIdentification, endToEndIdentification));
+            specs.add(TransferSpecs.like(Transfer_.endToEndIdentification, createLikeExpression(endToEndIdentification)));
         }
 
         logger.info("finding transfers based on {} specs", specs.size());
@@ -578,6 +578,10 @@ public class OperationsDetailedApi {
      */
     private Filter parseFilter(String filterBy) {
         return filterBy == null ? null : Filter.valueOf(filterBy.toUpperCase());
+    }
+
+    private String createLikeExpression(String input) {
+        return "%" + input + "%";
     }
 
     /*
