@@ -171,10 +171,24 @@ public class OperationsDetailedApi {
 
         List<Specification<Transfer>> specs = new ArrayList<>();
 
-        specs.add((Specification<Transfer>) (root, query, cb) -> switch (transferType) {
-            case TRANSFER -> cb.and(cb.isNull(root.get(Transfer_.recallDirection)), cb.isNull(root.get(Transfer_.rtpDirection)));
-            case RECALL -> cb.and(cb.equal(root.get(Transfer_.recallDirection), recallDirection), cb.isNull(root.get(Transfer_.rtpDirection)));
-            case REQUEST_TO_PAY -> cb.equal(root.get(Transfer_.rtpDirection), rtpDirection);
+        specs.add((Specification<Transfer>) (root, query, cb) -> {
+            Predicate finalPredicate = null;
+            switch (transferType) {
+                case TRANSFER:
+                    finalPredicate = cb.and(cb.isNull(root.get(Transfer_.recallDirection)), cb.isNull(root.get(Transfer_.rtpDirection)));
+                    break;
+                case RECALL:
+                    if (recallDirection == null) {
+                        finalPredicate = cb.and(cb.or(cb.isNotNull(root.get(Transfer_.recallDirection))), cb.isNull(root.get(Transfer_.rtpDirection)));
+                    } else {
+                        finalPredicate = cb.and(cb.or(cb.equal(root.get(Transfer_.recallDirection), recallDirection)), cb.isNull(root.get(Transfer_.rtpDirection)));
+                    }
+                    break;
+                case REQUEST_TO_PAY:
+                    finalPredicate = cb.equal(root.get(Transfer_.rtpDirection), rtpDirection);
+                    break;
+            }
+            return finalPredicate;
         });
 
         if (StringUtils.isNotBlank(payerPartyId)) {
