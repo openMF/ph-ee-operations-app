@@ -20,7 +20,7 @@ import java.security.spec.PKCS8EncodedKeySpec;
 public class UtilityServiceImpl implements UtilityService{
     @Override
     public String getSignature(String tobeHashed, String privateKeyString)throws       NoSuchPaddingException, NoSuchAlgorithmException, InvalidKeySpecException, IllegalBlockSizeException, BadPaddingException, InvalidKeyException {
-        String hashData = (new DigestUtils("SHA-256")).digestAsHex(tobeHashed);
+        String hashData = (new DigestUtils("SHA3-256")).digestAsHex(tobeHashed);
 
         Cipher cipher = Cipher.getInstance("RSA");
         PrivateKey publicKey = getPrivateKeyFromString(privateKeyString);
