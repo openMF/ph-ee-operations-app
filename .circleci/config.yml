@@ -9,7 +9,7 @@ orbs:
 executors:
   docker-executor:
     docker:
-      - image: circleci/openjdk:8-buster-node-browsers-legacy
+      - image: circleci/openjdk:11-buster-node-browsers-legacy
         auth:
           username: $DOCKERHUB_USERNAME
           password: $DOCKERHUB_PASSWORD
