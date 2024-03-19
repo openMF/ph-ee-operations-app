@@ -325,11 +325,14 @@ public class OperationsDetailedApi {
 
         if (specs.size() > 0) {
             Specifications<TransactionRequest> compiledSpecs = specs.get(0);
+            logger.info("specs size: {}",specs.size());
             for (int i = 1; i < specs.size(); i++) {
                 compiledSpecs = compiledSpecs.and(specs.get(i));
+                logger.info("---------> {}", specs.get(i).toString());
             }
             return transactionRequestRepository.findAll(compiledSpecs, pager);
         } else {
+            logger.info("inside else");
             return transactionRequestRepository.findAll(pager);
         }
     }
