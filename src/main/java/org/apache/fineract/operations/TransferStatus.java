@@ -4,5 +4,6 @@ public enum TransferStatus {
     COMPLETED,
     FAILED,
     IN_PROGRESS,
-    UNKNOWN
+    UNKNOWN,
+    EXCEPTION
 }
