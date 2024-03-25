@@ -128,20 +128,26 @@ public class BatchDbServiceImpl implements BatchDbService {
             ThreadLocalContextUtil.setTenant(connection);
             return batchRepository.findAllBatch(registeringInstitutionId, payerFsp, batchId, pager);
         });
+        CompletableFuture<Optional<Long>> totalSubBatchesAsync = CompletableFuture.supplyAsync(() -> {
+            ThreadLocalContextUtil.setTenant(connection);
+            return batchRepository.getTotalSubBatches(registeringInstitutionId, payerFsp, batchId);
+        });
+
 
         CompletableFuture<Void> allTasks = CompletableFuture.allOf(totalTransactionsAsync, totalAmountAsync,
-                totalBatchesAsync, totalApprovedCountAsync, totalApprovedAmountAsync, batchesAsync);
+                totalBatchesAsync, totalApprovedCountAsync, totalApprovedAmountAsync, batchesAsync, totalSubBatchesAsync);
         allTasks.join();
 
         Optional<Long> totalTransactions = totalTransactionsAsync.join();
         Optional<Long> totalAmount = totalAmountAsync.join();
         Optional<Long> totalBatches = totalBatchesAsync.join();
+        Optional<Long> totalSubBatches = totalSubBatchesAsync.join();
         Optional<Long> totalApprovedCount = totalApprovedCountAsync.join();
         Optional<Long> totalApprovedAmount = totalApprovedAmountAsync.join();
         List<Batch> batches = batchesAsync.join();
         return getBatchPaginatedResponseInstance(totalBatches.orElse(0L), totalTransactions.orElse(0L),
                 totalAmount.orElse(0L), totalApprovedCount.orElse(0L),
-                totalApprovedAmount.orElse(0L), 10, batches);
+                totalApprovedAmount.orElse(0L), totalSubBatches.orElse(0L), batches);
     }
 
     @Override

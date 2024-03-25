@@ -46,6 +46,10 @@ public interface BatchRepository extends JpaRepository<Batch, Long>, JpaSpecific
             "WHERE (bt.registeringInstitutionId LIKE :registeringInstitutionId) AND (bt.payerFsp LIKE :payerFsp) AND " +
             "bt.batchId LIKE :batchId AND bt.subBatchId IS NULL")
     Optional<Long> getTotalBatches(String registeringInstitutionId, String payerFsp, String batchId);
+    @Query(value = "SELECT COUNT(bt) FROM Batch bt " +
+            "WHERE (bt.registeringInstitutionId LIKE :registeringInstitutionId) AND (bt.payerFsp LIKE :payerFsp) AND " +
+            "bt.batchId LIKE :batchId AND bt.subBatchId IS NOT NULL")
+    Optional<Long> getTotalSubBatches(String registeringInstitutionId, String payerFsp, String batchId);
 
     @Query(value = "SELECT COUNT(bt) FROM Batch bt " +
             "WHERE bt.startedAt >= :dateFrom AND " +
