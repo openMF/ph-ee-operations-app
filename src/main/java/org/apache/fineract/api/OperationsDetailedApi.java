@@ -67,6 +67,35 @@ public class OperationsDetailedApi {
     @Autowired
     private ModelMapper modelMapper;
 
+    @GetMapping("/businessProcessStatus")
+    public List<String> transfers(
+            @RequestParam(value = "direction", required = false) String direction,
+            @RequestParam(value = "transferType", required = false) Transfer.TransferType transferType
+    ) {
+        CriteriaBuilder cb = entityManager.getCriteriaBuilder();
+        CriteriaQuery<Tuple> cq = cb.createQuery(Tuple.class);
+        Root<Transfer> root = cq.from(Transfer.class);
+        List<Predicate> predicates = new ArrayList<>();
+        predicates.add(cb.equal(root.get(Transfer_.direction), direction));
+        predicates.add(cb.isNotNull(root.get(Transfer_.businessProcessStatus)));
+        switch (transferType) {
+            case TRANSFER:
+                predicates.add(cb.and(cb.isNull(root.get(Transfer_.recallDirection)), cb.isNull(root.get(Transfer_.rtpDirection))));
+                break;
+            case RECALL:
+                predicates.add(cb.and(cb.or(cb.isNotNull(root.get(Transfer_.recallDirection))), cb.isNull(root.get(Transfer_.rtpDirection))));
+                break;
+            case REQUEST_TO_PAY:
+                predicates.add(cb.isNotNull(root.get(Transfer_.rtpDirection)));
+                break;
+        }
+        cq.select(cb.tuple(root.get(Transfer_.businessProcessStatus).alias(Transfer_.businessProcessStatus.getName())))
+                .where(predicates.toArray(predicates.toArray(new Predicate[0])))
+                .groupBy(root.get(Transfer_.businessProcessStatus))
+                .orderBy(cb.asc(root.get(Transfer_.businessProcessStatus)));
+        List<Tuple> resultList = entityManager.createQuery(cq).getResultList();
+        return resultList.stream().map(tuple -> tuple.get(Transfer_.businessProcessStatus.getName(), String.class)).collect(Collectors.toList());
+    }
 
     @PreAuthorize("hasAuthority('ALL_FUNCTIONS') and hasRole('Admin')")
     @GetMapping("/transfers")
