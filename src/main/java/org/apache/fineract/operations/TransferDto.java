@@ -44,7 +44,7 @@ public class TransferDto {
     private String endToEndIdentification;
     private String recallStatus;
     private String recallDirection;
-    private String paymentStatus;
+    private String businessProcessStatus;
     private Integer recallCount;
 
     public TransferDto (Tuple tuple) {
