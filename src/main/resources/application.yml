@@ -92,10 +92,9 @@ channel-connector:
   transfer-path: /channel/transfer
 
 management:
-#  server:
-#    port: 5000
   endpoint:
     health:
+      enabled: true
       probes:
         enabled: true
       liveness:
