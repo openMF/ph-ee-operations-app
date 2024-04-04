@@ -95,6 +95,9 @@ management:
 #  server:
 #    port: 5000
   endpoint:
+    web:
+      exposure:
+        include: health, liveness, readiness
     health:
       enabled: true
       probes:
