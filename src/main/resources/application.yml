@@ -92,8 +92,8 @@ channel-connector:
   transfer-path: /channel/transfer
 
 management:
-  server:
-    port: 80
+#  server:
+#    port: 5000
   endpoint:
     health:
       enabled: true
