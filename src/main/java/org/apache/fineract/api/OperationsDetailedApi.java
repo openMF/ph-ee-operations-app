@@ -277,7 +277,7 @@ public class OperationsDetailedApi {
         }
         if (StringUtils.isNotBlank(direction)) {
             if (Transfer.TransferType.TRANSFER.equals(transferType)) {
-                if (StringUtils.isNotBlank(paymentScheme)) {
+                if (StringUtils.isNotBlank(paymentScheme) && !"ON_US".equals(paymentScheme)) {
                     specs.add(TransferSpecs.match(Transfer_.direction, direction));
                     specs.add((Specification<Transfer>) (root, query, cb) -> {
                         Join<Transfer, Variable> transferVariables = root.join(Transfer_.variables, JoinType.LEFT);
