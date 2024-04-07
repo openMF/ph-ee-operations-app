@@ -38,6 +38,7 @@ import java.util.List;
 public class TenantAwareHeaderFilter extends GenericFilterBean {
     private static final String TENANT_IDENTIFIER_REQUEST_HEADER = "Platform-TenantId";
     public static final String TENANT_IDENTIFIER_REQUEST_PARAM = "tenantIdentifier";
+    public static final String REMEMBER_ME_REQUEST_PARAM = "rememberMe";
     private static final List<String> EXCLUDED_URL = List.of("/oauth2/authorize", "/favicon.ico", "/login", "/oauth2/token", "/logout");
     private static final List<String> EXCLUDED_PREFIX = List.of("/actuator", "/css", "/images");
 

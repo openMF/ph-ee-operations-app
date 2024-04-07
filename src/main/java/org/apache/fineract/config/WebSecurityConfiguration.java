@@ -188,7 +188,8 @@ public class WebSecurityConfiguration {
             context.getClaims()
                     .claim("scope", finalScope)
                     .claim("role", roles)
-                    .claim("tenant", details.getTenant());
+                    .claim("tenant", details.getTenant())
+                    .claim("rememberMe", details.getRememberMe());
         };
     }
 
