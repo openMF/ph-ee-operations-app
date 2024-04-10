@@ -275,7 +275,7 @@ public class OperationsDetailedApi {
         if (StringUtils.isNotBlank(currency)) {
             specs.add(TransferSpecs.match(Transfer_.currency, currency));
         }
-        if (StringUtils.isNotBlank(direction)) {
+        /*if (StringUtils.isNotBlank(direction)) {
             if (Transfer.TransferType.TRANSFER.equals(transferType)) {
                 if (StringUtils.isNotBlank(paymentScheme) && !"ON_US".equals(paymentScheme)) {
                     specs.add(TransferSpecs.match(Transfer_.direction, direction));
@@ -301,7 +301,23 @@ public class OperationsDetailedApi {
                 transferVariables.on(cb.equal(transferVariables.get(Variable_.name), "paymentScheme"));
                 return cb.equal(transferVariables.get(Variable_.value), paymentScheme);
             });
+        }*/
+        if (StringUtils.isNotBlank(direction)) {
+            if (StringUtils.isEmpty(paymentScheme)) {
+                specs.add((Specification<Transfer>) (root, query, cb) -> cb.or(cb.equal(root.get(Transfer_.direction), direction), cb.equal(root.get(Transfer_.direction), "ON_US")));
+            } else if (!"ON_US".equals(paymentScheme)) {
+                specs.add(TransferSpecs.match(Transfer_.direction, direction));
+            }
         }
+
+        if (StringUtils.isNotBlank(paymentScheme)) {
+            specs.add((Specification<Transfer>) (root, query, cb) -> {
+                Join<Transfer, Variable> transferVariables = root.join(Transfer_.variables, JoinType.LEFT);
+                transferVariables.on(cb.equal(transferVariables.get(Variable_.name), "paymentScheme"));
+                return cb.equal(transferVariables.get(Variable_.value), paymentScheme);
+            });
+        }
+
         if (StringUtils.isNotBlank(partyIdType)) {
             specs.add(TransferSpecs.multiMatch(Transfer_.payeePartyIdType, Transfer_.payerPartyIdType, partyIdType));
         }
