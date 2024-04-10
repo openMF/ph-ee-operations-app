@@ -67,7 +67,7 @@ logging:
 cloud:
   aws:
     enabled: true
-    mino-public-host: "http://minio.sandbox.fynarfin.io"
+    mino-public-host: "http://minio.sandbox.mifos.io"
     s3BaseUrl: "https://s3.ap-south-1.amazonaws.com"
     credentials:
       access-key: ${AWS_ACCESS_KEY:AKIAX32JM37TZOJ5AKFB}
