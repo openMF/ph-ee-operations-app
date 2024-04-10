@@ -42,7 +42,7 @@ public class AwsFileTransferImpl implements FileTransferService {
     private AmazonS3 s3Client;
     @Value("${cloud.aws.s3BaseUrl}")
     private String endpoint;
-    @Value("${cloud.aws.mino-public-host}")
+    @Value("${cloud.aws.minio-public-host}")
     private String minioPublicHost;
     private static final String MINIO = "minio";
     @Override
