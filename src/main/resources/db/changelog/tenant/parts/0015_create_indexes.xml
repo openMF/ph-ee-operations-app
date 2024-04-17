@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.1.xsd">
+    <changeSet author="dgyenizse" id="1" objectQuotingStrategy="QUOTE_ALL_OBJECTS">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <indexExists indexName="idx_tasks_workflow_instance_key"
+                             tableName="tasks"/>
+                <indexExists indexName="idx_variables_workflow_instance_key_name_value_partial"
+                             tableName="variables"/>
+            </not>
+        </preConditions>
+        <sql splitStatements="true" stripComments="true" endDelimiter="\nGO">
+            CREATE INDEX idx_tasks_workflow_instance_key ON tasks (workflow_instance_key);
+            CREATE INDEX idx_variables_workflow_instance_key_name_value_partial ON variables (workflow_instance_key, name, value) WHERE name = 'paymentScheme';
+        </sql>
+    </changeSet>
+</databaseChangeLog>
