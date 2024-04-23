@@ -42,4 +42,5 @@
     <include file="parts/0013_rename_payment_status.xml" relativeToChangelogFile="true"/>
     <include file="parts/0014_widen_payment_status.xml" relativeToChangelogFile="true"/>
     <include file="parts/0015_create_indexes.xml" relativeToChangelogFile="true"/>
+    <include file="parts/0016_transfer_lastupdated.xml" relativeToChangelogFile="true"/>
 </databaseChangeLog>
