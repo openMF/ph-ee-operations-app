@@ -4,7 +4,7 @@
                    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.1.xsd">
     <changeSet author="dgyenizse" id="1" objectQuotingStrategy="QUOTE_ALL_OBJECTS">
         <addColumn tableName="transfers">
-            <column name="last_updated" type="long"/>
+            <column name="last_updated" type="BIGINT"/>
         </addColumn>
     </changeSet>
 </databaseChangeLog>
