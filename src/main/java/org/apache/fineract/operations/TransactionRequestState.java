@@ -2,9 +2,5 @@ package org.apache.fineract.operations;
 
 public enum TransactionRequestState {
 
-    IN_PROGRESS,
-    RECEIVED,
-    ACCEPTED,
-    REJECTED,
-    FAILED;
+    INITIATED, IN_PROGRESS, RECEIVED, REQUEST_ACCEPTED, ACCEPTED, REJECTED, FAILED, SUCCESS;
 }
