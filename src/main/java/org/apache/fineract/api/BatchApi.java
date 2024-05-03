@@ -185,13 +185,18 @@ public class BatchApi {
         }
 
         Page<Transfer> transfers;
+        List<Batch> batchAndSubBatches = batchRepository.findAllByBatchId(batchId);
 
         if (status.equalsIgnoreCase(TransferStatus.COMPLETED.toString()) ||
                 status.equalsIgnoreCase(TransferStatus.IN_PROGRESS.toString()) ||
                 status.equalsIgnoreCase(TransferStatus.FAILED.toString())) {
             transfers = transferRepository.findAllByBatchIdAndStatus(batchId, status.toUpperCase(), new PageRequest(pageNo, pageSize));
         } else {
-            transfers = transferRepository.findAllByBatchId(batchId, new PageRequest(pageNo, pageSize));
+            if(batchAndSubBatches.size()>1){
+                transfers = transferRepository.findAllByBatchIdMatchSubBatchId(batchId, new PageRequest(pageNo, pageSize));
+            } else {
+                transfers = transferRepository.findAllByBatchId(batchId, new PageRequest(pageNo, pageSize));
+            }
         }
 
         return transfers;

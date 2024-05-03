@@ -26,5 +26,7 @@ public interface TransferRepository extends JpaRepository<Transfer, Long>, JpaSp
     Page<Transfer> findAllByBatchId(String batchId, Pageable pageable);
     Long countAllByBatchId(String batchId);
     Page<Transfer> findAll(Pageable pageable);
+    @Query("SELECT t FROM Transfer t WHERE t.batchId IN (SELECT b.subBatchId FROM Batch b WHERE b.batchId = :batchId AND b.subBatchId IS NOT NULL)")
+    Page<Transfer>findAllByBatchIdMatchSubBatchId(String batchId, Pageable pageable);
 
 }
