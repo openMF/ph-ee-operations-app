@@ -32,6 +32,9 @@ public class Variable {
     @Column(name = "TIMESTAMP")
     private Long timestamp;
 
+    @Column(name = "POSITION")
+    private Long position;
+
     @Lob
     @Column(name = "VALUE")
     private String value;
