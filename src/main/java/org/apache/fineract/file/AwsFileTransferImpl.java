@@ -10,8 +10,9 @@ import com.amazonaws.services.s3.model.PutObjectRequest;
 import com.amazonaws.services.s3.model.S3Object;
 import com.amazonaws.services.s3.model.S3ObjectInputStream;
 import com.amazonaws.util.IOUtils;
-import com.mysql.cj.log.Log;
-import org.apache.commons.lang3.time.DateUtils;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,15 +21,10 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.util.Date;
-
 @Service
 @Qualifier("awsStorage")
 public class AwsFileTransferImpl implements FileTransferService {
+
     private Logger logger = LoggerFactory.getLogger(this.getClass());
     @Value("${cloud.aws.credentials.access-key}")
     private String accessKey;
@@ -45,6 +41,7 @@ public class AwsFileTransferImpl implements FileTransferService {
     @Value("${cloud.aws.minio-public-host}")
     private String minioPublicHost;
     private static final String MINIO = "minio";
+
     @Override
     public String uploadFile(File file, String bucketName) {
 
@@ -57,10 +54,10 @@ public class AwsFileTransferImpl implements FileTransferService {
         logger.info("uploading file");
         s3Client.putObject(new PutObjectRequest(bucketName, fileName, file));
         String url = s3Client.getUrl(bucketName, fileName).toString();
-        if(url.contains(MINIO)){
-            url = url.replaceFirst("^.*(?=/"+bucketName+")",minioPublicHost);
+        if (url.contains(MINIO)) {
+            url = url.replaceFirst("^.*(?=/" + bucketName + ")", minioPublicHost);
         }
-        logger.debug("File access URL",url);
+        logger.debug("File access URL", url);
         file.delete();
         return url;
     }

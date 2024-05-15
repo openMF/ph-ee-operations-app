@@ -1,11 +1,32 @@
 package org.apache.fineract.api;
 
+import static org.apache.fineract.core.service.OperatorUtils.dateFormat;
+
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import java.io.IOException;
+import java.io.UnsupportedEncodingException;
+import java.math.BigDecimal;
+import java.net.URLDecoder;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import javax.servlet.http.HttpServletResponse;
 import org.apache.fineract.data.ErrorResponse;
 import org.apache.fineract.exception.WriteToCsvException;
-import org.apache.fineract.operations.*;
+import org.apache.fineract.operations.Filter;
+import org.apache.fineract.operations.TransactionRequest;
+import org.apache.fineract.operations.TransactionRequestRepository;
+import org.apache.fineract.operations.TransactionRequestSpecs;
+import org.apache.fineract.operations.TransactionRequestState;
+import org.apache.fineract.operations.TransactionRequest_;
+import org.apache.fineract.operations.Transfer;
+import org.apache.fineract.operations.TransferRepository;
+import org.apache.fineract.operations.TransferResponse;
+import org.apache.fineract.operations.TransferSpecs;
+import org.apache.fineract.operations.TransferStatus;
+import org.apache.fineract.operations.Transfer_;
 import org.apache.fineract.utils.CsvUtility;
 import org.apache.fineract.utils.DateUtil;
 import org.slf4j.Logger;
@@ -15,19 +36,14 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
-import org.springframework.data.jpa.domain.Specifications;
-import org.springframework.web.bind.annotation.*;
-
-import javax.servlet.http.HttpServletResponse;
-import java.io.IOException;
-import java.io.UnsupportedEncodingException;
-import java.math.BigDecimal;
-import java.net.URLDecoder;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-
-import static org.apache.fineract.core.service.OperatorUtils.dateFormat;
+import org.springframework.data.jpa.domain.Specification;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/api/v1")
@@ -51,8 +67,7 @@ public class OperationsDetailedApi {
     private DateUtil dateUtil;
 
     @GetMapping("/transfers")
-    public Page<TransferResponse> transfers(
-            @RequestParam(value = "page", required = false, defaultValue = "0") Integer page,
+    public Page<TransferResponse> transfers(@RequestParam(value = "page", required = false, defaultValue = "0") Integer page,
             @RequestParam(value = "size", required = false, defaultValue = "1") Integer size,
             @RequestParam(value = "payerPartyId", required = false) String payerPartyId,
             @RequestParam(value = "payerDfspId", required = false) String payerDfspId,
@@ -70,7 +85,7 @@ public class OperationsDetailedApi {
             @RequestParam(value = "partyIdType", required = false) String partyIdType,
             @RequestParam(value = "clientCorrelationId", required = false) String clientCorrelationId,
             @RequestParam(value = "sortedOrder", required = false, defaultValue = "DESC") String sortedOrder) {
-        List<Specifications<Transfer>> specs = new ArrayList<>();
+        List<Specification<Transfer>> specs = new ArrayList<>();
 
         if (payerPartyId != null) {
             if (payerPartyId.contains("%2B")) {
@@ -152,14 +167,14 @@ public class OperationsDetailedApi {
 
         PageRequest pager;
         if (sortedBy == null || "startedAt".equals(sortedBy)) {
-            pager = new PageRequest(page, size, new Sort(Sort.Direction.fromString(sortedOrder), "startedAt"));
+            pager = PageRequest.of(page, size, Sort.by(Sort.Direction.fromString(sortedOrder), "startedAt"));
         } else {
-            pager = new PageRequest(page, size, new Sort(Sort.Direction.fromString(sortedOrder), sortedBy));
+            pager = PageRequest.of(page, size, Sort.by(Sort.Direction.fromString(sortedOrder), sortedBy));
         }
 
         Page<Transfer> transferPage;
         if (specs.size() > 0) {
-            Specifications<Transfer> compiledSpecs = specs.get(0);
+            Specification<Transfer> compiledSpecs = specs.get(0);
             for (int i = 1; i < specs.size(); i++) {
                 compiledSpecs = compiledSpecs.and(specs.get(i));
             }
@@ -175,8 +190,7 @@ public class OperationsDetailedApi {
             try {
                 String json = transfer.getErrorInformation();
                 transfer.setErrorInformation(null);
-                transferResponse = objectMapper.readValue(objectMapper.writeValueAsString(transfer),
-                        TransferResponse.class);
+                transferResponse = objectMapper.readValue(objectMapper.writeValueAsString(transfer), TransferResponse.class);
                 transferResponse.parseErrorInformation(json, objectMapper);
                 transferResponseList.add(transferResponse);
             } catch (Exception e) {
@@ -188,31 +202,30 @@ public class OperationsDetailedApi {
             }
         }
 
-        Page<TransferResponse> paginatedTransferResponse = new PageImpl<>(transferResponseList, transferPage.getPageable(), transferPage.getTotalPages());
+        Page<TransferResponse> paginatedTransferResponse = new PageImpl<>(transferResponseList, transferPage.getPageable(),
+                transferPage.getTotalPages());
 
         return paginatedTransferResponse;
     }
 
-    //payment status check api
+    // payment status check api
     @PostMapping("/transfers")
-    public Page<TransferResponse> transfersStatusCheck(
-            @RequestHeader("Platform-TenantId") String tenantId,
+    public Page<TransferResponse> transfersStatusCheck(@RequestHeader("Platform-TenantId") String tenantId,
             @RequestParam(value = "page", required = false, defaultValue = "0") Integer page,
             @RequestParam(value = "size", required = false, defaultValue = "10000") Integer size,
             @RequestParam(value = "sortedOrder", required = false, defaultValue = "DESC") String sortedOrder,
             @RequestParam(value = "startFrom", required = false) String startFrom,
             @RequestParam(value = "startTo", required = false) String startTo,
-            @RequestParam(value = "sortedBy", required = false) String sortedBy,
-            @RequestBody Map<String, List<String>> body) throws IOException {
-        List<Specifications<Transfer>> specs = new ArrayList<>();
+            @RequestParam(value = "sortedBy", required = false) String sortedBy, @RequestBody Map<String, List<String>> body)
+            throws IOException {
+        List<Specification<Transfer>> specs = new ArrayList<>();
         PageRequest pager;
         if (sortedBy == null || "startedAt".equals(sortedBy)) {
-            pager = new PageRequest(page, size, new Sort(Sort.Direction.fromString(sortedOrder),
-                    "startedAt"));
+            pager = PageRequest.of(page, size, Sort.by(Sort.Direction.fromString(sortedOrder), "startedAt"));
         } else {
-            pager = new PageRequest(page, size, new Sort(Sort.Direction.fromString(sortedOrder), sortedBy));
+            pager = PageRequest.of(page, size, Sort.by(Sort.Direction.fromString(sortedOrder), sortedBy));
         }
-        Specifications<Transfer> spec = null;
+        Specification<Transfer> spec = null;
         List<String> filterByList = new ArrayList<>(body.keySet());
         for (String filterBy : filterByList) {
             List<String> ids = body.get(filterBy);
@@ -234,8 +247,7 @@ public class OperationsDetailedApi {
             try {
                 String json = transfer.getErrorInformation();
                 transfer.setErrorInformation(null);
-                transferResponse = objectMapper.readValue(objectMapper.writeValueAsString(transfer),
-                        TransferResponse.class);
+                transferResponse = objectMapper.readValue(objectMapper.writeValueAsString(transfer), TransferResponse.class);
                 transferResponse.parseErrorInformation(json, objectMapper);
                 transferResponseList.add(transferResponse);
             } catch (Exception e) {
@@ -245,13 +257,13 @@ public class OperationsDetailedApi {
                 }
             }
         }
-        Page<TransferResponse> paginatedTransferResponse = new PageImpl<>(transferResponseList, transferPage.getPageable(), transferPage.getTotalPages());
+        Page<TransferResponse> paginatedTransferResponse = new PageImpl<>(transferResponseList, transferPage.getPageable(),
+                transferPage.getTotalPages());
         return paginatedTransferResponse;
     }
 
     @GetMapping("/transactionRequests")
-    public Page<TransactionRequest> transactionRequests(
-            @RequestParam(value = "page", required = false, defaultValue = "0") Integer page,
+    public Page<TransactionRequest> transactionRequests(@RequestParam(value = "page", required = false, defaultValue = "0") Integer page,
             @RequestParam(value = "size", required = false, defaultValue = "20") Integer size,
             @RequestParam(value = "payerPartyId", required = false) String payerPartyId,
             @RequestParam(value = "payeePartyId", required = false) String payeePartyId,
@@ -267,7 +279,7 @@ public class OperationsDetailedApi {
             @RequestParam(value = "clientCorrelationId", required = false) String clientCorrelationId,
             @RequestParam(value = "sortedBy", required = false) String sortedBy,
             @RequestParam(value = "sortedOrder", required = false, defaultValue = "DESC") String sortedOrder) {
-        List<Specifications<TransactionRequest>> specs = new ArrayList<>();
+        List<Specification<TransactionRequest>> specs = new ArrayList<>();
         if (payerPartyId != null) {
             specs.add(TransactionRequestSpecs.match(TransactionRequest_.payerPartyId, payerPartyId));
         }
@@ -306,7 +318,8 @@ public class OperationsDetailedApi {
                 startTo = dateUtil.getUTCFormat(startTo);
             }
             if (startFrom != null && startTo != null) {
-                specs.add(TransactionRequestSpecs.between(TransactionRequest_.startedAt, dateFormat().parse(startFrom), dateFormat().parse(startTo)));
+                specs.add(TransactionRequestSpecs.between(TransactionRequest_.startedAt, dateFormat().parse(startFrom),
+                        dateFormat().parse(startTo)));
             } else if (startFrom != null) {
                 specs.add(TransactionRequestSpecs.later(TransactionRequest_.startedAt, dateFormat().parse(startFrom)));
             } else if (startTo != null) {
@@ -318,13 +331,13 @@ public class OperationsDetailedApi {
 
         PageRequest pager;
         if (sortedBy == null || "startedAt".equals(sortedBy)) {
-            pager = new PageRequest(page, size, new Sort(Sort.Direction.valueOf(sortedOrder), "startedAt"));
+            pager = PageRequest.of(page, size, Sort.by(Sort.Direction.valueOf(sortedOrder), "startedAt"));
         } else {
-            pager = new PageRequest(page, size, new Sort(Sort.Direction.valueOf(sortedOrder), sortedBy));
+            pager = PageRequest.of(page, size, Sort.by(Sort.Direction.valueOf(sortedOrder), sortedBy));
         }
 
         if (specs.size() > 0) {
-            Specifications<TransactionRequest> compiledSpecs = specs.get(0);
+            Specification<TransactionRequest> compiledSpecs = specs.get(0);
             for (int i = 1; i < specs.size(); i++) {
                 compiledSpecs = compiledSpecs.and(specs.get(i));
             }
@@ -337,36 +350,40 @@ public class OperationsDetailedApi {
     /**
      * Filter the [TransactionRequests] based on multiple type of ids
      *
-     * @param response    instance of HttpServletResponse
-     * @param page        the count/number of page which we want to fetch
-     * @param size        the size of the single page defaults to [10000]
-     * @param sortedOrder the order of sorting [ASC] or [DESC], defaults to [DESC]
-     * @param startFrom   use for filtering records after this date, format: "yyyy-MM-dd HH:mm:ss"
-     * @param startTo     use for filtering records before this date
-     * @param state       filter based on state of the transaction
+     * @param response
+     *            instance of HttpServletResponse
+     * @param page
+     *            the count/number of page which we want to fetch
+     * @param size
+     *            the size of the single page defaults to [10000]
+     * @param sortedOrder
+     *            the order of sorting [ASC] or [DESC], defaults to [DESC]
+     * @param startFrom
+     *            use for filtering records after this date, format: "yyyy-MM-dd HH:mm:ss"
+     * @param startTo
+     *            use for filtering records before this date
+     * @param state
+     *            filter based on state of the transaction
      */
     @PostMapping("/transactionRequests")
-    public Map<String, String> filterTransactionRequests(
-            HttpServletResponse response,
+    public Map<String, String> filterTransactionRequests(HttpServletResponse response,
             @RequestParam(value = "command", required = false, defaultValue = "export") String command,
             @RequestParam(value = "page", required = false, defaultValue = "0") Integer page,
             @RequestParam(value = "size", required = false, defaultValue = "10000") Integer size,
             @RequestParam(value = "sortedOrder", required = false, defaultValue = "DESC") String sortedOrder,
             @RequestParam(value = "startFrom", required = false) String startFrom,
             @RequestParam(value = "startTo", required = false) String startTo,
-            @RequestParam(value = "state", required = false) String state,
-            @RequestBody Map<String, List<String>> body) {
+            @RequestParam(value = "state", required = false) String state, @RequestBody Map<String, List<String>> body) {
 
         if (!command.equalsIgnoreCase("export")) {
-            return new ErrorResponse.Builder()
-                    .setErrorCode("" + HttpServletResponse.SC_NOT_FOUND)
-                    .setErrorDescription(command + " not supported")
-                    .setDeveloperMessage("Possible supported command is " + command).build();
+            return new ErrorResponse.Builder().setErrorCode("" + HttpServletResponse.SC_NOT_FOUND)
+                    .setErrorDescription(command + " not supported").setDeveloperMessage("Possible supported command is " + command)
+                    .build();
         }
 
         List<String> filterByList = new ArrayList<>(body.keySet());
 
-        List<Specifications<TransactionRequest>> specs = new ArrayList<>();
+        List<Specification<TransactionRequest>> specs = new ArrayList<>();
         if (state != null && parseState(state) != null) {
             specs.add(TransactionRequestSpecs.match(TransactionRequest_.state, parseState(state)));
             logger.info("State filter added");
@@ -384,7 +401,7 @@ public class OperationsDetailedApi {
             logger.warn("failed to parse dates {} / {}", startFrom, startTo);
         }
 
-        Specifications<TransactionRequest> spec = null;
+        Specification<TransactionRequest> spec = null;
         List<TransactionRequest> data = new ArrayList<>();
         for (String filterBy : filterByList) {
             List<String> ids = body.get(filterBy);
@@ -406,17 +423,13 @@ public class OperationsDetailedApi {
         }
         if (data.isEmpty()) {
             response.setStatus(HttpServletResponse.SC_NOT_FOUND);
-            return new ErrorResponse.Builder()
-                    .setErrorCode("" + HttpServletResponse.SC_NOT_FOUND)
-                    .setErrorDescription("Empty response")
+            return new ErrorResponse.Builder().setErrorCode("" + HttpServletResponse.SC_NOT_FOUND).setErrorDescription("Empty response")
                     .setDeveloperMessage("Empty response").build();
         }
         try {
             CsvUtility.writeToCsv(response, data);
         } catch (WriteToCsvException e) {
-            return new ErrorResponse.Builder()
-                    .setErrorCode(e.getErrorCode())
-                    .setErrorDescription(e.getErrorDescription())
+            return new ErrorResponse.Builder().setErrorCode(e.getErrorCode()).setErrorDescription(e.getErrorDescription())
                     .setDeveloperMessage(e.getDeveloperMessage()).build();
         }
         return null;
@@ -424,49 +437,54 @@ public class OperationsDetailedApi {
 
     /*
      * Returns respective [TransactionRequest] specifications based on filter
+     *
      * @param filter the filter we want to apply
+     *
      * @param listOfValues the values to which we want to apply filter
      */
-    private Specifications<TransactionRequest> getFilterSpecs(Filter filter, List<String> listOfValues) {
-        Specifications<TransactionRequest> spec = null;
+    private Specification<TransactionRequest> getFilterSpecs(Filter filter, List<String> listOfValues) {
+        Specification<TransactionRequest> spec = null;
         switch (filter) {
             case TRANSACTIONID:
                 spec = TransactionRequestSpecs.in(TransactionRequest_.transactionId, listOfValues);
-                break;
+            break;
             case PAYERID:
                 spec = TransactionRequestSpecs.in(TransactionRequest_.payerPartyId, listOfValues);
-                break;
+            break;
             case PAYEEID:
                 spec = TransactionRequestSpecs.in(TransactionRequest_.payeePartyId, listOfValues);
-                break;
+            break;
             case WORKFLOWINSTANCEKEY:
                 spec = TransactionRequestSpecs.in(TransactionRequest_.workflowInstanceKey, listOfValues);
-                break;
+            break;
             case STATE:
                 spec = TransactionRequestSpecs.in(TransactionRequest_.state, parseStates(listOfValues));
-                break;
+            break;
             case ERRORDESCRIPTION:
                 spec = TransactionRequestSpecs.filterByErrorDescription(parseErrorDescription(listOfValues));
-                break;
+            break;
             case EXTERNALID:
                 spec = TransactionRequestSpecs.in(TransactionRequest_.externalId, listOfValues);
-                break;
+            break;
 
             case CLIENTCORRELATIONID:
                 spec = TransactionRequestSpecs.in(TransactionRequest_.clientCorrelationId, listOfValues);
-                break;
+            break;
         }
         return spec;
     }
 
     /*
      * Parse the date filter and return the specification accordingly
+     *
      * @param startTo date before which we want all the records, in format "yyyy-MM-dd HH:mm:ss"
+     *
      * @param startFrom date after which we want all the records, in format "yyyy-MM-dd HH:mm:ss"
      */
-    private Specifications<TransactionRequest> getDateSpecification(String startTo, String startFrom) throws Exception {
+    private Specification<TransactionRequest> getDateSpecification(String startTo, String startFrom) throws Exception {
         if (startFrom != null && startTo != null) {
-            return TransactionRequestSpecs.between(TransactionRequest_.startedAt, dateFormat().parse(startFrom), dateFormat().parse(startTo));
+            return TransactionRequestSpecs.between(TransactionRequest_.startedAt, dateFormat().parse(startFrom),
+                    dateFormat().parse(startTo));
         } else if (startFrom != null) {
             return TransactionRequestSpecs.later(TransactionRequest_.startedAt, dateFormat().parse(startFrom));
         } else if (startTo != null) {
@@ -478,37 +496,40 @@ public class OperationsDetailedApi {
 
     /*
      * Executes the transactionRequest api request with specifications and returns the paged result
+     *
      * @param baseSpec the base specification in which all the other spec needed to be merged
+     *
      * @param extraSpecs the list of specification which is required to be merged in [baseSpec]
+     *
      * @param page the page number we want to fetch
+     *
      * @param size the size of single page or number of elements in single page
+     *
      * @param sortedOrder the order of sorting to be applied ASC OR DESC
      */
-    private Page<TransactionRequest> executeRequest(
-            Specifications<TransactionRequest> baseSpec, List<Specifications<TransactionRequest>> extraSpecs,
-            int page, int size, String sortedOrder) {
-        PageRequest pager = new PageRequest(page, size, new Sort(Sort.Direction.valueOf(sortedOrder), "startedAt"));
+    private Page<TransactionRequest> executeRequest(Specification<TransactionRequest> baseSpec,
+            List<Specification<TransactionRequest>> extraSpecs, int page, int size, String sortedOrder) {
+        PageRequest pager = PageRequest.of(page, size, Sort.by(Sort.Direction.valueOf(sortedOrder), "startedAt"));
         Page<TransactionRequest> result;
         if (baseSpec == null) {
             result = transactionRequestRepository.findAll(pager);
             logger.info("Getting data without spec");
         } else {
-            Specifications<TransactionRequest> combineSpecs = combineSpecs(baseSpec, extraSpecs);
+            Specification<TransactionRequest> combineSpecs = combineSpecs(baseSpec, extraSpecs);
             result = transactionRequestRepository.findAll(combineSpecs, pager);
         }
         return result;
     }
 
-    private Page<Transfer> executeTransferRequest(
-            Specifications<Transfer> baseSpec, List<Specifications<Transfer>> extraSpecs,
-            int page, int size, String sortedOrder) {
-        PageRequest pager = new PageRequest(page, size, new Sort(Sort.Direction.valueOf(sortedOrder), "startedAt"));
+    private Page<Transfer> executeTransferRequest(Specification<Transfer> baseSpec, List<Specification<Transfer>> extraSpecs, int page,
+            int size, String sortedOrder) {
+        PageRequest pager = PageRequest.of(page, size, Sort.by(Sort.Direction.valueOf(sortedOrder), "startedAt"));
         Page<Transfer> result;
         if (baseSpec == null) {
             result = transferRepository.findAll(pager);
             logger.info("Getting data without spec");
         } else {
-            Specifications<Transfer> combineSpecs = combineSpecs(baseSpec, extraSpecs);
+            Specification<Transfer> combineSpecs = combineSpecs(baseSpec, extraSpecs);
             result = transferRepository.findAll(combineSpecs, pager);
         }
         return result;
@@ -516,14 +537,15 @@ public class OperationsDetailedApi {
 
     /*
      * Combines the multiple specifications into one using and clause
+     *
      * @param baseSpec the base specification in which all the other spec needed to be merged
+     *
      * @param specs the list of specification which is required to be merged in [baseSpec]
      */
-    private <T> Specifications<T> combineSpecs(Specifications<T> baseSpec,
-                                               List<Specifications<T>> specs) {
+    private <T> Specification<T> combineSpecs(Specification<T> baseSpec, List<Specification<T>> specs) {
         logger.info("Combining specs " + specs.size());
-        for (Specifications<T> specifications : specs) {
-            baseSpec = baseSpec.and(specifications);
+        for (Specification<T> specification : specs) {
+            baseSpec = baseSpec.and(specification);
         }
         return baseSpec;
     }
@@ -551,8 +573,7 @@ public class OperationsDetailedApi {
     /*
      * Parses the [TransferStatus] enum from transactionStatus string
      */
-    private TransferStatus parseStatus(@RequestParam(value = "transactionStatus", required = false) String
-                                               transactionStatus) {
+    private TransferStatus parseStatus(@RequestParam(value = "transactionStatus", required = false) String transactionStatus) {
         try {
             return transactionStatus == null ? null : TransferStatus.valueOf(transactionStatus);
         } catch (Exception e) {

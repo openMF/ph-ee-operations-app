@@ -2,6 +2,10 @@ package org.apache.fineract.file;
 
 import com.azure.storage.blob.BlobClientBuilder;
 import com.azure.storage.blob.models.BlobProperties;
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import org.apache.commons.io.FileUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -10,17 +14,11 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Service;
 
-import java.io.File;
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Paths;
-
 @Service
 @Qualifier("azureStorage")
-@ConditionalOnProperty(
-        value="cloud.azure.enabled",
-        havingValue = "true")
+@ConditionalOnProperty(value = "cloud.azure.enabled", havingValue = "true")
 public class AzureFileTransferImpl implements FileTransferService {
+
     private Logger logger = LoggerFactory.getLogger(this.getClass());
 
     @Autowired
@@ -44,7 +42,7 @@ public class AzureFileTransferImpl implements FileTransferService {
     @Override
     public byte[] downloadFile(String fileName, String bucketName) {
         try {
-            File temp = new File("/temp/"+fileName);
+            File temp = new File("/temp/" + fileName);
             BlobProperties properties = client.containerName(bucketName).blobName(fileName).buildClient().downloadToFile(temp.getPath());
             byte[] content = Files.readAllBytes(Paths.get(temp.getPath()));
             temp.delete();

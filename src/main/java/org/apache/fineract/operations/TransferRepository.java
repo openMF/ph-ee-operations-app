@@ -1,15 +1,12 @@
 package org.apache.fineract.operations;
 
+import java.util.List;
+import java.util.Optional;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Query;
-import org.springframework.data.repository.query.Param;
-
-import java.util.List;
-import java.util.Optional;
 
 public interface TransferRepository extends JpaRepository<Transfer, Long>, JpaSpecificationExecutor {
 
@@ -24,9 +21,12 @@ public interface TransferRepository extends JpaRepository<Transfer, Long>, JpaSp
     Page<Transfer> findAllByBatchIdAndStatus(String batchId, String status, Pageable pageable);
 
     Page<Transfer> findAllByBatchId(String batchId, Pageable pageable);
+
     Long countAllByBatchId(String batchId);
+
     Page<Transfer> findAll(Pageable pageable);
+
     @Query("SELECT t FROM Transfer t WHERE t.batchId IN (SELECT b.subBatchId FROM Batch b WHERE b.batchId = :batchId AND b.subBatchId IS NOT NULL)")
-    Page<Transfer>findAllByBatchIdMatchSubBatchId(String batchId, Pageable pageable);
+    Page<Transfer> findAllByBatchIdMatchSubBatchId(String batchId, Pageable pageable);
 
 }

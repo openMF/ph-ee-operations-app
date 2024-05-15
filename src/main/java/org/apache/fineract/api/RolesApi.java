@@ -18,8 +18,13 @@
  */
 package org.apache.fineract.api;
 
+import static java.util.stream.Collectors.toList;
+import static org.apache.fineract.api.AssignmentAction.ASSIGN;
 
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import java.util.Collection;
+import java.util.List;
+import javax.servlet.http.HttpServletResponse;
 import org.apache.fineract.organisation.permission.Permission;
 import org.apache.fineract.organisation.permission.PermissionRepository;
 import org.apache.fineract.organisation.role.Role;
@@ -35,13 +40,6 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-
-import javax.servlet.http.HttpServletResponse;
-import java.util.Collection;
-import java.util.List;
-
-import static java.util.stream.Collectors.toList;
-import static org.apache.fineract.api.AssignmentAction.ASSIGN;
 
 @RestController
 @SecurityRequirement(name = "auth")
@@ -62,7 +60,7 @@ public class RolesApi {
     @GetMapping(path = "/role/{roleId}", produces = MediaType.APPLICATION_JSON_VALUE)
     public Role retrieveOne(@PathVariable("roleId") Long roleId, HttpServletResponse response) {
         Role role = roleRepository.findById(roleId).get();
-        if(role != null) {
+        if (role != null) {
             return role;
         } else {
             response.setStatus(HttpServletResponse.SC_NOT_FOUND);
@@ -73,7 +71,7 @@ public class RolesApi {
     @GetMapping(path = "/role/{roleId}/permissions", produces = MediaType.APPLICATION_JSON_VALUE)
     public Collection<Permission> retrievePermissions(@PathVariable("roleId") Long roleId, HttpServletResponse response) {
         Role role = roleRepository.findById(roleId).get();
-        if(role != null) {
+        if (role != null) {
             return role.getPermissions();
         } else {
             response.setStatus(HttpServletResponse.SC_NOT_FOUND);
@@ -107,7 +105,7 @@ public class RolesApi {
 
     @DeleteMapping(path = "/role/{roleId}")
     public void delete(@PathVariable("roleId") Long roleId, HttpServletResponse response) {
-        if(roleRepository.existsById(roleId)) {
+        if (roleRepository.existsById(roleId)) {
             roleRepository.deleteById(roleId);
         } else {
             response.setStatus(HttpServletResponse.SC_NOT_FOUND);
@@ -116,29 +114,25 @@ public class RolesApi {
 
     @PutMapping(path = "/role/{roleId}/permissions", consumes = MediaType.APPLICATION_JSON_VALUE)
     public void permissionAssignment(@PathVariable("roleId") Long roleId, @RequestParam("action") AssignmentAction action,
-                                     @RequestBody EntityAssignments assignments, HttpServletResponse response) {
+            @RequestBody EntityAssignments assignments, HttpServletResponse response) {
         Role existingRole = roleRepository.findById(roleId).get();
         if (existingRole != null) {
             Collection<Permission> permissionToAssign = existingRole.getPermissions();
-            List<Long> existingPermissionIds = permissionToAssign.stream()
-                    .map(Permission::getId)
-                    .collect(toList());
-            List<Permission> deltaPermissions = assignments.getEntityIds().stream()
-                    .filter(id -> {
-                        if (ASSIGN.equals(action)) {
-                            return !existingPermissionIds.contains(id);
-                        } else { // revoke
-                            return existingPermissionIds.contains(id);
-                        }
-                    })
-                    .map(id -> {
-                        Permission p = permissionRepository.findById(id).get();
-                        if (p == null) {
-                            throw new RuntimeException("Invalid permission id: " + id + " can not continue assignment!");
-                        } else {
-                            return p;
-                        }
-                    }).collect(toList());
+            List<Long> existingPermissionIds = permissionToAssign.stream().map(Permission::getId).collect(toList());
+            List<Permission> deltaPermissions = assignments.getEntityIds().stream().filter(id -> {
+                if (ASSIGN.equals(action)) {
+                    return !existingPermissionIds.contains(id);
+                } else { // revoke
+                    return existingPermissionIds.contains(id);
+                }
+            }).map(id -> {
+                Permission p = permissionRepository.findById(id).get();
+                if (p == null) {
+                    throw new RuntimeException("Invalid permission id: " + id + " can not continue assignment!");
+                } else {
+                    return p;
+                }
+            }).collect(toList());
 
             if (!deltaPermissions.isEmpty()) {
                 if (ASSIGN.equals(action)) {

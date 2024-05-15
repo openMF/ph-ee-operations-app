@@ -18,17 +18,15 @@
  */
 package org.apache.fineract.core.service;
 
-import org.apache.commons.lang3.time.StopWatch;
-
-import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.stream.Collectors;
+import javax.servlet.http.HttpServletRequest;
+import org.apache.commons.lang3.time.StopWatch;
 
 /**
- * Immutable data object representing platform API request used for
- * logging/debugging.
+ * Immutable data object representing platform API request used for logging/debugging.
  */
 public class PlatformRequestLog {
 
@@ -63,13 +61,8 @@ public class PlatformRequestLog {
     }
 
     public String toString() {
-        return String.format("Start: %s -- total: %s -- method: %s -- url: %s -- parameters: %s",
-                startTime,
-                totalTime,
-                method,
-                url,
-                parameters.entrySet().stream()
-                .map(e -> e.getKey() + " - " + String.join(",", e.getValue()))
-                .collect(Collectors.joining(" # ")));
+        return String.format("Start: %s -- total: %s -- method: %s -- url: %s -- parameters: %s", startTime, totalTime, method, url,
+                parameters.entrySet().stream().map(e -> e.getKey() + " - " + String.join(",", e.getValue()))
+                        .collect(Collectors.joining(" # ")));
     }
 }

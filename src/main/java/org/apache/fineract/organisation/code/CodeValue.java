@@ -18,17 +18,17 @@
  */
 package org.apache.fineract.organisation.code;
 
-import org.apache.fineract.organisation.parent.AbstractPersistableCustom;
-
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.Table;
 import javax.persistence.UniqueConstraint;
+import org.apache.fineract.organisation.parent.AbstractPersistableCustom;
 
 @Entity
-@Table(name = "m_code_value", uniqueConstraints = { @UniqueConstraint(columnNames = { "code_id", "code_value" }, name = "code_value_duplicate") })
+@Table(name = "m_code_value", uniqueConstraints = {
+        @UniqueConstraint(columnNames = { "code_id", "code_value" }, name = "code_value_duplicate") })
 public class CodeValue extends AbstractPersistableCustom<Long> {
 
     @Column(name = "code_value", length = 100)
@@ -46,7 +46,7 @@ public class CodeValue extends AbstractPersistableCustom<Long> {
 
     @Column(name = "is_active")
     private boolean isActive;
-    
+
     @Column(name = "is_mandatory")
     private boolean mandatory;
 

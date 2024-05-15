@@ -2,8 +2,8 @@ package org.apache.fineract.operations;
 
 import java.util.List;
 
-
 public class TransactionRequestDetail {
+
     private TransactionRequest transactionRequest;
     private List<Task> tasks;
     private List<Variable> variables;

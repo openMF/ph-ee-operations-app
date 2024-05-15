@@ -18,11 +18,10 @@
  */
 package org.apache.fineract.organisation.group;
 
-import org.apache.fineract.organisation.parent.AbstractPersistableCustom;
-
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Table;
+import org.apache.fineract.organisation.parent.AbstractPersistableCustom;
 
 @Entity
 @Table(name = "m_group_level")
@@ -40,8 +39,7 @@ public class GroupLevel extends AbstractPersistableCustom<Long> {
     @Column(name = "recursable", nullable = false)
     private boolean recursable;
 
-    public GroupLevel() {
-    }
+    public GroupLevel() {}
 
     public Long getParentId() {
         return parentId;

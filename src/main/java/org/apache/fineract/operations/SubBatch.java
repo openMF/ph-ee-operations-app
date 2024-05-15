@@ -1,6 +1,7 @@
 package org.apache.fineract.operations;
 
 public class SubBatch {
+
     private String subBatchId;
     private String payerFSP;
     private String payeeFSPSet;

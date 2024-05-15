@@ -18,7 +18,13 @@
  */
 package org.apache.fineract.core.service;
 
+import static org.apache.fineract.config.ResourceServerConfig.IDENTITY_PROVIDER_RESOURCE_ID;
+
 import com.googlecode.flyway.core.Flyway;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import javax.annotation.PostConstruct;
 import org.apache.fineract.organisation.tenant.TenantServerConnection;
 import org.apache.fineract.organisation.tenant.TenantServerConnectionRepository;
 import org.slf4j.Logger;
@@ -26,13 +32,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
-
-import javax.annotation.PostConstruct;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
-import static org.apache.fineract.config.ResourceServerConfig.IDENTITY_PROVIDER_RESOURCE_ID;
 
 @Service
 public class TenantDatabaseUpgradeService {
@@ -104,7 +103,9 @@ public class TenantDatabaseUpgradeService {
                     placeholders.put("userRefreshTokenValidity", userTokenRefreshValiditySeconds);
                     placeholders.put("clientAccessTokenValidity", clientAccessTokenValidity);
                     placeholders.put("channelClientSecret", channelClientSecret);
-                    placeholders.put("identityProviderResourceId", IDENTITY_PROVIDER_RESOURCE_ID); // add identity provider as aud claim
+                    placeholders.put("identityProviderResourceId", IDENTITY_PROVIDER_RESOURCE_ID); // add identity
+                                                                                                   // provider as aud
+                                                                                                   // claim
                     fw.setPlaceholders(placeholders);
                     fw.migrate();
                 } catch (Exception e) {
@@ -117,9 +118,9 @@ public class TenantDatabaseUpgradeService {
     }
 
     private void insertTenants() {
-        for(String tenant : tenants) {
+        for (String tenant : tenants) {
             TenantServerConnection existingTenant = repository.findOneBySchemaName(tenant);
-            if(existingTenant == null) {
+            if (existingTenant == null) {
                 TenantServerConnection tenantServerConnection = new TenantServerConnection();
                 tenantServerConnection.setSchemaName(tenant);
                 tenantServerConnection.setSchemaServer(hostname);

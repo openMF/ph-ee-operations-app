@@ -21,7 +21,6 @@ package org.apache.fineract.organisation.group;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 
-
 public interface GroupRoleRepository extends JpaRepository<GroupRole, Long>, JpaSpecificationExecutor<GroupRole> {
 
 }

@@ -18,8 +18,9 @@
  */
 package org.apache.fineract.organisation.office;
 
-import org.apache.fineract.organisation.parent.AbstractPersistableCustom;
-
+import java.util.Date;
+import java.util.LinkedList;
+import java.util.List;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
@@ -29,9 +30,7 @@ import javax.persistence.OneToMany;
 import javax.persistence.Table;
 import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
-import java.util.Date;
-import java.util.LinkedList;
-import java.util.List;
+import org.apache.fineract.organisation.parent.AbstractPersistableCustom;
 
 @Entity
 @Table(name = "m_office")

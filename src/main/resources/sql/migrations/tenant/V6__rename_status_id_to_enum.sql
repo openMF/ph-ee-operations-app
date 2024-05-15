@@ -19,4 +19,3 @@
 
 
 ALTER TABLE m_group CHANGE COLUMN `status_id` `status_enum` INT(5) NOT NULL DEFAULT '300'  ;
-

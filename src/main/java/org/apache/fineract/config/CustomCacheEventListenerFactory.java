@@ -1,9 +1,8 @@
 package org.apache.fineract.config;
 
+import java.util.Properties;
 import net.sf.ehcache.event.CacheEventListener;
 import net.sf.ehcache.event.CacheEventListenerFactory;
-
-import java.util.Properties;
 
 public class CustomCacheEventListenerFactory extends CacheEventListenerFactory {
 

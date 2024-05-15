@@ -2,8 +2,8 @@ package org.apache.fineract.operations;
 
 import java.util.List;
 
-
 public class TransferDetail {
+
     private Transfer transfer;
     private List<Task> tasks;
     private List<Variable> variables;

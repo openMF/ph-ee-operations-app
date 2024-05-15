@@ -1,12 +1,11 @@
 package org.apache.fineract.response;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
-import lombok.Getter;
-import lombok.Setter;
-
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.Set;
+import lombok.Getter;
+import lombok.Setter;
 
 @Getter
 @Setter

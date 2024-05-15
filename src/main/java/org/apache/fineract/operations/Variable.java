@@ -1,16 +1,14 @@
 package org.apache.fineract.operations;
 
-
 import com.fasterxml.jackson.annotation.JsonBackReference;
-import org.apache.fineract.organisation.parent.AbstractPersistableCustom;
-import org.eclipse.persistence.annotations.Index;
-
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.JoinColumn;
 import javax.persistence.Lob;
 import javax.persistence.ManyToOne;
 import javax.persistence.Table;
+import org.apache.fineract.organisation.parent.AbstractPersistableCustom;
+import org.eclipse.persistence.annotations.Index;
 
 @Entity
 @Table(name = "variables")
@@ -33,8 +31,7 @@ public class Variable extends AbstractPersistableCustom<Long> {
     @Column(name = "VALUE")
     private String value;
 
-    @JoinColumn(name = "WORKFLOW_INSTANCE_KEY", insertable=false, updatable=false,
-            referencedColumnName = "WORKFLOW_INSTANCE_KEY")
+    @JoinColumn(name = "WORKFLOW_INSTANCE_KEY", insertable = false, updatable = false, referencedColumnName = "WORKFLOW_INSTANCE_KEY")
     @ManyToOne()
     private TransactionRequest transactionRequest;
 

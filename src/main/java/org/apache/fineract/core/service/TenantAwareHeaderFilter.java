@@ -18,20 +18,18 @@
  */
 package org.apache.fineract.core.service;
 
+import java.io.IOException;
+import javax.servlet.FilterChain;
+import javax.servlet.ServletRequest;
+import javax.servlet.ServletResponse;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 import org.apache.commons.lang3.time.StopWatch;
 import org.apache.fineract.organisation.tenant.TenantServerConnectionRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.filter.GenericFilterBean;
-
-import javax.servlet.FilterChain;
-import javax.servlet.ServletRequest;
-import javax.servlet.ServletResponse;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import java.io.IOException;
-
 
 public class TenantAwareHeaderFilter extends GenericFilterBean {
 
@@ -53,16 +51,16 @@ public class TenantAwareHeaderFilter extends GenericFilterBean {
         task.start();
 
         try {
-            if(!EXCLUDED_URL.equals(request.getServletPath()) &&
-                    !request.getServletPath().contains("swagger") && !request.getServletPath().contains("api-docs") && !request.getServletPath().contains("actuator") ) {
+            if (!EXCLUDED_URL.equals(request.getServletPath()) && !request.getServletPath().contains("swagger")
+                    && !request.getServletPath().contains("api-docs") && !request.getServletPath().contains("actuator")) {
                 String tenantIdentifier = request.getHeader(TENANT_IDENTIFIER_REQUEST_HEADER);
                 if (tenantIdentifier == null || tenantIdentifier.length() < 1) {
                     tenantIdentifier = request.getParameter(TENANT_IDENTIFIER_REQUEST_PARAM);
                 }
 
                 if (tenantIdentifier == null || tenantIdentifier.length() < 1) {
-                    throw new RuntimeException(
-                            String.format("No tenant identifier found! Add request header: %s or request param: %s", TENANT_IDENTIFIER_REQUEST_HEADER, TENANT_IDENTIFIER_REQUEST_PARAM));
+                    throw new RuntimeException(String.format("No tenant identifier found! Add request header: %s or request param: %s",
+                            TENANT_IDENTIFIER_REQUEST_HEADER, TENANT_IDENTIFIER_REQUEST_PARAM));
                 }
 
                 ThreadLocalContextUtil.setTenant(this.repository.findOneBySchemaName(tenantIdentifier));

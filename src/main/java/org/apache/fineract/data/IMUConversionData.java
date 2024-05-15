@@ -1,13 +1,13 @@
 package org.apache.fineract.data;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
-
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.Date;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class IMUConversionData {
+
     private String lockKey;
     private String from;
     private String to;
@@ -19,8 +19,7 @@ public class IMUConversionData {
     private String errorMessage;
     private Date expireBy;
 
-    public IMUConversionData() {
-    }
+    public IMUConversionData() {}
 
     public String getFrom() {
         return from;
@@ -43,8 +42,7 @@ public class IMUConversionData {
     }
 
     public void setAmount(BigDecimal amount) {
-        if(amount != null)
-            amount = amount.setScale(2, RoundingMode.HALF_UP);
+        if (amount != null) amount = amount.setScale(2, RoundingMode.HALF_UP);
         this.amount = amount;
     }
 
@@ -53,8 +51,7 @@ public class IMUConversionData {
     }
 
     public void setRate(BigDecimal rate) {
-        if(rate != null)
-            rate = rate.setScale(2, RoundingMode.HALF_UP);
+        if (rate != null) rate = rate.setScale(2, RoundingMode.HALF_UP);
         this.rate = rate;
     }
 
@@ -63,8 +60,7 @@ public class IMUConversionData {
     }
 
     public void setConvertedAmount(BigDecimal convertedAmount) {
-        if(convertedAmount != null)
-            convertedAmount = convertedAmount.setScale(2, RoundingMode.HALF_UP);
+        if (convertedAmount != null) convertedAmount = convertedAmount.setScale(2, RoundingMode.HALF_UP);
         this.convertedAmount = convertedAmount;
     }
 

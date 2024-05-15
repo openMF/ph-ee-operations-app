@@ -1,5 +1,8 @@
 package org.apache.fineract.config;
 
+import java.util.HashMap;
+import java.util.Map;
+import javax.sql.DataSource;
 import org.eclipse.persistence.config.PersistenceUnitProperties;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -16,10 +19,6 @@ import org.springframework.orm.jpa.vendor.EclipseLinkJpaVendorAdapter;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
 import org.springframework.transaction.jta.JtaTransactionManager;
 
-import javax.sql.DataSource;
-import java.util.HashMap;
-import java.util.Map;
-
 @Configuration
 @EntityScan(basePackages = "org.apache.fineract")
 @EnableJpaRepositories(basePackages = "org.apache.fineract")
@@ -28,8 +27,10 @@ public class EclipselinkJpaConfig extends JpaBaseConfiguration {
 
     private Logger logger = LoggerFactory.getLogger(this.getClass());
 
-    public EclipselinkJpaConfig(DataSource routingDataSource, JpaProperties properties, ObjectProvider<JtaTransactionManager> jtaTransactionManager, ObjectProvider<TransactionManagerCustomizers> transactionManagerCustomizers) {
-        super(routingDataSource, properties, jtaTransactionManager, transactionManagerCustomizers);
+    public EclipselinkJpaConfig(DataSource routingDataSource, JpaProperties properties,
+            ObjectProvider<JtaTransactionManager> jtaTransactionManager,
+            ObjectProvider<TransactionManagerCustomizers> transactionManagerCustomizers) {
+        super(routingDataSource, properties, jtaTransactionManager);
     }
 
     @Override

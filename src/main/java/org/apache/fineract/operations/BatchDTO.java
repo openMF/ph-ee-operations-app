@@ -1,12 +1,10 @@
 package org.apache.fineract.operations;
 
+import java.math.BigDecimal;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import lombok.ToString;
-
-import java.math.BigDecimal;
 
 @Getter
 @Setter
@@ -56,10 +54,10 @@ public class BatchDTO {
 
     private String correlationId;
 
-    public BatchDTO(String batchId, String requestId, Long totalTransactions, Long ongoing, Long failed,
-                    Long completed, BigDecimal total_amount, BigDecimal completed_amount, BigDecimal ongoing_amount,
-                    BigDecimal failed_amount, String result_file, String note, String failPercentage,
-                    String successPercentage, String registeringInstitutionId, String payerFsp, String correlationId) {
+    public BatchDTO(String batchId, String requestId, Long totalTransactions, Long ongoing, Long failed, Long completed,
+            BigDecimal total_amount, BigDecimal completed_amount, BigDecimal ongoing_amount, BigDecimal failed_amount, String result_file,
+            String note, String failPercentage, String successPercentage, String registeringInstitutionId, String payerFsp,
+            String correlationId) {
         this.batchId = batchId;
         this.requestId = requestId;
         this.total = totalTransactions;

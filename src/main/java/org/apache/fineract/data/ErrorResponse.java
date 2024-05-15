@@ -5,9 +5,8 @@ import java.util.HashMap;
 public class ErrorResponse extends HashMap<String, String> {
 
     private enum Key {
-        ERRORCODE("errorCode"),
-        ERRORDESCRIPTION("errorDescription"),
-        DEVELOPERMESSAGE("developerMessage");
+
+        ERRORCODE("errorCode"), ERRORDESCRIPTION("errorDescription"), DEVELOPERMESSAGE("developerMessage");
 
         private final String text;
 
@@ -17,6 +16,7 @@ public class ErrorResponse extends HashMap<String, String> {
     }
 
     public static class Builder {
+
         ErrorResponse res = new ErrorResponse();
 
         public Builder setErrorCode(String errorCode) {
@@ -35,10 +35,10 @@ public class ErrorResponse extends HashMap<String, String> {
         }
 
         public ErrorResponse build() {
-            if(!res.containsKey(Key.ERRORCODE.text)) {
+            if (!res.containsKey(Key.ERRORCODE.text)) {
                 setErrorCode("");
             }
-            if(!res.containsKey(Key.ERRORDESCRIPTION.text)) {
+            if (!res.containsKey(Key.ERRORDESCRIPTION.text)) {
                 setErrorDescription("");
             }
             if (!res.containsKey(Key.DEVELOPERMESSAGE.text)) {

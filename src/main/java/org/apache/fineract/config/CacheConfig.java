@@ -19,7 +19,7 @@ public class CacheConfig {
 
     @Bean
     @Primary
-    public CacheManager cacheManager()  {
+    public CacheManager cacheManager() {
         CacheConfiguration cacheConfiguration = new CacheConfiguration(CACHE_USER_BY_NAME, 1000);
         cacheConfiguration.timeToLiveSeconds(10);
         CacheConfiguration.CacheEventListenerFactoryConfiguration factory = new CacheConfiguration.CacheEventListenerFactoryConfiguration();

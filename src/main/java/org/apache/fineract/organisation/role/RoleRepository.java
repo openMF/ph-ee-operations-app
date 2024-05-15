@@ -24,8 +24,8 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 public interface RoleRepository extends JpaRepository<Role, Long>, JpaSpecificationExecutor<Role> {
-    
+
     @Query("SELECT role FROM Role role WHERE role.name = :name")
     Role getRoleByName(@Param("name") String name);
-  
+
 }

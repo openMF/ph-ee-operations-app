@@ -18,12 +18,7 @@
  */
 package org.apache.fineract.organisation.staff;
 
-import org.apache.commons.lang3.StringUtils;
-import org.apache.fineract.organisation.document.Image;
-import org.apache.fineract.organisation.office.Office;
-import org.apache.fineract.organisation.parent.AbstractPersistableCustom;
-import org.joda.time.LocalDate;
-
+import java.util.Date;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.JoinColumn;
@@ -32,7 +27,11 @@ import javax.persistence.OneToOne;
 import javax.persistence.Table;
 import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
-import java.util.Date;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.fineract.organisation.document.Image;
+import org.apache.fineract.organisation.office.Office;
+import org.apache.fineract.organisation.parent.AbstractPersistableCustom;
+import org.joda.time.LocalDate;
 
 @Entity
 @Table(name = "m_staff")
@@ -53,7 +52,7 @@ public class Staff extends AbstractPersistableCustom<Long> {
     @Column(name = "external_id", length = 100, nullable = true, unique = true)
     private String externalId;
 
-	@Column(name = "email_address", length = 50, unique = true)
+    @Column(name = "email_address", length = 50, unique = true)
     private String emailAddress;
 
     @ManyToOne
@@ -112,7 +111,6 @@ public class Staff extends AbstractPersistableCustom<Long> {
         this.office = newOffice;
     }
 
-
     public boolean isNotLoanOfficer() {
         return !isLoanOfficer();
     }
@@ -141,7 +139,7 @@ public class Staff extends AbstractPersistableCustom<Long> {
         return getId().equals(staff.getId());
     }
 
-	public String emailAddress() {
+    public String emailAddress() {
         return emailAddress;
     }
 

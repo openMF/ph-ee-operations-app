@@ -1,11 +1,33 @@
 package org.apache.fineract.api;
 
+import static org.apache.fineract.core.service.OperatorUtils.strip;
+
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileWriter;
+import java.math.BigDecimal;
+import java.math.RoundingMode;
+import java.text.DecimalFormat;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Optional;
+import javax.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.fineract.config.PaymentModeConfiguration;
 import org.apache.fineract.file.FileTransferService;
-import org.apache.fineract.operations.*;
+import org.apache.fineract.operations.Batch;
+import org.apache.fineract.operations.BatchDTO;
+import org.apache.fineract.operations.BatchPaginatedResponse;
+import org.apache.fineract.operations.BatchRepository;
+import org.apache.fineract.operations.PaymentBatchDetail;
+import org.apache.fineract.operations.Transfer;
+import org.apache.fineract.operations.TransferRepository;
+import org.apache.fineract.operations.TransferStatus;
+import org.apache.fineract.operations.Variable;
+import org.apache.fineract.operations.VariableRepository;
 import org.apache.fineract.response.BatchAndSubBatchSummaryResponse;
 import org.apache.fineract.response.SubBatchSummary;
 import org.apache.fineract.service.BatchDbService;
@@ -17,33 +39,22 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.util.ObjectUtils;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-import javax.servlet.http.HttpServletResponse;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
-import java.io.BufferedWriter;
-import java.io.File;
-import java.io.FileWriter;
-import java.math.BigDecimal;
-import java.math.RoundingMode;
-import java.text.DecimalFormat;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Optional;
-
-import static org.apache.fineract.core.service.OperatorUtils.strip;
 
 @Slf4j
 @RestController
 @SecurityRequirement(name = "auth")
 @RequestMapping("/api/v1")
 public class BatchApi {
+
     @Autowired
     private TransferRepository transferRepository;
 
@@ -89,25 +100,19 @@ public class BatchApi {
         }
         sortedBy = sortedBy.replace(" ", "");
         log.info("Sorting by: {} and Sorting direction: {}", sortedBy, sortDirection.name());
-        return new Sort(sortDirection, sortedBy);
+        return Sort.by(sortDirection, sortedBy);
     }
 
     @GetMapping("/batches")
-    public BatchPaginatedResponse getBatch(@RequestParam(value = "offset", required = false, defaultValue = "0")
-                                           Integer offset,
-                                           @RequestParam(value = "limit", required = false, defaultValue = "10")
-                                           Integer limit,
-                                           @RequestParam(value = "sort", required = false,
-                                                   defaultValue = "-startedAt") String sort,
-                                           @RequestParam(value = "dateFrom", required = false) String startFrom,
-                                           @RequestParam(value = "dateTo", required = false) String startTo,
-                                           @RequestParam(value = "registeringInstitutionId", required = false,
-                                                   defaultValue = "%") String registeringInstituteId,
-                                           @RequestParam(value = "payerFsp", required = false, defaultValue = "%")
-                                               String payerFsp,
-                                           @RequestParam(value = "batchId", required = false, defaultValue = "%")
-                                               String batchId,
-                                           HttpServletResponse httpServletResponse) {
+    public BatchPaginatedResponse getBatch(@RequestParam(value = "offset", required = false, defaultValue = "0") Integer offset,
+            @RequestParam(value = "limit", required = false, defaultValue = "10") Integer limit,
+            @RequestParam(value = "sort", required = false, defaultValue = "-startedAt") String sort,
+            @RequestParam(value = "dateFrom", required = false) String startFrom,
+            @RequestParam(value = "dateTo", required = false) String startTo,
+            @RequestParam(value = "registeringInstitutionId", required = false, defaultValue = "%") String registeringInstituteId,
+            @RequestParam(value = "payerFsp", required = false, defaultValue = "%") String payerFsp,
+            @RequestParam(value = "batchId", required = false, defaultValue = "%") String batchId,
+            HttpServletResponse httpServletResponse) {
         log.info("Registering Id: {}, PayerFsp: {}, batchId: {}", registeringInstituteId, payerFsp, batchId);
         Sort sortObject = getSortObject(sort);
         int page = Math.floorDiv(offset, limit);
@@ -142,7 +147,7 @@ public class BatchApi {
 
     @GetMapping("/batch")
     public ResponseEntity<Object> batchDetails(@RequestParam(value = "batchId", required = false) String batchId,
-                                               @RequestParam(value = "requestId", required = false) String requestId) {
+            @RequestParam(value = "requestId", required = false) String requestId) {
         Batch batch = batchRepository.findByBatchId(batchId);
 
         if (batch == null) {
@@ -154,8 +159,8 @@ public class BatchApi {
 
     @GetMapping("/batch/{batchId}")
     public ResponseEntity<Object> batchAggregation(@PathVariable(value = "batchId") String batchId,
-                                     @RequestParam(value = "requestId", required = false) String requestId,
-                                     @RequestParam(value = "command", required = false, defaultValue = "aggregate") String command) {
+            @RequestParam(value = "requestId", required = false) String requestId,
+            @RequestParam(value = "command", required = false, defaultValue = "aggregate") String command) {
         Batch batch = batchRepository.findByBatchId(batchId);
 
         if (batch == null) {
@@ -166,12 +171,11 @@ public class BatchApi {
     }
 
     @GetMapping("/batch/detail")
-    public Page<Transfer> batchDetails(HttpServletResponse httpServletResponse,
-                                       @RequestParam(value = "batchId") String batchId,
-                                       @RequestParam(value = "status", defaultValue = "ALL") String status,
-                                       @RequestParam(value = "pageNo", defaultValue = "0") Integer pageNo,
-                                       @RequestParam(value = "pageSize", defaultValue = "10") Integer pageSize,
-                                       @RequestParam(value = "command", required = false, defaultValue = "json") String command) {
+    public Page<Transfer> batchDetails(HttpServletResponse httpServletResponse, @RequestParam(value = "batchId") String batchId,
+            @RequestParam(value = "status", defaultValue = "ALL") String status,
+            @RequestParam(value = "pageNo", defaultValue = "0") Integer pageNo,
+            @RequestParam(value = "pageSize", defaultValue = "10") Integer pageSize,
+            @RequestParam(value = "command", required = false, defaultValue = "json") String command) {
 
         if (command.equalsIgnoreCase("download")) {
             Batch batch = batchRepository.findByBatchId(batchId);
@@ -187,15 +191,14 @@ public class BatchApi {
         Page<Transfer> transfers;
         List<Batch> batchAndSubBatches = batchRepository.findAllByBatchId(batchId);
 
-        if (status.equalsIgnoreCase(TransferStatus.COMPLETED.toString()) ||
-                status.equalsIgnoreCase(TransferStatus.IN_PROGRESS.toString()) ||
-                status.equalsIgnoreCase(TransferStatus.FAILED.toString())) {
-            transfers = transferRepository.findAllByBatchIdAndStatus(batchId, status.toUpperCase(), new PageRequest(pageNo, pageSize));
+        if (status.equalsIgnoreCase(TransferStatus.COMPLETED.toString()) || status.equalsIgnoreCase(TransferStatus.IN_PROGRESS.toString())
+                || status.equalsIgnoreCase(TransferStatus.FAILED.toString())) {
+            transfers = transferRepository.findAllByBatchIdAndStatus(batchId, status.toUpperCase(), PageRequest.of(pageNo, pageSize));
         } else {
-            if(batchAndSubBatches.size()>1){
-                transfers = transferRepository.findAllByBatchIdMatchSubBatchId(batchId, new PageRequest(pageNo, pageSize));
+            if (batchAndSubBatches.size() > 1) {
+                transfers = transferRepository.findAllByBatchIdMatchSubBatchId(batchId, PageRequest.of(pageNo, pageSize));
             } else {
-                transfers = transferRepository.findAllByBatchId(batchId, new PageRequest(pageNo, pageSize));
+                transfers = transferRepository.findAllByBatchId(batchId, PageRequest.of(pageNo, pageSize));
             }
         }
 
@@ -216,21 +219,17 @@ public class BatchApi {
             return null;
         }
     }
-    @GetMapping("/batches/{batchId}")
-    public <T>ResponseEntity<T> getBatchAndSubBatchSummary(@PathVariable String batchId,
-                                                                                      @RequestHeader(name = "X-Correlation-ID") String clientCorrelationId,
-                                                                                      @RequestParam(value = "offset", required = false, defaultValue = "0")
-                                                                                          Integer offset,
-                                                                                      @RequestParam(value = "limit", required = false, defaultValue = "10")
-                                                                                          Integer limit,
-                                                                                      @RequestParam(value = "associations", required = false)
-                                                                                          String associations,
-                                                                                      @RequestParam(value = "orderBy", required = false, defaultValue = "instructionId")
-                                                                                          String orderBy,
-                                                                                      @RequestParam(value = "sortBy", required = false, defaultValue = "asc")
-                                                                                          String sortBy){
 
-        if (associations!=null && associations.equals("all")) {
+    @GetMapping("/batches/{batchId}")
+    public <T> ResponseEntity<T> getBatchAndSubBatchSummary(@PathVariable String batchId,
+            @RequestHeader(name = "X-Correlation-ID") String clientCorrelationId,
+            @RequestParam(value = "offset", required = false, defaultValue = "0") Integer offset,
+            @RequestParam(value = "limit", required = false, defaultValue = "10") Integer limit,
+            @RequestParam(value = "associations", required = false) String associations,
+            @RequestParam(value = "orderBy", required = false, defaultValue = "instructionId") String orderBy,
+            @RequestParam(value = "sortBy", required = false, defaultValue = "asc") String sortBy) {
+
+        if (associations != null && associations.equals("all")) {
             PaymentBatchDetail response = batchService.getPaymentBathDetail(batchId, clientCorrelationId, offset, limit, orderBy, sortBy);
             if (ObjectUtils.isEmpty(response)) {
                 return new ResponseEntity<>(HttpStatus.NOT_FOUND);
@@ -248,19 +247,17 @@ public class BatchApi {
             return (ResponseEntity<T>) new ResponseEntity<>(response, HttpStatus.OK);
         }
     }
-    @GetMapping("/batches/{batchId}/subBatches/{subBatchId}")
-    public <T>ResponseEntity<T> getSubBatchPaymentDetail(@PathVariable String batchId, @PathVariable String subBatchId,
-                                                           @RequestHeader(name = "X-Correlation-ID") String clientCorrelationId,
-                                                           @RequestParam(value = "offset", required = false, defaultValue = "0")
-                                                           Integer offset,
-                                                           @RequestParam(value = "limit", required = false, defaultValue = "10")
-                                                           Integer limit,
-                                                         @RequestParam(value = "orderBy", required = false, defaultValue = "instructionId")
-                                                             String orderBy,
-                                                         @RequestParam(value = "sortBy", required = false, defaultValue = "asc")
-                                                             String sortBy){
 
-        SubBatchSummary response = batchService.getPaymentSubBatchDetail(batchId, subBatchId, clientCorrelationId, offset, limit, orderBy, sortBy);
+    @GetMapping("/batches/{batchId}/subBatches/{subBatchId}")
+    public <T> ResponseEntity<T> getSubBatchPaymentDetail(@PathVariable String batchId, @PathVariable String subBatchId,
+            @RequestHeader(name = "X-Correlation-ID") String clientCorrelationId,
+            @RequestParam(value = "offset", required = false, defaultValue = "0") Integer offset,
+            @RequestParam(value = "limit", required = false, defaultValue = "10") Integer limit,
+            @RequestParam(value = "orderBy", required = false, defaultValue = "instructionId") String orderBy,
+            @RequestParam(value = "sortBy", required = false, defaultValue = "asc") String sortBy) {
+
+        SubBatchSummary response = batchService.getPaymentSubBatchDetail(batchId, subBatchId, clientCorrelationId, offset, limit, orderBy,
+                sortBy);
 
         if (ObjectUtils.isEmpty(response)) {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
@@ -268,9 +265,9 @@ public class BatchApi {
 
         return (ResponseEntity<T>) new ResponseEntity<>(response, HttpStatus.OK);
     }
-    private void saveBatch(Batch batch,Long completed,Long ongoing,Long failed,
-                           Long totalTransfers,Long totalAmount,Long totalCompletedAmount,
-                           Long totalOngoingAmount,Long totalFailedAmount){
+
+    private void saveBatch(Batch batch, Long completed, Long ongoing, Long failed, Long totalTransfers, Long totalAmount,
+            Long totalCompletedAmount, Long totalOngoingAmount, Long totalFailedAmount) {
         batch.setCompleted(completed);
         batch.setFailed(failed);
         batch.setResultGeneratedAt(new Date());
@@ -282,22 +279,22 @@ public class BatchApi {
         batch.setFailedAmount(totalFailedAmount);
         batchRepository.save(batch);
     }
-    private BatchDTO getBatchSummary(Batch batch,String modes) {
+
+    private BatchDTO getBatchSummary(Batch batch, String modes) {
         Double batchCompletedPercent = 0.0;
         Double batchFailedPercent = 0.0;
-        if (batch.getCompleted() != null){
+        if (batch.getCompleted() != null) {
             batchCompletedPercent = (double) batch.getCompleted() / batch.getTotalTransactions() * 100;
         }
-        if(batch.getFailed() != null){
+        if (batch.getFailed() != null) {
             batchFailedPercent = (double) batch.getFailed() / batch.getTotalTransactions() * 100;
         }
 
-        BatchDTO response = new BatchDTO(batch.getBatchId(),
-                batch.getRequestId(), batch.getTotalTransactions(), batch.getOngoing(),
-                batch.getFailed(), batch.getCompleted(),BigDecimal.valueOf(batch.getTotalAmount()),BigDecimal.valueOf(batch.getCompletedAmount()),
-                BigDecimal.valueOf(batch.getOngoingAmount()), BigDecimal.valueOf(batch.getFailedAmount()), batch.getResult_file(), batch.getNote(),
-                batchFailedPercent.toString(),batchCompletedPercent.toString(), batch.getRegisteringInstitutionId(),
-                batch.getPayerFsp(), batch.getCorrelationId());
+        BatchDTO response = new BatchDTO(batch.getBatchId(), batch.getRequestId(), batch.getTotalTransactions(), batch.getOngoing(),
+                batch.getFailed(), batch.getCompleted(), BigDecimal.valueOf(batch.getTotalAmount()),
+                BigDecimal.valueOf(batch.getCompletedAmount()), BigDecimal.valueOf(batch.getOngoingAmount()),
+                BigDecimal.valueOf(batch.getFailedAmount()), batch.getResult_file(), batch.getNote(), batchFailedPercent.toString(),
+                batchCompletedPercent.toString(), batch.getRegisteringInstitutionId(), batch.getPayerFsp(), batch.getCorrelationId());
 
         response.setCreatedAt("" + batch.getStartedAt());
         response.setModes(modes);
@@ -316,6 +313,7 @@ public class BatchApi {
 
         return response;
     }
+
     private void evaluateBatchSummary(Batch batch) {
         Long completed = 0L;
         Long failed = 0L;
@@ -326,47 +324,48 @@ public class BatchApi {
         BigDecimal ongoingAmount = BigDecimal.ZERO;
         BigDecimal failedAmount = BigDecimal.ZERO;
         List<Transfer> transfers = null;
-        if(batch.getSubBatchId()!=null){
+        if (batch.getSubBatchId() != null) {
             transfers = transferRepository.findAllByBatchId(batch.getSubBatchId());
-        }else{
+        } else {
             transfers = transferRepository.findAllByBatchId(batch.getBatchId());
         }
 
-            for (Transfer transfer : transfers) {
-                Optional<Variable> variable = variableRepository.findByWorkflowInstanceKeyAndVariableName("paymentMode",
-                        transfer.getWorkflowInstanceKey());
-                if (variable.isPresent()) {
-                    // this will prevent 2x count of variables by eliminating data from transfers table
-                    if (paymentModeConfig.getByMode(strip(variable.get().getValue()))
-                            .getType().equalsIgnoreCase("BATCH")) {
-                        continue;
-                    }
-                }
-                total++;
-                BigDecimal amount = transfer.getAmount();
-                totalAmount = totalAmount.add(amount);
-                if (transfer.getStatus().equals(TransferStatus.COMPLETED)) {
-                    completed++;
-                    completedAmount = completedAmount.add(amount);
-                } else if (transfer.getStatus().equals(TransferStatus.FAILED)) {
-                    failed++;
-                    failedAmount = failedAmount.add(amount);
-                } else if (transfer.getStatus().equals(TransferStatus.IN_PROGRESS)) {
-                    if (transfer.getCompletedAt() == null || transfer.getCompletedAt().toString().isEmpty()) {
-                        ongoing++;
-                        ongoingAmount = ongoingAmount.add(amount);
-                    } else {
-                        completed++;
-                        completedAmount = completedAmount.add(amount);
-                    }
+        for (Transfer transfer : transfers) {
+            Optional<Variable> variable = variableRepository.findByWorkflowInstanceKeyAndVariableName("paymentMode",
+                    transfer.getWorkflowInstanceKey());
+            if (variable.isPresent()) {
+                // this will prevent 2x count of variables by eliminating data from transfers table
+                if (paymentModeConfig.getByMode(strip(variable.get().getValue())).getType().equalsIgnoreCase("BATCH")) {
+                    continue;
                 }
             }
+            total++;
+            BigDecimal amount = transfer.getAmount();
+            totalAmount = totalAmount.add(amount);
+            if (transfer.getStatus().equals(TransferStatus.COMPLETED)) {
+                completed++;
+                completedAmount = completedAmount.add(amount);
+            } else if (transfer.getStatus().equals(TransferStatus.FAILED)) {
+                failed++;
+                failedAmount = failedAmount.add(amount);
+            } else if (transfer.getStatus().equals(TransferStatus.IN_PROGRESS)) {
+                if (transfer.getCompletedAt() == null || transfer.getCompletedAt().toString().isEmpty()) {
+                    ongoing++;
+                    ongoingAmount = ongoingAmount.add(amount);
+                } else {
+                    completed++;
+                    completedAmount = completedAmount.add(amount);
+                }
+            }
+        }
         if (batch.getResult_file() == null || (batch.getResult_file() != null && batch.getResult_file().isEmpty())) {
             batch.setResult_file(createDetailsFile(transfers));
         }
-        saveBatch(batch, completed, ongoing, failed, total, totalAmount.longValue(), completedAmount.longValue(), ongoingAmount.longValue(), failedAmount.longValue());
+        saveBatch(batch, completed, ongoing, failed, total, totalAmount.longValue(), completedAmount.longValue(), ongoingAmount.longValue(),
+                failedAmount.longValue());
     }
-    private Batch getParentBatchSummary(List<Batch> batches){
+
+    private Batch getParentBatchSummary(List<Batch> batches) {
         StringBuilder modes = new StringBuilder();
 
         Long subBatchFailed = 0L;
@@ -408,15 +407,16 @@ public class BatchApi {
                 totalAmount = totalAmount.add(BigDecimal.valueOf(bt.getTotalAmount()));
             }
         }
-        saveBatch(parentBatch,subBatchCompleted,subBatchOngoing,subBatchFailed,subBatchTotal,
-                totalAmount.longValue(),completedAmount.longValue(),ongoingAmount.longValue(),failedAmount.longValue());
-        return  parentBatch;
+        saveBatch(parentBatch, subBatchCompleted, subBatchOngoing, subBatchFailed, subBatchTotal, totalAmount.longValue(),
+                completedAmount.longValue(), ongoingAmount.longValue(), failedAmount.longValue());
+        return parentBatch;
     }
-    private BatchDTO generateDetails(Batch batch){
+
+    private BatchDTO generateDetails(Batch batch) {
 
         StringBuilder modes = new StringBuilder();
         List<Batch> batches = batchRepository.findAllByBatchId(batch.getBatchId());
-        for (Batch subBatch:batches){
+        for (Batch subBatch : batches) {
             if (subBatch.getPaymentMode() != null && !modes.toString().contains(subBatch.getPaymentMode())) {
                 if (!modes.toString().equals("")) {
                     modes.append(",");
@@ -426,12 +426,11 @@ public class BatchApi {
             evaluateBatchSummary(subBatch);
         }
         Batch parentBatchSummary = null;
-        if(batches.size()==1){
+        if (batches.size() == 1) {
             parentBatchSummary = batch;
-        }else{
+        } else {
             parentBatchSummary = getParentBatchSummary(batches);
         }
-
 
         return getBatchSummary(parentBatchSummary, modes.toString());
     }
@@ -439,9 +438,7 @@ public class BatchApi {
     private String createDetailsFile(List<Transfer> transfers) {
         String CSV_SEPARATOR = ",";
         File tempFile = new File(System.currentTimeMillis() + "_response.csv");
-        try (
-                FileWriter writer = new FileWriter(tempFile.getName());
-                BufferedWriter bw = new BufferedWriter(writer)) {
+        try (FileWriter writer = new FileWriter(tempFile.getName()); BufferedWriter bw = new BufferedWriter(writer)) {
             for (Transfer transfer : transfers) {
                 StringBuffer oneLine = new StringBuffer();
                 oneLine.append(transfer.getTransactionId());
@@ -481,7 +478,7 @@ public class BatchApi {
         double batchFailedPercent = 0;
         double batchCompletedPercent = 0;
 
-        if(batch.getTotalTransactions() != null){
+        if (batch.getTotalTransactions() != null) {
             batchFailedPercent = ((double) batch.getFailed()) / batch.getTotalTransactions() * 100;
             batchCompletedPercent = ((double) batch.getCompleted()) / batch.getTotalTransactions() * 100;
         }
@@ -496,20 +493,15 @@ public class BatchApi {
 
         Long nullValue = 0L;
 
-        BatchDTO batchDTO = new BatchDTO(batch.getBatchId(),
-                batch.getRequestId(), batch.getTotalTransactions(), batch.getOngoing(),
-                batch.getFailed(), batch.getCompleted(),
-                BigDecimal.valueOf(totalAmount.orElse(nullValue)),
-                BigDecimal.valueOf(completedAmount.orElse(nullValue)),
-                BigDecimal.valueOf(ongoingAmount.orElse(nullValue)),
-                BigDecimal.valueOf(failedAmount.orElse(nullValue)),
-                batch.getResult_file(), batch.getNote(),
-                decimalFormat.format(batchFailedPercent), decimalFormat.format(batchCompletedPercent),
-                batch.getRegisteringInstitutionId(), batch.getPayerFsp(), batch.getCorrelationId());
+        BatchDTO batchDTO = new BatchDTO(batch.getBatchId(), batch.getRequestId(), batch.getTotalTransactions(), batch.getOngoing(),
+                batch.getFailed(), batch.getCompleted(), BigDecimal.valueOf(totalAmount.orElse(nullValue)),
+                BigDecimal.valueOf(completedAmount.orElse(nullValue)), BigDecimal.valueOf(ongoingAmount.orElse(nullValue)),
+                BigDecimal.valueOf(failedAmount.orElse(nullValue)), batch.getResult_file(), batch.getNote(),
+                decimalFormat.format(batchFailedPercent), decimalFormat.format(batchCompletedPercent), batch.getRegisteringInstitutionId(),
+                batch.getPayerFsp(), batch.getCorrelationId());
 
-        if (batch.getTotalTransactions() != null &&
-                batch.getCompleted() != null &&
-                batch.getTotalTransactions().longValue() == batch.getCompleted().longValue()) {
+        if (batch.getTotalTransactions() != null && batch.getCompleted() != null
+                && batch.getTotalTransactions().longValue() == batch.getCompleted().longValue()) {
             batchDTO.setStatus("COMPLETED");
         } else if (batch.getOngoing() != null && batch.getOngoing() != 0 && batch.getCompletedAt() == null) {
             batchDTO.setStatus("Pending");

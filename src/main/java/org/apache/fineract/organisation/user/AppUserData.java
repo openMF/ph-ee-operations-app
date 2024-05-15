@@ -18,13 +18,11 @@
  */
 package org.apache.fineract.organisation.user;
 
+import java.util.Collection;
+import java.util.Objects;
 import org.apache.fineract.organisation.office.OfficeData;
 import org.apache.fineract.organisation.role.RoleData;
 import org.apache.fineract.organisation.staff.StaffData;
-
-import java.util.Collection;
-import java.util.Objects;
-
 
 public class AppUserData {
 
@@ -42,8 +40,10 @@ public class AppUserData {
     private StaffData staff;
 
     public AppUserData() {}
-    
-    public AppUserData(Long id, String username, Long officeId, String officeName, String firstname, String lastname, String email, Boolean passwordNeverExpires, Collection<OfficeData> allowedOffices, Collection<RoleData> availableRoles, Collection<RoleData> selectedRoles, StaffData staff) {
+
+    public AppUserData(Long id, String username, Long officeId, String officeName, String firstname, String lastname, String email,
+            Boolean passwordNeverExpires, Collection<OfficeData> allowedOffices, Collection<RoleData> availableRoles,
+            Collection<RoleData> selectedRoles, StaffData staff) {
         this.id = id;
         this.username = username;
         this.officeId = officeId;
@@ -159,22 +159,17 @@ public class AppUserData {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         AppUserData that = (AppUserData) o;
-        return Objects.equals(id, that.id) &&
-                Objects.equals(username, that.username) &&
-                Objects.equals(officeId, that.officeId) &&
-                Objects.equals(officeName, that.officeName) &&
-                Objects.equals(firstname, that.firstname) &&
-                Objects.equals(lastname, that.lastname) &&
-                Objects.equals(email, that.email) &&
-                Objects.equals(passwordNeverExpires, that.passwordNeverExpires) &&
-                Objects.equals(allowedOffices, that.allowedOffices) &&
-                Objects.equals(availableRoles, that.availableRoles) &&
-                Objects.equals(selectedRoles, that.selectedRoles) &&
-                Objects.equals(staff, that.staff);
+        return Objects.equals(id, that.id) && Objects.equals(username, that.username) && Objects.equals(officeId, that.officeId)
+                && Objects.equals(officeName, that.officeName) && Objects.equals(firstname, that.firstname)
+                && Objects.equals(lastname, that.lastname) && Objects.equals(email, that.email)
+                && Objects.equals(passwordNeverExpires, that.passwordNeverExpires) && Objects.equals(allowedOffices, that.allowedOffices)
+                && Objects.equals(availableRoles, that.availableRoles) && Objects.equals(selectedRoles, that.selectedRoles)
+                && Objects.equals(staff, that.staff);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(id, username, officeId, officeName, firstname, lastname, email, passwordNeverExpires, allowedOffices, availableRoles, selectedRoles, staff);
+        return Objects.hash(id, username, officeId, officeName, firstname, lastname, email, passwordNeverExpires, allowedOffices,
+                availableRoles, selectedRoles, staff);
     }
 }

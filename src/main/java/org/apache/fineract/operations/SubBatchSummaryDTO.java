@@ -4,6 +4,7 @@ import java.util.Date;
 import java.util.List;
 
 public class SubBatchSummaryDTO {
+
     private String batchId;
     private String xCorrelationId;
     private String payerFSP;

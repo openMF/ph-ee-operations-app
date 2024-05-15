@@ -19,17 +19,16 @@
 package org.apache.fineract.organisation.permission;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import org.apache.fineract.organisation.parent.AbstractPersistableCustom;
-import org.apache.fineract.organisation.role.Role;
-
+import java.util.Collection;
+import java.util.Objects;
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
 import javax.persistence.ManyToMany;
 import javax.persistence.Table;
-import java.util.Collection;
-import java.util.Objects;
+import org.apache.fineract.organisation.parent.AbstractPersistableCustom;
+import org.apache.fineract.organisation.role.Role;
 
 @Entity
 @Table(name = "m_permission")
@@ -50,11 +49,11 @@ public class Permission extends AbstractPersistableCustom<Long> {
     @Column(name = "can_maker_checker", nullable = false)
     private boolean canMakerChecker;
 
-    @ManyToMany(fetch = FetchType.LAZY, mappedBy = "permissions", cascade = {CascadeType.REFRESH, CascadeType.DETACH, CascadeType.PERSIST, CascadeType.MERGE})
+    @ManyToMany(fetch = FetchType.LAZY, mappedBy = "permissions", cascade = { CascadeType.REFRESH, CascadeType.DETACH, CascadeType.PERSIST,
+            CascadeType.MERGE })
     private Collection<Role> roles;
 
-    public Permission() {
-    }
+    public Permission() {}
 
     @JsonIgnore
     public Collection<Role> getRoles() {

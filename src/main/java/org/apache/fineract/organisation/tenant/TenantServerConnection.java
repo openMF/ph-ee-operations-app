@@ -18,12 +18,10 @@
  */
 package org.apache.fineract.organisation.tenant;
 
-
-import org.apache.fineract.organisation.parent.AbstractPersistableCustom;
-
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Table;
+import org.apache.fineract.organisation.parent.AbstractPersistableCustom;
 
 @Entity
 @Table(name = "tenant_server_connections")

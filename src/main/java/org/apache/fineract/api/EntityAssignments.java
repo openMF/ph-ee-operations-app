@@ -6,8 +6,7 @@ public class EntityAssignments {
 
     private List<Long> entityIds;
 
-    public EntityAssignments() {
-    }
+    public EntityAssignments() {}
 
     public List<Long> getEntityIds() {
         return entityIds;

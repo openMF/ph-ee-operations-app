@@ -1,14 +1,14 @@
 package org.apache.fineract.operations;
 
-import lombok.Getter;
-import lombok.Setter;
-
 import java.math.BigDecimal;
 import java.util.Date;
+import lombok.Getter;
+import lombok.Setter;
 
 @Getter
 @Setter
 public class Instruction {
+
     private String instructionId;
     private String payerFsp;
     private String payeeFunctionalId;

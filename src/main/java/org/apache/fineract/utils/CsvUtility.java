@@ -1,16 +1,15 @@
 package org.apache.fineract.utils;
 
-import org.apache.fineract.data.ErrorCode;
-import org.apache.fineract.exception.WriteToCsvException;
+import static org.apache.fineract.utils.CsvWriter.performErrorProneTask;
 
-import javax.servlet.http.HttpServletResponse;
 import java.io.PrintWriter;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
-
-import static org.apache.fineract.utils.CsvWriter.performErrorProneTask;
+import javax.servlet.http.HttpServletResponse;
+import org.apache.fineract.data.ErrorCode;
+import org.apache.fineract.exception.WriteToCsvException;
 
 public class CsvUtility {
 
@@ -24,19 +23,13 @@ public class CsvUtility {
         response.setHeader(headerKey, headerValue);
 
         PrintWriter printWriter = performErrorProneTask(
-                new WriteToCsvException(
-                        ErrorCode.CSV_GET_WRITER,
-                        "Unable get writer from HttpServletResponse"),
-                response::getWriter) ;
+                new WriteToCsvException(ErrorCode.CSV_GET_WRITER, "Unable get writer from HttpServletResponse"), response::getWriter);
 
-        //System.out.println("Print writer fetch success");
+        // System.out.println("Print writer fetch success");
 
-        CsvWriter<T> writer = new CsvWriter.Builder<T>()
-                .setPrintWriter(printWriter)
-                .setData(listOfData)
-                .build();
+        CsvWriter<T> writer = new CsvWriter.Builder<T>().setPrintWriter(printWriter).setData(listOfData).build();
 
-        //System.out.println("Writer object created success");
+        // System.out.println("Writer object created success");
         writer.write();
     }
 

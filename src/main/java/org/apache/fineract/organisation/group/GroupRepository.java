@@ -18,15 +18,14 @@
  */
 package org.apache.fineract.organisation.group;
 
+import java.util.Collection;
+import java.util.Date;
+import javax.transaction.Transactional;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
-
-import javax.transaction.Transactional;
-import java.util.Collection;
-import java.util.Date;
 
 @Repository
 @Transactional
@@ -34,7 +33,7 @@ public interface GroupRepository extends JpaRepository<Group, Long>, JpaSpecific
 
     Collection<Group> findByParentId(Long parentId);
 
-	@Query("select g.submittedOnDate from Group g where g.id = :groupId")
-	Date retrieveGroupTypeSubmitteOndDate(@Param("groupId") Long groupId);
+    @Query("select g.submittedOnDate from Group g where g.id = :groupId")
+    Date retrieveGroupTypeSubmitteOndDate(@Param("groupId") Long groupId);
 
 }

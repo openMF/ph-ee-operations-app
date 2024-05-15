@@ -105,5 +105,3 @@ management:
       readiness:
         enabled: true
 #      show-details: always
-
-

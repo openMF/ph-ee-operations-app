@@ -1,16 +1,16 @@
 package org.apache.fineract.operations;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
-import org.apache.fineract.organisation.parent.AbstractPersistableCustom;
-
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Table;
+import org.apache.fineract.organisation.parent.AbstractPersistableCustom;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @Entity
 @Table(name = "m_beneficiary")
 public class Beneficiary extends AbstractPersistableCustom<Long> {
+
     @Column(name = "c_identifier")
     private String custIdentifier;
 
@@ -35,11 +35,10 @@ public class Beneficiary extends AbstractPersistableCustom<Long> {
     @Column(name = "b_country_code")
     private String countryCode;
 
-    public Beneficiary() {
-    }
+    public Beneficiary() {}
 
-    public Beneficiary(String custIdentifier, String identifier, String name, String nickName, String accountNo,
-                       String leId, String currencyCode, String countryCode) {
+    public Beneficiary(String custIdentifier, String identifier, String name, String nickName, String accountNo, String leId,
+            String currencyCode, String countryCode) {
         this.custIdentifier = custIdentifier;
         this.identifier = identifier;
         this.name = name;
@@ -82,7 +81,7 @@ public class Beneficiary extends AbstractPersistableCustom<Long> {
         return countryCode;
     }
 
-    public void removeId(){
+    public void removeId() {
         super.setId(null);
     }
 }

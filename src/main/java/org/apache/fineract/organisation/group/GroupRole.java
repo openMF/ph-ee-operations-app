@@ -18,14 +18,13 @@
  */
 package org.apache.fineract.organisation.group;
 
-import org.apache.fineract.organisation.code.CodeValue;
-import org.apache.fineract.organisation.parent.AbstractPersistableCustom;
-
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.Table;
+import org.apache.fineract.organisation.code.CodeValue;
+import org.apache.fineract.organisation.parent.AbstractPersistableCustom;
 
 @Entity
 @Table(name = "m_group_roles")

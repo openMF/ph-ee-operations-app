@@ -2,6 +2,17 @@ package org.apache.fineract.api;
 
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.security.InvalidKeyException;
+import java.security.NoSuchAlgorithmException;
+import java.security.spec.InvalidKeySpecException;
+import java.util.stream.Collectors;
+import javax.crypto.BadPaddingException;
+import javax.crypto.IllegalBlockSizeException;
+import javax.crypto.NoSuchPaddingException;
 import org.apache.fineract.service.UtilityService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -13,18 +24,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
-import javax.crypto.BadPaddingException;
-import javax.crypto.IllegalBlockSizeException;
-import javax.crypto.NoSuchPaddingException;
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.security.InvalidKeyException;
-import java.security.NoSuchAlgorithmException;
-import java.security.spec.InvalidKeySpecException;
-import java.util.stream.Collectors;
-
 
 @RestController
 @SecurityRequirement(name = "auth")
@@ -36,17 +35,15 @@ public class UtilityApi {
     UtilityService utilityService;
 
     @PostMapping("/util/x-signature")
-    public ResponseEntity<String> getXSignature(
-            @RequestHeader("X-CorrelationID") String correlationId,
-            @RequestHeader("Platform-TenantId") String tenantId,
-            @RequestHeader("privateKey") String privateKey,
-            @RequestParam(required = false) MultipartFile data,
-            @RequestBody(required = false) String rawData
-    )throws NoSuchPaddingException, IllegalBlockSizeException, NoSuchAlgorithmException, BadPaddingException, InvalidKeySpecException, InvalidKeyException, IOException {
+    public ResponseEntity<String> getXSignature(@RequestHeader("X-CorrelationID") String correlationId,
+            @RequestHeader("Platform-TenantId") String tenantId, @RequestHeader("privateKey") String privateKey,
+            @RequestParam(required = false) MultipartFile data, @RequestBody(required = false) String rawData)
+            throws NoSuchPaddingException, IllegalBlockSizeException, NoSuchAlgorithmException, BadPaddingException,
+            InvalidKeySpecException, InvalidKeyException, IOException {
 
         String tobeHashed = "";
-        
-        if(data != null && !data.isEmpty()) {
+
+        if (data != null && !data.isEmpty()) {
             String fileContent;
             try {
                 fileContent = readInputStreamToString(data.getInputStream());
@@ -54,12 +51,10 @@ public class UtilityApi {
                 e.printStackTrace();
                 return new ResponseEntity<>("Failed to read file content", HttpStatus.INTERNAL_SERVER_ERROR);
             }
-            tobeHashed = correlationId+":"+tenantId+":"+fileContent;            
-        }
-        else if(rawData != null && !rawData.isEmpty()){
-            tobeHashed = correlationId+":"+tenantId+":"+rawData;
-        }
-        else {
+            tobeHashed = correlationId + ":" + tenantId + ":" + fileContent;
+        } else if (rawData != null && !rawData.isEmpty()) {
+            tobeHashed = correlationId + ":" + tenantId + ":" + rawData;
+        } else {
             return new ResponseEntity<>("No file or raw data provided", HttpStatus.BAD_REQUEST);
         }
 
