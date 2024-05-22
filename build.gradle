@@ -58,8 +58,7 @@ dependencies {
 
 group = 'org.apache.fineract'
 version = '1.0.0-SNAPSHOT'
-sourceCompatibility = JavaVersion.VERSION_17
-targetCompatibility = JavaVersion.VERSION_17
+sourceCompatibility = '17'
 
 
 sourceSets {
