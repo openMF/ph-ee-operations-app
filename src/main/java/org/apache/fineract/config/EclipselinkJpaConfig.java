@@ -29,7 +29,7 @@ public class EclipselinkJpaConfig extends JpaBaseConfiguration {
     private Logger logger = LoggerFactory.getLogger(this.getClass());
 
     public EclipselinkJpaConfig(DataSource routingDataSource, JpaProperties properties, ObjectProvider<JtaTransactionManager> jtaTransactionManager, ObjectProvider<TransactionManagerCustomizers> transactionManagerCustomizers) {
-        super(routingDataSource, properties, jtaTransactionManager, transactionManagerCustomizers);
+        super(routingDataSource, properties, jtaTransactionManager);
     }
 
     @Override
