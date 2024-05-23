@@ -26,6 +26,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.client.RestTemplate;
 
 import java.util.List;
+import java.util.ListIterator;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -33,6 +34,10 @@ import java.util.stream.Collectors;
 @SecurityRequirement(name = "auth")
 @RequestMapping("/api/v1")
 public class OperationsApi {
+
+    private static final String RECALL_REASON = "recallReason";
+    private static final String RECALLER_TYPE = "recallerType";
+
     private Logger logger = LoggerFactory.getLogger(this.getClass());
 
     @Autowired
@@ -197,6 +202,9 @@ public class OperationsApi {
                 ;
                 it.setValue(value);
             });
+            if (transfer.getRecallDirection() != null) {
+                setRecallerType(transfer, variables);
+            }
             return new TransferDetail(
                     modelMapper.map(transfer, TransferDto.class),
                     tasks.stream().map(t -> {
@@ -267,4 +275,23 @@ public class OperationsApi {
         return businessKeys;
     }
 
+    private void setRecallerType(Transfer transfer, List<Variable> variables) {
+        Optional<Variable> recallReasonOpt = variables.stream().filter(v -> RECALL_REASON.equals(v.getName())).findFirst();
+        if (recallReasonOpt.isPresent()) {
+            Variable recallReason = recallReasonOpt.get();
+            Variable newVariable = new Variable(recallReason.getWorkflowInstanceKey(), RECALLER_TYPE, recallReason.getWorkflowKey(), recallReason.getTimestamp(),
+                    null, RecallReason.getRecallerType(recallReason.getValue()), null, transfer);
+
+            ListIterator<Variable> iterator = variables.listIterator();
+            while (iterator.hasNext()) {
+                Variable var = iterator.next();
+                if (var.getName().compareTo(newVariable.getName()) > 0) {
+                    iterator.previous();
+                    iterator.add(newVariable);
+                    return;
+                }
+            }
+            variables.add(newVariable);
+        }
+    }
 }
