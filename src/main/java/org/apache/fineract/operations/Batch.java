@@ -96,6 +96,9 @@ public class Batch extends AbstractPersistableCustom<Long> {
     @Column(name = "APPROVED_COUNT")
     private Long approvedCount;
 
+    @Column(name = "STATUS")
+    private BatchStatus status;
+
     public Batch(Long workflowInstanceKey) {
         this.workflowInstanceKey = workflowInstanceKey;
     }
