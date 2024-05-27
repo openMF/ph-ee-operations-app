@@ -289,6 +289,9 @@ public class BatchServiceImpl implements BatchService{
                 payeeFspSet.add(transfer.getPayeeDfspId());
             }
             subBatchSummary.setPayeeFspSet(payeeFspSet);
+            subBatchSummary.setStartedAt(batch.getStartedAt());
+            subBatchSummary.setCompletedAt(batch.getCompletedAt());
+            subBatchSummary.setStatus(String.valueOf(batch.getStatus()));
 
 
             return subBatchSummary;
@@ -334,6 +337,10 @@ public class BatchServiceImpl implements BatchService{
             response.setPayerFsp(batch.getPayerFsp()!= null ? batch.getPayerFsp(): null);
             response.setGeneratedAt(LocalDateTime.now().toString());
             response.setTotalInstructionCount(transferRepository.countAllByBatchId(batch.getBatchId()));
+            response.setStartedAt(batch.getStartedAt());
+            response.setCompletedAt(batch.getCompletedAt());
+            response.setRegisteringInstitutionId(batch.getRegisteringInstitutionId());
+            response.setStatus(String.valueOf(batch.getStatus()));
 
 
         }
