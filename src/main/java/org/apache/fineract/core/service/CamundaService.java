@@ -70,6 +70,8 @@ public class CamundaService {
         variables.put("tenantIdentifier", tenantIdentifier);
         variables.put("originalPacs008TransactionIdentification", transactionId);
         variables.put("recallReason", comment);
+        variables.put("transactionId", getTransferVariable(transfer, "transactionId"));
+
         logger.debug("starting BPMN {} for paymentScheme {} using variables: {}", bpmn, paymentScheme, variables);
         zeebeClient.newCreateInstanceCommand()
                 .bpmnProcessId(bpmn)
