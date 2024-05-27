@@ -224,6 +224,10 @@ public class BatchServiceImpl implements BatchService{
         response.setPayerFsp(batch.getPayerFsp());
         response.setTotalBatchAmount(batch.getTotalAmount());
         response.setReportGeneratedAt(LocalDateTime.now().toString());
+        response.setStartedAt(batch.getStartedAt());
+        response.setCompletedAt(batch.getCompletedAt());
+        response.setRegisteringInstitutionId(batch.getRegisteringInstitutionId());
+        response.setStatus(String.valueOf(batch.getStatus()));
         response.setClientCorrelationId(batch.getCorrelationId());
     }
     private SubBatchSummary updateSubBatchPaymentDetail(Batch batch, PaymentBatchDetail response){
