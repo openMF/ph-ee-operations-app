@@ -229,6 +229,16 @@ public class BatchServiceImpl implements BatchService{
         response.setRegisteringInstitutionId(batch.getRegisteringInstitutionId());
         response.setStatus(String.valueOf(batch.getStatus()));
         response.setClientCorrelationId(batch.getCorrelationId());
+        response.setFailed(batch.getFailed());
+        response.setOngoing(batch.getOngoing());
+        response.setSuccessful(batch.getCompleted());
+        response.setTotal(batch.getTotalTransactions());
+        response.setTotalAmount(BigDecimal.valueOf(batch.getTotalAmount()));
+        response.setSuccessfulAmount(BigDecimal.valueOf(batch.getCompletedAmount()));
+        response.setFailedAmount(BigDecimal.valueOf(batch.getFailedAmount()));
+        response.setPendingAmount(BigDecimal.valueOf(batch.getOngoingAmount()));
+
+
     }
     private SubBatchSummary updateSubBatchPaymentDetail(Batch batch, PaymentBatchDetail response){
         SubBatchSummary subBatch = new SubBatchSummary();
