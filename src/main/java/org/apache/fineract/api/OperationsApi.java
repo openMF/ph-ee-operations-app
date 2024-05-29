@@ -6,9 +6,9 @@ import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import org.apache.fineract.operations.BatchRepository;
 import org.apache.fineract.operations.BusinessKey;
 import org.apache.fineract.operations.BusinessKeyRepository;
-import org.apache.fineract.operations.Task;
+import org.apache.fineract.operations.DelayResponseDTO;import org.apache.fineract.operations.Task;
 import org.apache.fineract.operations.TaskRepository;
-import org.apache.fineract.operations.TransactionRequest;
+import org.apache.fineract.operations.TimestampRepository;import org.apache.fineract.operations.Timestamps;import org.apache.fineract.operations.TransactionRequest;
 import org.apache.fineract.operations.TransactionRequestDetail;
 import org.apache.fineract.operations.TransactionRequestRepository;
 import org.apache.fineract.operations.Transfer;
@@ -38,8 +38,8 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.client.RestTemplate;
 
 import javax.servlet.http.HttpServletResponse;
-import java.util.HashMap;import java.util.List;
-import java.util.Map;import java.util.stream.Collectors;
+import java.text.ParseException;import java.text.SimpleDateFormat;import java.util.ArrayList;import java.util.Date;import java.util.HashMap;import java.util.List;
+import java.util.Map;import java.util.concurrent.atomic.AtomicReference;import java.util.stream.Collectors;
 
 @RestController
 @SecurityRequirement(name = "auth")
@@ -64,6 +64,9 @@ public class OperationsApi {
 
     @Autowired
     private BatchRepository batchRepository;
+
+    @Autowired
+    private TimestampRepository timestampRepository;
 
     @Autowired
     private RestTemplate restTemplate;
@@ -195,4 +198,36 @@ public class OperationsApi {
         return businessKeys;
     }
 
+    @GetMapping("/delays")
+    public List<DelayResponseDTO> getDelays(@RequestBody List<String> transactionIds) {
+
+        List<Timestamps> timestamps =  timestampRepository.findByTransactionIds(transactionIds);
+        List<DelayResponseDTO> delayResponseDTOList = new ArrayList<>();
+
+        Map<String, List<Timestamps>> timestampsPerTransaction = timestamps.stream()
+                        .collect(Collectors.groupingBy(Timestamps::getTransactionId));
+
+        timestampsPerTransaction.forEach((transactionId, timestampsList) -> {
+            AtomicReference<Long> totalExportImportDiff = new AtomicReference<>(0L);
+            AtomicReference<Long> totalZeebeExportDiff = new AtomicReference<>(0L);
+            int eventsCount = timestampsList.size();
+            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZZ");
+            timestampsList.forEach(timestamp -> {
+                try {
+                    Date d1 = sdf.parse(timestamp.getExportedTime());
+                    Date d2 = sdf.parse(timestamp.getImportedTime());
+                    Date d3 = sdf.parse(timestamp.getZeebeTime());
+                    totalExportImportDiff.updateAndGet(v -> v + d2.getTime()-d1.getTime());
+                    totalZeebeExportDiff.updateAndGet(v -> v + d1.getTime() - d3.getTime());
+                }
+                catch (ParseException e) {
+                        throw new RuntimeException(e);
+                }
+            });
+            Boolean workflowCompleted = transferRepository.findFirstByTransactionId(transactionId).get().getCompletedAt()!=null;
+            DelayResponseDTO delayResponseDTO = new DelayResponseDTO(totalExportImportDiff.get(), totalZeebeExportDiff.get(), eventsCount, workflowCompleted);
+            delayResponseDTOList.add(delayResponseDTO);
+        });
+        return delayResponseDTOList;
+    }
 }
