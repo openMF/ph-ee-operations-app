@@ -11,6 +11,6 @@ public interface TransferRepository extends JpaRepository<Transfer, Long>, JpaSp
 
     Transfer findFirstByTransactionIdAndDirection(String transactionId, String direction);
 
-    @Query("SELECT t FROM Transfer t WHERE t.transactionId = :transactionId AND :direction = 'INCOMING' AND recallDirection IS NULL")
+    @Query("SELECT t FROM Transfer t WHERE t.transactionId = :transactionId AND t.direction = 'INCOMING' AND t.recallDirection IS NULL")
     Transfer findIcomingTransfersForRecall(@Param("transactionId") String transactionId);
 }
