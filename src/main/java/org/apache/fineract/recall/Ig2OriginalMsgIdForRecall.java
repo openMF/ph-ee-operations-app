@@ -40,7 +40,7 @@ public class Ig2OriginalMsgIdForRecall implements JobHandler {
         String transactionId = (String) variables.get("transactionId");
 
         logger.debug("searching for original incoming transfer where transactionId is {}", transactionId);
-        Transfer incomingTransfer = transferRepository.findFirstByTransactionIdAndDirection(transactionId, "INCOMING");
+        Transfer incomingTransfer = transferRepository.findIcomingTransfersForRecall(transactionId);
         if (incomingTransfer == null) {
             throw new RuntimeException("transfer not found for transactionId " + transactionId);
         }
