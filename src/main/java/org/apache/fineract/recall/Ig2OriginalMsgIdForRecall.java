@@ -28,8 +28,8 @@ public class Ig2OriginalMsgIdForRecall implements JobHandler {
     private TransferRepository transferRepository;
 
     @Override
-    @JobWorker(name = "getOriginalMsgIdForRecall", autoComplete = false)
-    public void handle(JobClient client, ActivatedJob job) throws Exception {
+    @JobWorker(type = "getOriginalMsgIdForRecall", autoComplete = false)
+    public void handle(JobClient client, ActivatedJob job) {
         logger.info("IG2 incoming recall called getOriginalMsgIdForRecall");
 
         final Map<String, Object> variables = job.getVariablesAsMap();
