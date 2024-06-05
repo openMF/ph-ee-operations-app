@@ -237,8 +237,6 @@ public class BatchServiceImpl implements BatchService{
         response.setSuccessfulAmount(BigDecimal.valueOf(batch.getCompletedAmount()));
         response.setFailedAmount(BigDecimal.valueOf(batch.getFailedAmount()));
         response.setPendingAmount(BigDecimal.valueOf(batch.getOngoingAmount()));
-
-
     }
     private SubBatchSummary updateSubBatchPaymentDetail(Batch batch, PaymentBatchDetail response){
         SubBatchSummary subBatch = new SubBatchSummary();
