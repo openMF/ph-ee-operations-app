@@ -70,7 +70,7 @@ public class Ig2OriginalMsgIdForRecall implements JobHandler {
             logger.debug("found original incoming transfer with workflowInstanceKey {}", workflowInstanceKey);
         }
 
-        logger.debug("searching for variable originalMessageId where workflowInstanceKey is {}", workflowInstanceKey);
+        logger.debug("searching for variable pacs008FileMetadata where workflowInstanceKey is {}", workflowInstanceKey);
         Optional<Variable> pacs008FileMetadata = variableRepository.findByWorkflowInstanceKeyAndVariableName("pacs008FileMetadata", workflowInstanceKey);
         if (pacs008FileMetadata.isEmpty()) {
             throw new RuntimeException("pacs008FileMetadata not found for internalCorrelationId " + internalCorrelationId);
