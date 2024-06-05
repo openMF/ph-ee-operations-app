@@ -1,5 +1,9 @@
 package org.apache.fineract.recall;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.json.JsonMapper;
 import io.camunda.zeebe.client.api.response.ActivatedJob;
 import io.camunda.zeebe.client.api.worker.JobClient;
 import io.camunda.zeebe.client.api.worker.JobHandler;
@@ -21,11 +25,26 @@ public class Ig2OriginalMsgIdForRecall implements JobHandler {
 
     private static final Logger logger = LoggerFactory.getLogger(Ig2OriginalMsgIdForRecall.class);
 
+    private static final ObjectMapper mapper = JsonMapper.builder()
+            .findAndAddModules()
+            .configure(DeserializationFeature.USE_JAVA_ARRAY_FOR_JSON_ARRAY, true)
+            .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
+            .build();
+
     @Autowired
     private VariableRepository variableRepository;
 
     @Autowired
     private TransferRepository transferRepository;
+
+    private record FileMetaData(String messageId,
+                                String fileType,
+                                String contentType,
+                                String fileName,
+                                String processType,
+                                String messageDirection,
+                                String fileDateTime) {
+    }
 
     @Override
     @JobWorker(type = "getOriginalMsgIdForRecall", autoComplete = false)
@@ -52,14 +71,23 @@ public class Ig2OriginalMsgIdForRecall implements JobHandler {
         }
 
         logger.debug("searching for variable originalMessageId where workflowInstanceKey is {}", workflowInstanceKey);
-        Optional<Variable> originalMessageId = variableRepository.findByWorkflowInstanceKeyAndVariableName("originalMessageId", workflowInstanceKey);
-        if (originalMessageId.isEmpty()) {
-            throw new RuntimeException("originalMessageId not found for internalCorrelationId " + internalCorrelationId);
+        Optional<Variable> pacs008FileMetadata = variableRepository.findByWorkflowInstanceKeyAndVariableName("pacs008FileMetadata", workflowInstanceKey);
+        if (pacs008FileMetadata.isEmpty()) {
+            throw new RuntimeException("pacs008FileMetadata not found for internalCorrelationId " + internalCorrelationId);
         }
-        logger.debug("for the internalCorrelationId {} the originalMessageId found is {}", internalCorrelationId, originalMessageId.get());
+
+        String json = pacs008FileMetadata.get().getValue();
+        FileMetaData fileMetaData;
+        try {
+            fileMetaData = mapper.readValue(json, FileMetaData.class);
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException("failed to parse json from pacs008FileMetadata '" + json + "'", e);
+        }
+
+        logger.debug("for the internalCorrelationId {} the originalMessageId found is {}", internalCorrelationId, fileMetaData.messageId());
 
         client.newCompleteCommand(job)
-                .variables(Map.of("originalMessageId", originalMessageId.get()))
+                .variables(Map.of("originalMessageId", fileMetaData.messageId()))
                 .send()
                 .join();
     }
