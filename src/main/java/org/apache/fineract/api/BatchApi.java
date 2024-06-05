@@ -280,6 +280,14 @@ public class BatchApi {
         batch.setCompletedAmount(totalCompletedAmount);
         batch.setOngoingAmount(totalOngoingAmount);
         batch.setFailedAmount(totalFailedAmount);
+        batch.setCompletedAt(new Date());
+        if(completed.equals(totalTransfers)){
+            batch.setStatus(BatchStatus.COMPLETED);
+        } else if(ongoing > 0){
+            batch.setStatus(BatchStatus.IN_PROGRESS);
+        } else if(failed>0){
+            batch.setStatus(BatchStatus.FAILED);
+        }
         batchRepository.save(batch);
     }
     private BatchDTO getBatchSummary(Batch batch,String modes) {

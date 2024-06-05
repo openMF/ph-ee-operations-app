@@ -16,6 +16,12 @@ public class SubBatchSummary {
 
     private String batchId;
 
+    private Date startedAt;
+
+    private Date completedAt;
+
+    private String registeringInstitutionId;
+
     private String requestId;
 
     private Long total;
