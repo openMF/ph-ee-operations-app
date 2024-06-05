@@ -37,12 +37,12 @@ public class Ig2OriginalMsgIdForRecall implements JobHandler {
         if (!variables.containsKey("transactionId")) {
             throw new RuntimeException("transactionId variable not found");
         }
-        String transactionId = (String) variables.get("transactionId");
+        String internalCorrelationId = (String) variables.get("internalCorrelationId");
 
-        logger.debug("searching for original incoming transfer where transactionId is {}", transactionId);
-        Transfer incomingTransfer = transferRepository.findIcomingTransfersForRecall(transactionId);
+        logger.debug("searching for original incoming transfer where transactionId is {}", internalCorrelationId);
+        Transfer incomingTransfer = transferRepository.findIcomingTransfersForRecall(internalCorrelationId);
         if (incomingTransfer == null) {
-            throw new RuntimeException("transfer not found for transactionId " + transactionId);
+            throw new RuntimeException("transfer not found for internalCorrelationId " + internalCorrelationId);
         }
         Long workflowInstanceKey = incomingTransfer.getWorkflowInstanceKey();
         if (logger.isTraceEnabled()) {
@@ -54,9 +54,9 @@ public class Ig2OriginalMsgIdForRecall implements JobHandler {
         logger.debug("searching for variable originalMessageId where workflowInstanceKey is {}", workflowInstanceKey);
         Optional<Variable> originalMessageId = variableRepository.findByWorkflowInstanceKeyAndVariableName("originalMessageId", workflowInstanceKey);
         if (originalMessageId.isEmpty()) {
-            throw new RuntimeException("originalMessageId not found for transactionId " + transactionId);
+            throw new RuntimeException("originalMessageId not found for internalCorrelationId " + internalCorrelationId);
         }
-        logger.debug("for the transactionId {} the originalMessageId found is {}", transactionId, originalMessageId.get());
+        logger.debug("for the internalCorrelationId {} the originalMessageId found is {}", internalCorrelationId, originalMessageId.get());
 
         client.newCompleteCommand(job)
                 .variables(Map.of("originalMessageId", originalMessageId.get()))
