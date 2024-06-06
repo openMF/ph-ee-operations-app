@@ -94,6 +94,9 @@ public class WebSecurityConfiguration {
     @Value("${frontend.callback-url-base}")
     private String callbackUrlBase;
 
+    @Value("${frontend.admin-url-base}")
+    private String adminUrlBase;
+
 
     @Bean
     @Order(1)
@@ -233,7 +236,7 @@ public class WebSecurityConfiguration {
     CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
         config.setAllowCredentials(true);
-        config.addAllowedOrigin(callbackUrlBase);
+        config.setAllowedOrigins(Arrays.asList(callbackUrlBase, adminUrlBase));
         config.addAllowedHeader("*");
         config.addAllowedMethod("*");
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
