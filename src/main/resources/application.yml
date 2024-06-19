@@ -1,13 +1,13 @@
 fineract:
   datasource:
     core:
-      host: operations-mysql
-#      host: "127.0.0.1"
+#      host: operations-mysql
+      host: "127.0.0.1"
       port: 3306
       schema: tenants
       username: root
-      password: mysql
-#      password: "ethieTieCh8ahv"
+#     password: lavanya
+      password: "ethieTieCh8ahv"
     common:
       protocol: jdbc
       subprotocol: mysql
@@ -48,7 +48,7 @@ spring:
     enabled: false
 
 server:
-  port: 5000
+  port: 5001
 
 rest:
   authorization:
@@ -106,4 +106,4 @@ management:
         enabled: true
 #      show-details: always
 
-
+tenants: gorilla,rhino
