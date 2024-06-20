@@ -222,7 +222,6 @@ public class OperationsApi {
             }
         });
         DelayResponseDTO delayResponseDTO = new DelayResponseDTO(totalExportImportDiff.get(), totalZeebeExportDiff.get(), eventsCount);
-        logger.info(delayResponseDTO.toString());
         return delayResponseDTO;
     }
 }
