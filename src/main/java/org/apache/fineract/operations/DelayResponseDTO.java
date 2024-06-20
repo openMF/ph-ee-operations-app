@@ -8,6 +8,5 @@ public class DelayResponseDTO {
     private long averageExportImportTime;
     private long averageZeebeExportTime;
     private int eventsCount;
-    private Boolean workflowCompleted;
 
 }
