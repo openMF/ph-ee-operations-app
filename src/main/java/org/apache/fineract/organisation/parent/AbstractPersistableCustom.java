@@ -19,34 +19,35 @@
 package org.apache.fineract.organisation.parent;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import jakarta.persistence.*;
+import lombok.AccessLevel;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 import org.springframework.data.domain.Persistable;
 
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.MappedSuperclass;
 import java.io.Serializable;
 
 
 @MappedSuperclass
-public abstract class AbstractPersistableCustom<PK extends Serializable> implements Persistable<Long> {
+@Getter
+@Setter
+@NoArgsConstructor
+public abstract class AbstractPersistableCustom<T extends Serializable> implements Persistable<T>, Serializable {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    @Getter(onMethod = @__(@Override))
+    private T id;
 
-    @Override
-    public Long getId() {
-        return id;
-    }
+    @Transient
+    @Setter(value = AccessLevel.NONE)
+    @Getter(onMethod = @__(@Override))
+    private boolean isNew = true;
 
-    public void setId(final Long id) {
-        this.id = id;
-    }
-
-    @Override
-    @JsonIgnore
-    public boolean isNew() {
-        return null == this.id;
+    @PrePersist
+    @PostLoad
+    void markNotNew() {
+        this.isNew = false;
     }
 }

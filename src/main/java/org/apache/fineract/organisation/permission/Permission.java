@@ -106,6 +106,21 @@ public class Permission extends AbstractPersistableCustom<Long> {
         this.canMakerChecker = canMakerChecker;
     }
 
+    public boolean hasMakerCheckerEnabled() {
+        return this.canMakerChecker;
+    }
+
+    public boolean enableMakerChecker(final boolean canMakerChecker) {
+        final boolean isUpdatedValueSame = this.canMakerChecker == canMakerChecker;
+        this.canMakerChecker = canMakerChecker;
+
+        return !isUpdatedValueSame;
+    }
+
+    public boolean hasCode(final String checkCode) {
+        return this.code.equalsIgnoreCase(checkCode);
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;

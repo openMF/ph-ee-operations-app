@@ -1,5 +1,8 @@
 package org.apache.fineract.api;
 
+import static org.apache.fineract.api.OperationsApiConstants.TRANSACTION_RESOURCE_NAME;
+import static org.apache.fineract.core.service.OperatorUtils.dateFormat;
+
 import com.baasflow.commons.events.EventLogLevel;
 import com.baasflow.commons.events.EventService;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
@@ -12,10 +15,12 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.fineract.core.service.TenantAwareHeaderFilter;
 import org.apache.fineract.data.ErrorResponse;
 import org.apache.fineract.exception.WriteToCsvException;
+import org.apache.fineract.infrastructure.security.service.PlatformSecurityContext;
 import org.apache.fineract.operations.*;
 import org.apache.fineract.operations.TransferDto;
 import org.apache.fineract.utils.CsvUtility;
 import org.apache.fineract.utils.SortOrder;
+import org.checkerframework.checker.units.qual.A;
 import org.modelmapper.ModelMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -26,7 +31,6 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.io.UnsupportedEncodingException;
@@ -37,8 +41,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import static org.apache.fineract.core.service.OperatorUtils.dateFormat;
-
 
 @RestController
 @RequestMapping("/api/v1")
@@ -48,6 +50,9 @@ import static org.apache.fineract.core.service.OperatorUtils.dateFormat;
 public class OperationsDetailedApi {
 
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
+
+    @Autowired
+    private PlatformSecurityContext context;
 
     @Value("${payment.internal-account-id-prefix}")
     private String internalAccountIdPrefix;
@@ -72,6 +77,8 @@ public class OperationsDetailedApi {
             @RequestParam(value = "direction", required = false) String direction,
             @RequestParam(value = "transferType", required = false) Transfer.TransferType transferType
     ) {
+        this.context.jwt().validateHasReadPermission(TRANSACTION_RESOURCE_NAME);
+
         CriteriaBuilder cb = entityManager.getCriteriaBuilder();
         CriteriaQuery<Tuple> cq = cb.createQuery(Tuple.class);
         Root<Transfer> root = cq.from(Transfer.class);
@@ -97,7 +104,7 @@ public class OperationsDetailedApi {
         return resultList.stream().map(tuple -> tuple.get(Transfer_.businessProcessStatus.getName(), String.class)).collect(Collectors.toList());
     }
 
-    @PreAuthorize("hasAuthority('ALL_FUNCTIONS') and hasRole('Admin')")
+    //@PreAuthorize("hasAuthority('ALL_FUNCTIONS') and hasRole('Admin')")
     @GetMapping("/transfers")
     public Page<TransferDto> transfers(
             @RequestParam(value = "page") Integer page,
@@ -123,6 +130,7 @@ public class OperationsDetailedApi {
             @RequestParam(value = "partyIdType", required = false) String partyIdType,
             @RequestParam(value = "sortedOrder", required = false, defaultValue = "DESC") String sortedOrder,
             @RequestParam(value = "endToEndIdentification", required = false) String endToEndIdentification) {
+
         return eventService.auditedEvent(event -> event
                 .setEvent("transfers list invoked")
                 .setEventLogLevel(EventLogLevel.INFO)

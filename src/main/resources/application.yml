@@ -110,3 +110,13 @@ baasflow:
     channels:
       audit:
         topic: "auditlog"
+
+resilience4j:
+  retry:
+    instances:
+      executeCommand:
+        max-attempts: 3
+        wait-duration: 1s
+        enable-exponential-backoff: true
+        exponential-backoff-multiplier: 2
+        retryExceptions: org.springframework.dao.ConcurrencyFailureException,org.eclipse.persistence.exceptions.OptimisticLockException,jakarta.persistence.OptimisticLockException,org.apache.fineract.infrastructure.core.exception.IdempotentCommandProcessUnderProcessingException
