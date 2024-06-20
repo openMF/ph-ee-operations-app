@@ -49,7 +49,7 @@
     <include file="parts/0060_add_job_name_to_command_source.xml" relativeToChangelogFile="true"/>
     <include file="parts/0061_add_idempotency_key_to_command_source.xml" relativeToChangelogFile="true"/>
     <include file="parts/0071_add_external_id_support_for_loan_transaction.xml" relativeToChangelogFile="true"/>
-    <include file="parts/0072_add_result_and status_to_command_source.xml" relativeToChangelogFile="true"/>
+    <include file="parts/0072_add_result_and_status_to_command_source.xml" relativeToChangelogFile="true"/>
     <include file="parts/0073_add_result_status_code_to_command_source.xml" relativeToChangelogFile="true"/>
     <include file="parts/0117_set_datetime_precision.xml" relativeToChangelogFile="true"/>
 </databaseChangeLog>
