@@ -30,7 +30,7 @@ import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.DeleteMapping;import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -223,5 +223,10 @@ public class OperationsApi {
         });
         DelayResponseDTO delayResponseDTO = new DelayResponseDTO(totalExportImportDiff.get(), totalZeebeExportDiff.get(), eventsCount);
         return delayResponseDTO;
+    }
+
+    @DeleteMapping("/delays")
+    public void deleteTimestampsRecords() {
+        timestampRepository.deleteAll();
     }
 }
