@@ -222,7 +222,14 @@ public class OperationsApi {
                     throw new RuntimeException(e);
             }
         });
-        DelayResponseDTO delayResponseDTO = new DelayResponseDTO(totalExportImportDiff.get()/eventsCount, totalZeebeExportDiff.get()/eventsCount, eventsCount);
+
+        DelayResponseDTO delayResponseDTO;
+        if(eventsCount!=0) {
+            delayResponseDTO = new DelayResponseDTO(totalExportImportDiff.get()/eventsCount, totalZeebeExportDiff.get()/eventsCount, eventsCount);
+        }
+        else {
+            delayResponseDTO = new DelayResponseDTO();
+        }
         return delayResponseDTO;
     }
 
