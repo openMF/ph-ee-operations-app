@@ -99,6 +99,7 @@ public class Batch extends AbstractPersistableCustom<Long> {
     private Long approvedCount;
 
     @Enumerated(EnumType.STRING)
+    @Column(name = "STATUS")
     private BatchStatus status;
 
     public Batch(Long workflowInstanceKey) {
