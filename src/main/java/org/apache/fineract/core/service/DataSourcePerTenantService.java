@@ -42,7 +42,7 @@ public class DataSourcePerTenantService {
         config.setUsername(tenant.getSchemaUsername());
         config.setPassword(tenant.getSchemaPassword());
         config.setJdbcUrl(createJdbcUrl(tenant.getJdbcProtocol(), tenant.getJdbcSubProtocol(), tenant.getSchemaServer(), Integer.parseInt(tenant.getSchemaServerPort()), tenant.getSchemaName()));
-        config.setAutoCommit(false);
+        config.setAutoCommit(true);
         config.setConnectionInitSql("SELECT 1");
         config.setValidationTimeout(30000);
         config.setConnectionTestQuery("SELECT 1");
@@ -52,6 +52,7 @@ public class DataSourcePerTenantService {
         config.setMaximumPoolSize(20);
         config.setMinimumIdle(5);
         config.setPoolName(tenant.getSchemaName() + "Pool");
+        config.setTransactionIsolation("TRANSACTION_READ_COMMITTED");
         return new HikariDataSource(config);
     }
 

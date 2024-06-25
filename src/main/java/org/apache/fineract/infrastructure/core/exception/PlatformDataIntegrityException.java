@@ -18,9 +18,12 @@
  */
 package org.apache.fineract.infrastructure.core.exception;
 
+import lombok.Getter;
+
 /**
  * A {@link RuntimeException} thrown when data integrity problems happen due to state modifying actions.
  */
+@Getter
 public class PlatformDataIntegrityException extends AbstractPlatformException {
 
     private final String parameterName;

@@ -18,12 +18,15 @@
  */
 package org.apache.fineract.infrastructure.core.exception;
 
+import lombok.Getter;
+
 import java.util.ArrayList;
 import java.util.List;
 
 /**
  * Exception with internationalization support (it's message can be translated).
  */
+@Getter
 public abstract class AbstractPlatformException extends RuntimeException {
 
     private static final Object[] NO_ARGS = new Object[0];
