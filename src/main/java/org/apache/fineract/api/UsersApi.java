@@ -77,7 +77,7 @@ public class UsersApi {
                 .setPayload(String.valueOf(userId))
                 .setPayloadType("string")
                 .setTenantId(TenantAwareHeaderFilter.tenant.get()), event -> {
-            //this.context.jwt().validateHasReadPermission(RESOURCE_NAME_FOR_PERMISSIONS, userId); TODO:Mernemmeszelazanyadba
+            //this.context.jwt().validateHasReadPermission(RESOURCE_NAME_FOR_PERMISSIONS, userId); TODO
             return this.readPlatformService.retrieveUser(userId);
         });
     }

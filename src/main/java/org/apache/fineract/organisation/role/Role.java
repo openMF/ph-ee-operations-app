@@ -28,10 +28,7 @@ import org.apache.fineract.organisation.user.AppUser;
 import org.apache.fineract.useradministration.data.RoleData;
 
 import java.io.Serializable;
-import java.util.Collection;
-import java.util.LinkedHashMap;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 
 @Entity
 @Table(name = "m_role", uniqueConstraints = { @UniqueConstraint(columnNames = { "name" }, name = "unq_name") })
@@ -48,7 +45,7 @@ public class Role extends AbstractPersistableCustom<Long> implements Serializabl
 
     @ManyToMany(fetch = FetchType.LAZY, cascade = {CascadeType.REFRESH, CascadeType.DETACH, CascadeType.PERSIST, CascadeType.MERGE})
     @JoinTable(name = "m_role_permission", joinColumns = @JoinColumn(name = "role_id"), inverseJoinColumns = @JoinColumn(name = "permission_id"))
-    private Collection<Permission> permissions;
+    private Set<Permission> permissions;
 
     public static Role fromJson(final JsonCommand command) {
         final String name = command.stringValueOfParameterNamed("name");
@@ -141,7 +138,7 @@ public class Role extends AbstractPersistableCustom<Long> implements Serializabl
         return permissions;
     }
 
-    public void setPermissions(Collection<Permission> permissions) {
+    public void setPermissions(Set<Permission> permissions) {
         this.permissions = permissions;
     }
 

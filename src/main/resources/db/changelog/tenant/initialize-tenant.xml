@@ -46,6 +46,7 @@
     <include file="parts/0017_variables_position.xml" relativeToChangelogFile="true"/>
     <include file="parts/0018_add_resource_identifier_to_command_source.xml" relativeToChangelogFile="true"/>
     <include file="parts/0019_restore_sequences.xml" relativeToChangelogFile="true"/>
+    <include file="parts/0020_add_new_permissions.xml" relativeToChangelogFile="true"/>
     <include file="parts/0036_add_audit_entries_and_rework_command_source_datetime_fields.xml" relativeToChangelogFile="true"/>
     <include file="parts/0060_add_job_name_to_command_source.xml" relativeToChangelogFile="true"/>
     <include file="parts/0061_add_idempotency_key_to_command_source.xml" relativeToChangelogFile="true"/>

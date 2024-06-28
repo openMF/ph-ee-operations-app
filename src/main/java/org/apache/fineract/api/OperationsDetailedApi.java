@@ -1,6 +1,6 @@
 package org.apache.fineract.api;
 
-import static org.apache.fineract.api.OperationsApiConstants.TRANSACTION_RESOURCE_NAME;
+import static org.apache.fineract.api.OperationsApiConstants.*;
 import static org.apache.fineract.core.service.OperatorUtils.dateFormat;
 
 import com.baasflow.commons.events.EventLogLevel;
@@ -58,9 +58,6 @@ public class OperationsDetailedApi {
     private String internalAccountIdPrefix;
 
     @Autowired
-    private TransferRepository transferRepository;
-
-    @Autowired
     private TransactionRequestRepository transactionRequestRepository;
 
     @Autowired
@@ -69,15 +66,12 @@ public class OperationsDetailedApi {
     @Autowired
     private EntityManager entityManager;
 
-    @Autowired
-    private ModelMapper modelMapper;
-
     @GetMapping("/businessProcessStatus")
     public List<String> transfers(
             @RequestParam(value = "direction", required = false) String direction,
             @RequestParam(value = "transferType", required = false) Transfer.TransferType transferType
     ) {
-        this.context.jwt().validateHasReadPermission(TRANSACTION_RESOURCE_NAME);
+        //this.context.jwt().validateHasReadPermission(TRANSACTION_RESOURCE_NAME); TODO: 3 possible resources
 
         CriteriaBuilder cb = entityManager.getCriteriaBuilder();
         CriteriaQuery<Tuple> cq = cb.createQuery(Tuple.class);
@@ -104,7 +98,6 @@ public class OperationsDetailedApi {
         return resultList.stream().map(tuple -> tuple.get(Transfer_.businessProcessStatus.getName(), String.class)).collect(Collectors.toList());
     }
 
-    //@PreAuthorize("hasAuthority('ALL_FUNCTIONS') and hasRole('Admin')")
     @GetMapping("/transfers")
     public Page<TransferDto> transfers(
             @RequestParam(value = "page") Integer page,
@@ -135,7 +128,10 @@ public class OperationsDetailedApi {
                 .setEvent("transfers list invoked")
                 .setEventLogLevel(EventLogLevel.INFO)
                 .setSourceModule("operations-app")
-                .setTenantId(TenantAwareHeaderFilter.tenant.get()), event -> loadTransfers(Transfer.TransferType.TRANSFER, page, size, _payerPartyId, payerDfspId, _payeePartyId, payeeDfspId, transactionId, status, null, null, businessProcessStatus, paymentScheme, currency, amountFrom, amountTo, startFrom, startTo, acceptanceDateFrom, acceptanceDateTo, direction, sortedBy, _partyId, partyIdType, sortedOrder, endToEndIdentification, null));
+                .setTenantId(TenantAwareHeaderFilter.tenant.get()), event -> {
+                this.context.jwt().validateHasReadPermission(TRANSACTION_RESOURCE_NAME);
+                return loadTransfers(Transfer.TransferType.TRANSFER, page, size, _payerPartyId, payerDfspId, _payeePartyId, payeeDfspId, transactionId, status, null, null, businessProcessStatus, paymentScheme, currency, amountFrom, amountTo, startFrom, startTo, acceptanceDateFrom, acceptanceDateTo, direction, sortedBy, _partyId, partyIdType, sortedOrder, endToEndIdentification, null);
+        });
     }
 
     @GetMapping("/recalls")
@@ -169,8 +165,10 @@ public class OperationsDetailedApi {
                 .setEvent("recalls list invoked")
                 .setEventLogLevel(EventLogLevel.INFO)
                 .setSourceModule("operations-app")
-                .setTenantId(TenantAwareHeaderFilter.tenant.get()), event ->
-                loadTransfers(Transfer.TransferType.RECALL, page, size, _payerPartyId, payerDfspId, _payeePartyId, payeeDfspId, transactionId, status, recallStatus, recallDirection, businessProcessStatus, paymentScheme, currency, amountFrom, amountTo, startFrom, startTo, acceptanceDateFrom, acceptanceDateTo, direction, sortedBy, _partyId, partyIdType, sortedOrder, endToEndIdentification, null));
+                .setTenantId(TenantAwareHeaderFilter.tenant.get()), event -> {
+                this.context.jwt().validateHasReadPermission(RECALL_RESOURCE_NAME);
+                return loadTransfers(Transfer.TransferType.RECALL, page, size, _payerPartyId, payerDfspId, _payeePartyId, payeeDfspId, transactionId, status, recallStatus, recallDirection, businessProcessStatus, paymentScheme, currency, amountFrom, amountTo, startFrom, startTo, acceptanceDateFrom, acceptanceDateTo, direction, sortedBy, _partyId, partyIdType, sortedOrder, endToEndIdentification, null);
+        });
     }
 
     @GetMapping("/transactionRequests")
@@ -194,11 +192,13 @@ public class OperationsDetailedApi {
             @RequestParam(value = "sortedBy", required = false) String sortedBy,
             @RequestParam(value = "sortedOrder", required = false, defaultValue = "DESC") String sortedOrder) {
         return eventService.auditedEvent(event -> event
-                .setEvent("recalls list invoked")
+                .setEvent("request to pay list invoked")
                 .setEventLogLevel(EventLogLevel.INFO)
                 .setSourceModule("operations-app")
-                .setTenantId(TenantAwareHeaderFilter.tenant.get()), event ->
-                loadTransfers(Transfer.TransferType.REQUEST_TO_PAY, page, size, _payerPartyId, payerDfspId, _payeePartyId, payeeDfspId, transactionId, status, null, null, null, null, currency, amountFrom, amountTo, startFrom, startTo, null, null, direction, sortedBy, null, null, sortedOrder, null, rtpDirection));
+                .setTenantId(TenantAwareHeaderFilter.tenant.get()), event -> {
+                this.context.jwt().validateHasReadPermission(REQUESTTOPAY_RESOURCE_NAME);
+                return loadTransfers(Transfer.TransferType.REQUEST_TO_PAY, page, size, _payerPartyId, payerDfspId, _payeePartyId, payeeDfspId, transactionId, status, null, null, null, null, currency, amountFrom, amountTo, startFrom, startTo, null, null, direction, sortedBy, null, null, sortedOrder, null, rtpDirection);
+        });
     }
 
     private Page<TransferDto> loadTransfers(Transfer.TransferType transferType, Integer page, Integer size, String _payerPartyId, String payerDfspId, String _payeePartyId, String payeeDfspId, String transactionId, String status, String recallStatus, String recallDirection, String businessProcessStatus, String paymentScheme, String currency, BigDecimal amountFrom, BigDecimal amountTo, String startFrom, String startTo, String acceptanceDateFrom, String acceptanceDateTo, String direction, String sortedBy, String _partyId, String partyIdType, String sortedOrder, String endToEndIdentification, String rtpDirection) {
