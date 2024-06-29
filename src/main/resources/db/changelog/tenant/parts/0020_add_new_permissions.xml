@@ -18,6 +18,20 @@
             <column name="can_maker_checker" valueBoolean="false"/>
         </insert>
         <insert tableName="m_permission">
+            <column name="grouping" value="transaction"/>
+            <column name="code" value="RECALL_TRANSACTION"/>
+            <column name="entity_name" value="TRANSACTION"/>
+            <column name="action_name" value="RECALL"/>
+            <column name="can_maker_checker" valueBoolean="false"/>
+        </insert>
+        <insert tableName="m_permission">
+            <column name="grouping" value="transaction"/>
+            <column name="code" value="RECALL_TRANSACTION_CHECKER"/>
+            <column name="entity_name" value="TRANSACTION"/>
+            <column name="action_name" value="RECALL_CHECKER"/>
+            <column name="can_maker_checker" valueBoolean="false"/>
+        </insert>
+        <insert tableName="m_permission">
             <column name="grouping" value="recall"/>
             <column name="code" value="READ_RECALL"/>
             <column name="entity_name" value="RECALL"/>

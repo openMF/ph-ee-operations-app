@@ -20,9 +20,9 @@ import java.util.Optional;
 public class TransactionWritePlatformServiceImpl implements TransactionWritePlatformService {
 
     private final PlatformSecurityContext context;
-    private CamundaService camundaService;
-    private VariableRepository variableRepository;
-    private TransferRepository transferRepository;
+    private final CamundaService camundaService;
+    private final VariableRepository variableRepository;
+    private final TransferRepository transferRepository;
 
     @Override
     public CommandProcessingResult recallTransaction(String transactionId, JsonCommand command) {
