@@ -19,24 +19,20 @@
 package org.apache.fineract.organisation.role;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import jakarta.persistence.*;
+import org.apache.fineract.infrastructure.core.api.JsonCommand;
 import org.apache.fineract.organisation.parent.AbstractPersistableCustom;
 import org.apache.fineract.organisation.permission.Permission;
 import org.apache.fineract.organisation.user.AppUser;
 
-import jakarta.persistence.CascadeType;
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.FetchType;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.JoinTable;
-import jakarta.persistence.ManyToMany;
-import jakarta.persistence.Table;
-import java.util.Collection;
-import java.util.Objects;
+import org.apache.fineract.useradministration.data.RoleData;
+
+import java.io.Serializable;
+import java.util.*;
 
 @Entity
-@Table(name = "m_role")
-public class Role extends AbstractPersistableCustom<Long> {
+@Table(name = "m_role", uniqueConstraints = { @UniqueConstraint(columnNames = { "name" }, name = "unq_name") })
+public class Role extends AbstractPersistableCustom<Long> implements Serializable {
 
     @Column(name = "name", unique = true, nullable = false, length = 100)
     private String name;
@@ -48,13 +44,62 @@ public class Role extends AbstractPersistableCustom<Long> {
     private Boolean disabled;
 
     @ManyToMany(fetch = FetchType.LAZY, cascade = {CascadeType.REFRESH, CascadeType.DETACH, CascadeType.PERSIST, CascadeType.MERGE})
-    private Collection<AppUser> appUsers;
-
-    @ManyToMany(fetch = FetchType.LAZY, cascade = {CascadeType.REFRESH, CascadeType.DETACH, CascadeType.PERSIST, CascadeType.MERGE})
     @JoinTable(name = "m_role_permission", joinColumns = @JoinColumn(name = "role_id"), inverseJoinColumns = @JoinColumn(name = "permission_id"))
-    private Collection<Permission> permissions;
+    private Set<Permission> permissions;
+
+    public static Role fromJson(final JsonCommand command) {
+        final String name = command.stringValueOfParameterNamed("name");
+        final String description = command.stringValueOfParameterNamed("description");
+        return new Role(name, description);
+    }
 
     public Role() {}
+
+    public Role(final String name, final String description) {
+        this.name = name.trim();
+        this.description = description.trim();
+        this.disabled = false;
+    }
+
+    public Map<String, Object> update(final JsonCommand command) {
+
+        final Map<String, Object> actualChanges = new LinkedHashMap<>(7);
+
+        final String nameParamName = "name";
+        if (command.isChangeInStringParameterNamed(nameParamName, this.name)) {
+            final String newValue = command.stringValueOfParameterNamed(nameParamName);
+            actualChanges.put(nameParamName, newValue);
+            this.name = newValue;
+        }
+
+        final String descriptionParamName = "description";
+        if (command.isChangeInStringParameterNamed(descriptionParamName, this.description)) {
+            final String newValue = command.stringValueOfParameterNamed(descriptionParamName);
+            actualChanges.put(descriptionParamName, newValue);
+            this.description = newValue;
+        }
+
+        return actualChanges;
+    }
+
+    public boolean updatePermission(final Permission permission, final boolean isSelected) {
+        boolean changed = false;
+        if (isSelected) {
+            changed = addPermission(permission);
+        } else {
+            changed = removePermission(permission);
+        }
+
+        return changed;
+    }
+
+    private boolean addPermission(final Permission permission) {
+        return this.permissions.add(permission);
+    }
+
+    private boolean removePermission(final Permission permission) {
+        return this.permissions.remove(permission);
+    }
 
     public String getName() {
         return name;
@@ -80,22 +125,36 @@ public class Role extends AbstractPersistableCustom<Long> {
         this.disabled = disabled;
     }
 
+    public void disableRole() {
+        this.disabled = true;
+    }
+
+    public void enableRole() {
+        this.disabled = false;
+    }
+
     @JsonIgnore
     public Collection<Permission> getPermissions() {
         return permissions;
     }
 
-    public void setPermissions(Collection<Permission> permissions) {
+    public void setPermissions(Set<Permission> permissions) {
         this.permissions = permissions;
     }
 
-    @JsonIgnore
-    public Collection<AppUser> getAppusers() {
-        return this.appUsers;
+    public boolean hasPermissionTo(final String permissionCode) {
+        boolean match = false;
+        for (final Permission permission : this.permissions) {
+            if (permission.hasCode(permissionCode)) {
+                match = true;
+                break;
+            }
+        }
+        return match;
     }
 
-    public void setAppUsers(Collection<AppUser> appUsers) {
-        this.appUsers = appUsers;
+    public org.apache.fineract.useradministration.data.RoleData toData() {
+        return new RoleData(getId(), this.name, this.description, this.disabled);
     }
 
     @Override

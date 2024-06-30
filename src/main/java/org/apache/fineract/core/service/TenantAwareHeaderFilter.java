@@ -27,7 +27,6 @@ import org.apache.commons.lang3.time.StopWatch;
 import org.apache.fineract.core.tenants.TenantsService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.http.HttpMethod;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.filter.GenericFilterBean;
 
@@ -44,9 +43,11 @@ public class TenantAwareHeaderFilter extends GenericFilterBean {
 
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
     private final TenantsService tenantService;
+    //private final BasicAuthTenantDetailsService basicAuthTenantDetailsService;
     public static ThreadLocal<String> tenant = new ThreadLocal<>();
 
     public TenantAwareHeaderFilter(TenantsService tenantService) {
+        //this.basicAuthTenantDetailsService = basicAuthTenantDetailsService;
         this.tenantService = tenantService;
     }
 

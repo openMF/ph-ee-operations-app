@@ -1,5 +1,8 @@
 package org.apache.fineract.api;
 
+import static org.apache.fineract.api.OperationsApiConstants.*;
+import static org.apache.fineract.core.service.OperatorUtils.dateFormat;
+
 import com.baasflow.commons.events.EventLogLevel;
 import com.baasflow.commons.events.EventService;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
@@ -12,10 +15,12 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.fineract.core.service.TenantAwareHeaderFilter;
 import org.apache.fineract.data.ErrorResponse;
 import org.apache.fineract.exception.WriteToCsvException;
+import org.apache.fineract.infrastructure.security.service.PlatformSecurityContext;
 import org.apache.fineract.operations.*;
 import org.apache.fineract.operations.TransferDto;
 import org.apache.fineract.utils.CsvUtility;
 import org.apache.fineract.utils.SortOrder;
+import org.checkerframework.checker.units.qual.A;
 import org.modelmapper.ModelMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -26,7 +31,6 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.io.UnsupportedEncodingException;
@@ -36,8 +40,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
-
-import static org.apache.fineract.core.service.OperatorUtils.dateFormat;
 
 
 @RestController
@@ -49,11 +51,11 @@ public class OperationsDetailedApi {
 
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
+    @Autowired
+    private PlatformSecurityContext context;
+
     @Value("${payment.internal-account-id-prefix}")
     private String internalAccountIdPrefix;
-
-    @Autowired
-    private TransferRepository transferRepository;
 
     @Autowired
     private TransactionRequestRepository transactionRequestRepository;
@@ -64,14 +66,13 @@ public class OperationsDetailedApi {
     @Autowired
     private EntityManager entityManager;
 
-    @Autowired
-    private ModelMapper modelMapper;
-
     @GetMapping("/businessProcessStatus")
     public List<String> transfers(
             @RequestParam(value = "direction", required = false) String direction,
             @RequestParam(value = "transferType", required = false) Transfer.TransferType transferType
     ) {
+        //this.context.jwt().validateHasReadPermission(TRANSACTION_RESOURCE_NAME); TODO: 3 possible resources
+
         CriteriaBuilder cb = entityManager.getCriteriaBuilder();
         CriteriaQuery<Tuple> cq = cb.createQuery(Tuple.class);
         Root<Transfer> root = cq.from(Transfer.class);
@@ -97,7 +98,6 @@ public class OperationsDetailedApi {
         return resultList.stream().map(tuple -> tuple.get(Transfer_.businessProcessStatus.getName(), String.class)).collect(Collectors.toList());
     }
 
-    @PreAuthorize("hasAuthority('ALL_FUNCTIONS') and hasRole('Admin')")
     @GetMapping("/transfers")
     public Page<TransferDto> transfers(
             @RequestParam(value = "page") Integer page,
@@ -123,11 +123,15 @@ public class OperationsDetailedApi {
             @RequestParam(value = "partyIdType", required = false) String partyIdType,
             @RequestParam(value = "sortedOrder", required = false, defaultValue = "DESC") String sortedOrder,
             @RequestParam(value = "endToEndIdentification", required = false) String endToEndIdentification) {
+
         return eventService.auditedEvent(event -> event
                 .setEvent("transfers list invoked")
                 .setEventLogLevel(EventLogLevel.INFO)
                 .setSourceModule("operations-app")
-                .setTenantId(TenantAwareHeaderFilter.tenant.get()), event -> loadTransfers(Transfer.TransferType.TRANSFER, page, size, _payerPartyId, payerDfspId, _payeePartyId, payeeDfspId, transactionId, status, null, null, businessProcessStatus, paymentScheme, currency, amountFrom, amountTo, startFrom, startTo, acceptanceDateFrom, acceptanceDateTo, direction, sortedBy, _partyId, partyIdType, sortedOrder, endToEndIdentification, null));
+                .setTenantId(TenantAwareHeaderFilter.tenant.get()), event -> {
+                this.context.jwt().validateHasReadPermission(TRANSACTION_RESOURCE_NAME);
+                return loadTransfers(Transfer.TransferType.TRANSFER, page, size, _payerPartyId, payerDfspId, _payeePartyId, payeeDfspId, transactionId, status, null, null, businessProcessStatus, paymentScheme, currency, amountFrom, amountTo, startFrom, startTo, acceptanceDateFrom, acceptanceDateTo, direction, sortedBy, _partyId, partyIdType, sortedOrder, endToEndIdentification, null);
+        });
     }
 
     @GetMapping("/recalls")
@@ -161,8 +165,10 @@ public class OperationsDetailedApi {
                 .setEvent("recalls list invoked")
                 .setEventLogLevel(EventLogLevel.INFO)
                 .setSourceModule("operations-app")
-                .setTenantId(TenantAwareHeaderFilter.tenant.get()), event ->
-                loadTransfers(Transfer.TransferType.RECALL, page, size, _payerPartyId, payerDfspId, _payeePartyId, payeeDfspId, transactionId, status, recallStatus, recallDirection, businessProcessStatus, paymentScheme, currency, amountFrom, amountTo, startFrom, startTo, acceptanceDateFrom, acceptanceDateTo, direction, sortedBy, _partyId, partyIdType, sortedOrder, endToEndIdentification, null));
+                .setTenantId(TenantAwareHeaderFilter.tenant.get()), event -> {
+                this.context.jwt().validateHasReadPermission(RECALL_RESOURCE_NAME);
+                return loadTransfers(Transfer.TransferType.RECALL, page, size, _payerPartyId, payerDfspId, _payeePartyId, payeeDfspId, transactionId, status, recallStatus, recallDirection, businessProcessStatus, paymentScheme, currency, amountFrom, amountTo, startFrom, startTo, acceptanceDateFrom, acceptanceDateTo, direction, sortedBy, _partyId, partyIdType, sortedOrder, endToEndIdentification, null);
+        });
     }
 
     @GetMapping("/transactionRequests")
@@ -186,11 +192,13 @@ public class OperationsDetailedApi {
             @RequestParam(value = "sortedBy", required = false) String sortedBy,
             @RequestParam(value = "sortedOrder", required = false, defaultValue = "DESC") String sortedOrder) {
         return eventService.auditedEvent(event -> event
-                .setEvent("recalls list invoked")
+                .setEvent("request to pay list invoked")
                 .setEventLogLevel(EventLogLevel.INFO)
                 .setSourceModule("operations-app")
-                .setTenantId(TenantAwareHeaderFilter.tenant.get()), event ->
-                loadTransfers(Transfer.TransferType.REQUEST_TO_PAY, page, size, _payerPartyId, payerDfspId, _payeePartyId, payeeDfspId, transactionId, status, null, null, null, null, currency, amountFrom, amountTo, startFrom, startTo, null, null, direction, sortedBy, null, null, sortedOrder, null, rtpDirection));
+                .setTenantId(TenantAwareHeaderFilter.tenant.get()), event -> {
+                this.context.jwt().validateHasReadPermission(REQUESTTOPAY_RESOURCE_NAME);
+                return loadTransfers(Transfer.TransferType.REQUEST_TO_PAY, page, size, _payerPartyId, payerDfspId, _payeePartyId, payeeDfspId, transactionId, status, null, null, null, null, currency, amountFrom, amountTo, startFrom, startTo, null, null, direction, sortedBy, null, null, sortedOrder, null, rtpDirection);
+        });
     }
 
     private Page<TransferDto> loadTransfers(Transfer.TransferType transferType, Integer page, Integer size, String _payerPartyId, String payerDfspId, String _payeePartyId, String payeeDfspId, String transactionId, String status, String recallStatus, String recallDirection, String businessProcessStatus, String paymentScheme, String currency, BigDecimal amountFrom, BigDecimal amountTo, String startFrom, String startTo, String acceptanceDateFrom, String acceptanceDateTo, String direction, String sortedBy, String _partyId, String partyIdType, String sortedOrder, String endToEndIdentification, String rtpDirection) {

@@ -1,8 +1,12 @@
 package org.apache.fineract.core.tenants;
 
 import lombok.Data;
+import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.stereotype.Component;
 
 @Data
+@Component
+@ConfigurationProperties
 public class TenantConnectionProperties {
     String name;
     String schemaServer;

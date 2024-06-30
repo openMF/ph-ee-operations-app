@@ -19,7 +19,7 @@
 package org.apache.fineract.core.service;
 
 import org.apache.fineract.organisation.user.AppUser;
-import org.apache.fineract.organisation.user.AppUserRepository;
+import org.apache.fineract.useradministration.domain.AppUserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -44,7 +44,7 @@ public class TenantAwareUserDetailsService implements UserDetailsService {
             return appUserByName;
         } else {
             AppUser unknownUser = new AppUser();
-            unknownUser.setRoles(Collections.emptyList());
+            unknownUser.setRoles(Collections.emptySet());
             return unknownUser;
         }
     }

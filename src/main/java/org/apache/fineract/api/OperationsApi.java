@@ -6,8 +6,13 @@ import com.baasflow.commons.events.EventService;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import jakarta.servlet.http.HttpServletResponse;
 import org.apache.commons.text.StringEscapeUtils;
+import org.apache.fineract.commands.domain.CommandWrapper;
+import org.apache.fineract.commands.service.CommandWrapperBuilder;
+import org.apache.fineract.commands.service.PortfolioCommandSourceWritePlatformService;
 import org.apache.fineract.core.service.CamundaService;
 import org.apache.fineract.core.service.TenantAwareHeaderFilter;
+import org.apache.fineract.infrastructure.core.data.CommandProcessingResult;
+import org.apache.fineract.infrastructure.security.service.PlatformSecurityContext;
 import org.apache.fineract.operations.*;
 import org.apache.fineract.operations.TransferDto;
 import org.apache.fineract.operations.converter.TimestampToStringConverter;
@@ -30,6 +35,8 @@ import java.util.ListIterator;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+import static org.apache.fineract.api.OperationsApiConstants.TRANSACTION_DETAILS_RESOURCE_NAME;
+
 @RestController
 @SecurityRequirement(name = "auth")
 @RequestMapping("/api/v1")
@@ -39,6 +46,12 @@ public class OperationsApi {
     private static final String RECALLER_TYPE = "recallerType";
 
     private Logger logger = LoggerFactory.getLogger(this.getClass());
+
+    @Autowired
+    private PlatformSecurityContext context;
+
+    @Autowired
+    private PortfolioCommandSourceWritePlatformService commandsSourceWritePlatformService;
 
     @Autowired
     private BusinessKeyRepository businessKeyRepository;
@@ -54,9 +67,6 @@ public class OperationsApi {
 
     @Autowired
     private TransactionRequestRepository transactionRequestRepository;
-
-    @Autowired
-    private BatchRepository batchRepository;
 
     @Autowired
     private CamundaService camundaService;
@@ -115,10 +125,9 @@ public class OperationsApi {
     }
 
     @PostMapping("/transfer/{transactionId}/recall")
-    public String recallTransfer(@RequestHeader("Platform-TenantId") String tenantId,
-                                 @PathVariable("transactionId") String transactionId,
-                                 @RequestBody String requestBody,
-                                 HttpServletResponse response) {
+    public CommandProcessingResult recallTransfer(@RequestHeader("Platform-TenantId") String tenantId,
+                                                  @PathVariable("transactionId") String transactionId,
+                                                  @RequestBody String requestBody) {
         return eventService.auditedEvent(event -> event
                 .setEvent("initiating recall for transaction")
                 .setEventLogLevel(EventLogLevel.INFO)
@@ -127,14 +136,11 @@ public class OperationsApi {
                 .setPayloadType("string")
                 .setTenantId(tenantId), event -> {
 
-            logger.info("Recall transfer request received for transactionId {}", transactionId);
-            Transfer transfer = transferRepository.findFirstByTransactionIdAndDirection(transactionId, "OUTGOING");
-            Optional<Variable> paymentSchemeOpt = variableRepository.findByWorkflowInstanceKeyAndVariableName("paymentScheme", transfer.getWorkflowInstanceKey());
-            String paymentScheme = paymentSchemeOpt.orElseThrow(() -> new RuntimeException("Payment scheme not found for transactionId " + transactionId)).getValue();
-
-            camundaService.startRecallFlow(requestBody, paymentScheme, transfer);
-            response.setStatus(200);
-            return "{}";
+            final CommandWrapper commandRequest = new CommandWrapperBuilder() //
+                    .recall(transactionId) //
+                    .withJson(requestBody) //
+                    .build();
+            return this.commandsSourceWritePlatformService.logCommandSource(commandRequest);
         });
     }
 
@@ -188,7 +194,7 @@ public class OperationsApi {
                 .setPayload(Long.toString(workflowInstanceKey))
                 .setPayloadType("string")
                 .setTenantId(TenantAwareHeaderFilter.tenant.get()), event -> {
-
+            this.context.jwt().validateHasReadPermission(TRANSACTION_DETAILS_RESOURCE_NAME);
             Transfer transfer = transferRepository.findFirstByWorkflowInstanceKey(workflowInstanceKey);
             List<Task> tasks = taskRepository.findByWorkflowInstanceKeyOrderByTimestamp(workflowInstanceKey);
             List<Variable> variables = variableRepository.findByWorkflowInstanceKeyOrderByName(workflowInstanceKey);
