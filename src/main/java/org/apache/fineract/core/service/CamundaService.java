@@ -63,6 +63,9 @@ public class CamundaService {
             variables.put("paymentScheme", "IG2:RECALL");
             variables.put("originalFileMetadata", getTransferVariable(transfer, "fileMetadata"));
         }
+        variables.put("partnerName", getTransferVariable(transfer, "partnerName"));
+        variables.put("partnerIban", getTransferVariable(transfer, "partnerName"));
+        variables.put("partnerBic", getTransferVariable(transfer, "partnerName"));
         variables.put("iban", iban);
         variables.put("creditorIban", debtorIban);
         variables.put("transactionGroupId", transactionGroupId);
