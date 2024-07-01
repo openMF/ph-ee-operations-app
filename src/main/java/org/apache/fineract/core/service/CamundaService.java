@@ -64,6 +64,9 @@ public class CamundaService {
             variables.put("originalFileMetadata", getTransferVariable(transfer, "fileMetadata"));
         }
         variables.put("iban", iban);
+        variables.put("partnerName", getTransferVariable(transfer, "partnerName"));
+        variables.put("partnerIban", getTransferVariable(transfer, "partnerIban"));
+        variables.put("partnerBic", getTransferVariable(transfer, "partnerBic"));
         variables.put("creditorIban", debtorIban);
         variables.put("transactionGroupId", transactionGroupId);
         variables.put("internalCorrelationId", internalCorrelationId);
