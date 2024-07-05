@@ -1,4 +1,4 @@
-package org.apache.fineract.ReportApi;
+package org.apache.fineract.reportapi;
 
 public class ReportNotFoundException extends RuntimeException {
     public ReportNotFoundException(String message) {
