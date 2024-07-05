@@ -1,24 +1,31 @@
-package org.apache.fineract.ReportApi;
+package org.apache.fineract.reportapi;
+
+import javax.persistence.Entity;
+import javax.persistence.Table;
+import javax.persistence.Id;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Column;
+import javax.persistence.OneToMany;
+import javax.persistence.CascadeType;
 
 import lombok.Data;
 import lombok.Getter;
 import lombok.Setter;
 
-import javax.persistence.*;
-import java.util.*;
+import java.util.List;
 
 @Entity
 @Data
-@Table(name = "REPORTREQUEST")
+@Table(name = "report_request")
 @Getter
 @Setter
 public class ReportRequest {
     @Id
-    @Column
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "report_name")
+    @Column(name = "report_name", nullable = false)
     private String reportName;
 
     @Column(name = "report_type")
@@ -33,9 +40,10 @@ public class ReportRequest {
     @Column
     private String description;
 
-    @Column(name = "report_sql")
+    @Column(name = "report_sql", nullable = false)
     private String reportSql;
 
-    @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true, mappedBy = "reportRequest")
+    @OneToMany(mappedBy = "reportRequest", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<ReportParameter> reportParameters;
+
 }
