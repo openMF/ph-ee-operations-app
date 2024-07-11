@@ -10,6 +10,7 @@ import java.math.BigDecimal;
 import java.util.Date;
 
 import static org.apache.fineract.core.service.OperatorUtils.formatDate;
+import static org.apache.fineract.core.service.OperatorUtils.formatDateTime;
 
 @Getter
 @Setter
@@ -47,11 +48,15 @@ public class TransferDto {
     private String businessProcessStatus;
     private Integer recallCount;
 
-    public TransferDto (Tuple tuple) {
+    public TransferDto (Transfer.TransferType transferType, Tuple tuple) {
         this.workflowInstanceKey = tuple.get(Transfer_.workflowInstanceKey.getName(), Long.class);
-        this.startedAt = formatDate(tuple.get(Transfer_.startedAt.getName(), Date.class));
-        this.completedAt = formatDate(tuple.get(Transfer_.completedAt.getName(), Date.class));
-        this.acceptanceDate = formatDate(tuple.get(Transfer_.acceptanceDate.getName(), Date.class));
+        this.startedAt = formatDateTime(tuple.get(Transfer_.startedAt.getName(), Date.class));
+        this.completedAt = formatDateTime(tuple.get(Transfer_.completedAt.getName(), Date.class));
+        if (Transfer.TransferType.TRANSFER.equals(transferType)) {
+            this.acceptanceDate = formatDate(tuple.get(Transfer_.acceptanceDate.getName(), Date.class));
+        } else {
+            this.acceptanceDate = formatDateTime(tuple.get(Transfer_.acceptanceDate.getName(), Date.class));
+        }
         this.transactionId = tuple.get(Transfer_.transactionId.getName(), String.class);
         this.payerPartyId = tuple.get(Transfer_.payerPartyId.getName(), String.class);
         this.payeePartyId = tuple.get(Transfer_.payeePartyId.getName(), String.class);

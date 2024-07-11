@@ -6,13 +6,15 @@ import java.util.TimeZone;
 
 public class OperatorUtils {
 
-    private static final String PATTERN = "yyyy-MM-dd'T'HH:mm:ss'Z'";
-    private static final SimpleDateFormat DATE_FORMAT = new SimpleDateFormat(PATTERN);
-    private static final SimpleDateFormat UTC_DATE_FORMAT;
+    private static final String DATE_PATTERN = "yyyy-MM-dd";
+    private static final String DATETIME_PATTERN = "yyyy-MM-dd'T'HH:mm:ss'Z'";
+    private static final SimpleDateFormat DATETIME_FORMAT = new SimpleDateFormat(DATETIME_PATTERN);
+    private static final SimpleDateFormat DATE_FORMAT = new SimpleDateFormat(DATE_PATTERN);
+    private static final SimpleDateFormat UTC_DATETIME_FORMAT;
 
     static {
-        UTC_DATE_FORMAT = new SimpleDateFormat(PATTERN);
-        UTC_DATE_FORMAT.setTimeZone(TimeZone.getTimeZone("UTC"));
+        UTC_DATETIME_FORMAT = new SimpleDateFormat(DATETIME_PATTERN);
+        UTC_DATETIME_FORMAT.setTimeZone(TimeZone.getTimeZone("UTC"));
     }
 
     public static String strip(String str) {
@@ -23,8 +25,12 @@ public class OperatorUtils {
         return DATE_FORMAT;
     }
 
-    public static SimpleDateFormat utcDateFormat() {
-        return UTC_DATE_FORMAT;
+    public static SimpleDateFormat dateTimeFormat() {
+        return DATETIME_FORMAT;
+    }
+
+    public static SimpleDateFormat utcDateTimeFormat() {
+        return UTC_DATETIME_FORMAT;
     }
 
     public static String formatDate(Date input) {
@@ -34,10 +40,17 @@ public class OperatorUtils {
         return dateFormat().format(input);
     }
 
-    public static String formatUtcDate(Date input) {
+    public static String formatDateTime(Date input) {
         if (input == null) {
             return null;
         }
-        return utcDateFormat().format(input);
+        return dateTimeFormat().format(input);
+    }
+
+    public static String formatUtcDateTime(Date input) {
+        if (input == null) {
+            return null;
+        }
+        return utcDateTimeFormat().format(input);
     }
 }

@@ -2,6 +2,7 @@ package org.apache.fineract.api;
 
 import static org.apache.fineract.api.OperationsApiConstants.*;
 import static org.apache.fineract.core.service.OperatorUtils.dateFormat;
+import static org.apache.fineract.core.service.OperatorUtils.dateTimeFormat;
 
 import com.baasflow.commons.events.EventLogLevel;
 import com.baasflow.commons.events.EventService;
@@ -20,8 +21,6 @@ import org.apache.fineract.operations.*;
 import org.apache.fineract.operations.TransferDto;
 import org.apache.fineract.utils.CsvUtility;
 import org.apache.fineract.utils.SortOrder;
-import org.checkerframework.checker.units.qual.A;
-import org.modelmapper.ModelMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -36,7 +35,9 @@ import org.springframework.web.bind.annotation.*;
 import java.io.UnsupportedEncodingException;
 import java.math.BigDecimal;
 import java.net.URLDecoder;
+import java.text.ParseException;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -335,23 +336,33 @@ public class OperationsDetailedApi {
         }
         try {
             if (startFrom != null && startTo != null) {
-                specs.add(TransferSpecs.between(Transfer_.startedAt, dateFormat().parse(startFrom), dateFormat().parse(startTo)));
+                specs.add(TransferSpecs.between(Transfer_.startedAt, dateTimeFormat().parse(startFrom), dateTimeFormat().parse(startTo)));
             } else if (startFrom != null) {
-                specs.add(TransferSpecs.later(Transfer_.startedAt, dateFormat().parse(startFrom)));
+                specs.add(TransferSpecs.later(Transfer_.startedAt, dateTimeFormat().parse(startFrom)));
             } else if (startTo != null) {
-                specs.add(TransferSpecs.earlier(Transfer_.startedAt, dateFormat().parse(startTo)));
+                specs.add(TransferSpecs.earlier(Transfer_.startedAt, dateTimeFormat().parse(startTo)));
             }
         } catch (Exception e) {
             logger.warn("failed to parse dates {} / {}", startFrom, startTo);
         }
 
         try {
-            if (acceptanceDateFrom != null && acceptanceDateTo != null) {
-                specs.add(TransferSpecs.between(Transfer_.acceptanceDate, dateFormat().parse(acceptanceDateFrom), dateFormat().parse(acceptanceDateTo)));
-            } else if (acceptanceDateFrom != null) {
-                specs.add(TransferSpecs.later(Transfer_.acceptanceDate, dateFormat().parse(acceptanceDateFrom)));
-            } else if (acceptanceDateTo != null) {
-                specs.add(TransferSpecs.earlier(Transfer_.acceptanceDate, dateFormat().parse(acceptanceDateTo)));
+            if (Transfer.TransferType.TRANSFER.equals(transferType)) {
+                if (acceptanceDateFrom != null && acceptanceDateTo != null) {
+                    specs.add(TransferSpecs.betweenDay(Transfer_.acceptanceDate, dateFormat().parse(acceptanceDateFrom), dateFormat().parse(acceptanceDateTo)));
+                } else if (acceptanceDateFrom != null) {
+                    specs.add(TransferSpecs.laterDay(Transfer_.acceptanceDate, dateFormat().parse(acceptanceDateFrom)));
+                } else if (acceptanceDateTo != null) {
+                    specs.add(TransferSpecs.earlierDay(Transfer_.acceptanceDate, dateFormat().parse(acceptanceDateTo)));
+                }
+            } else {
+                if (acceptanceDateFrom != null && acceptanceDateTo != null) {
+                    specs.add(TransferSpecs.between(Transfer_.acceptanceDate, dateTimeFormat().parse(acceptanceDateFrom), dateTimeFormat().parse(acceptanceDateTo)));
+                } else if (acceptanceDateFrom != null) {
+                    specs.add(TransferSpecs.later(Transfer_.acceptanceDate, dateTimeFormat().parse(acceptanceDateFrom)));
+                } else if (acceptanceDateTo != null) {
+                    specs.add(TransferSpecs.earlier(Transfer_.acceptanceDate, dateTimeFormat().parse(acceptanceDateTo)));
+                }
             }
         } catch (Exception e) {
             logger.warn("failed to parse dates {} / {}", acceptanceDateFrom, acceptanceDateTo);
@@ -414,7 +425,7 @@ public class OperationsDetailedApi {
         Long count = entityManager.createQuery(cqCount.select(cb.count(countRoot)).where(combinedSpec.toPredicate(countRoot, cqCount, cb))).getSingleResult();
 
         return new PageImpl<>(resultList.stream()
-                .map(t -> new TransferDto(t)).collect(Collectors.toList()), PageRequest.of(page, size, Sort.by(Sort.Direction.fromString(sortedOrder), sortedBy)), count);
+                .map(t -> new TransferDto(transferType, t)).collect(Collectors.toList()), PageRequest.of(page, size, Sort.by(Sort.Direction.fromString(sortedOrder), sortedBy)), count);
     }
 
     private Order getSortDirection(CriteriaBuilder cb, Root<?> root, String direction, String sortedBy) {
@@ -566,11 +577,11 @@ public class OperationsDetailedApi {
      */
     private Specification<TransactionRequest> getDateSpecification(String startTo, String startFrom) throws Exception {
         if (startFrom != null && startTo != null) {
-            return TransactionRequestSpecs.between(TransactionRequest_.startedAt, dateFormat().parse(startFrom), dateFormat().parse(startTo));
+            return TransactionRequestSpecs.between(TransactionRequest_.startedAt, dateTimeFormat().parse(startFrom), dateTimeFormat().parse(startTo));
         } else if (startFrom != null) {
-            return TransactionRequestSpecs.later(TransactionRequest_.startedAt, dateFormat().parse(startFrom));
+            return TransactionRequestSpecs.later(TransactionRequest_.startedAt, dateTimeFormat().parse(startFrom));
         } else if (startTo != null) {
-            return TransactionRequestSpecs.earlier(TransactionRequest_.startedAt, dateFormat().parse(startTo));
+            return TransactionRequestSpecs.earlier(TransactionRequest_.startedAt, dateTimeFormat().parse(startTo));
         } else {
             throw new Exception("Both dates(startTo, startFrom empty, skipping");
         }

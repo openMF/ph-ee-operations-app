@@ -292,7 +292,8 @@ public final class DateUtils {
     // LocalDate
 
     public static LocalDate getLocalDateOfTenant() {
-        return LocalDate.now(getDateTimeZoneOfTenant());
+        //return LocalDate.now(getDateTimeZoneOfTenant());
+        return LocalDate.now();
     }
 
     public static LocalDate getBusinessLocalDate() {
