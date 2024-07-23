@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.1.xsd">
+
+    <changeSet id="1" author="fineract">
+        <createTable tableName="file_transport">
+            <column name="WORKFLOW_INSTANCE_KEY" type="BIGINT">
+                <constraints primaryKey="true"/>
+            </column>
+            <column name="SESSION_NUMBER" type="INT"/>
+            <column name="STARTED_AT" type="DATETIME"/>
+            <column name="COMPLETED_AT" type="DATETIME"/>
+            <column name="TRANSACTION_DATE" type="DATE"/>
+            <column name="STATUS" type="VARCHAR(100)"/>
+            <column name="LIST_OF_BICS" type="VARCHAR(1000)"/>
+            <column name="TRANSPORT_TYPE" type="VARCHAR(10)"/>
+            <column name="DIRECTION" type="VARCHAR(10)"/>
+        </createTable>
+    </changeSet>
+
+</databaseChangeLog>

@@ -1,12 +1,11 @@
 package org.apache.fineract.operations;
 
 
+import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.With;
-
-import jakarta.persistence.*;
 
 @Entity
 @IdClass(VariableId.class)
@@ -43,8 +42,12 @@ public class Variable {
     private TransactionRequest transactionRequest;
 
     @Id
-    @ManyToOne(fetch=FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "WORKFLOW_INSTANCE_KEY", referencedColumnName = "WORKFLOW_INSTANCE_KEY", insertable = false, updatable = false)
     private Transfer transfer;
 
+    @Id
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "WORKFLOW_INSTANCE_KEY", referencedColumnName = "WORKFLOW_INSTANCE_KEY", insertable = false, updatable = false)
+    private FileTransport fileTransport;
 }
