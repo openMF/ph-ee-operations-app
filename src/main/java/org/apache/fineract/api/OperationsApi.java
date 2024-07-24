@@ -286,7 +286,7 @@ public class OperationsApi {
         if (recallReasonOpt.isPresent()) {
             Variable recallReason = recallReasonOpt.get();
             Variable newVariable = new Variable(recallReason.getWorkflowInstanceKey(), RECALLER_TYPE, recallReason.getWorkflowKey(), recallReason.getTimestamp(),
-                    null, RecallReason.getRecallerType(recallReason.getValue()), null, transfer);
+                    null, RecallReason.getRecallerType(recallReason.getValue()), null, transfer, null);
 
             ListIterator<Variable> iterator = variables.listIterator();
             while (iterator.hasNext()) {
