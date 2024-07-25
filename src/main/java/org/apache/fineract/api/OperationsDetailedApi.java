@@ -1,9 +1,5 @@
 package org.apache.fineract.api;
 
-import static org.apache.fineract.api.OperationsApiConstants.*;
-import static org.apache.fineract.core.service.OperatorUtils.dateFormat;
-import static org.apache.fineract.core.service.OperatorUtils.dateTimeFormat;
-
 import com.baasflow.commons.events.EventLogLevel;
 import com.baasflow.commons.events.EventService;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
@@ -18,17 +14,14 @@ import org.apache.fineract.data.ErrorResponse;
 import org.apache.fineract.exception.WriteToCsvException;
 import org.apache.fineract.infrastructure.security.service.PlatformSecurityContext;
 import org.apache.fineract.operations.*;
-import org.apache.fineract.operations.TransferDto;
 import org.apache.fineract.utils.CsvUtility;
 import org.apache.fineract.utils.SortOrder;
+import org.modelmapper.ModelMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Sort;
+import org.springframework.data.domain.*;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.web.bind.annotation.*;
 
@@ -41,6 +34,10 @@ import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
+
+import static org.apache.fineract.api.OperationsApiConstants.*;
+import static org.apache.fineract.core.service.OperatorUtils.dateFormat;
+import static org.apache.fineract.core.service.OperatorUtils.dateTimeFormat;
 
 
 @RestController
@@ -60,6 +57,12 @@ public class OperationsDetailedApi {
 
     @Autowired
     private TransactionRequestRepository transactionRequestRepository;
+
+    @Autowired
+    private FileTransportRepository fileTransportRepository;
+
+    @Autowired
+    private ModelMapper modelMapper;
 
     @Autowired
     private EventService eventService;
@@ -99,6 +102,54 @@ public class OperationsDetailedApi {
         return resultList.stream().map(tuple -> tuple.get(Transfer_.businessProcessStatus.getName(), String.class)).collect(Collectors.toList());
     }
 
+    @GetMapping("/fileTransports")
+    public Page<FileTransportDto> fileTransports(
+            @RequestParam(value = "page") Integer page,
+            @RequestParam(value = "size") Integer size,
+            @RequestParam(value = "transactionDateFrom", required = false) String transactionDateFrom,
+            @RequestParam(value = "transactionDateTo", required = false) String transactionDateTo,
+            @RequestParam(value = "status", required = false) String status,
+            @RequestParam(value = "sessionNumber", required = false) Integer sessionNumber) {
+        return eventService.auditedEvent(event -> event
+                .setEvent("fileTransports list invoked")
+                .setEventLogLevel(EventLogLevel.INFO)
+                .setSourceModule("operations-app")
+                .setTenantId(TenantAwareHeaderFilter.tenant.get()), event -> {
+            // TODO this.context.jwt().validateHasReadPermission(TRANSACTION_RESOURCE_NAME);
+            return loadFileTransports(page,
+                    size,
+                    status,
+                    sessionNumber,
+                    transactionDateFrom,
+                    transactionDateTo);
+        });
+    }
+
+    private Page<FileTransportDto> loadFileTransports(Integer page,
+                                                      Integer size,
+                                                      String status,
+                                                      Integer sessionNumber,
+                                                      String transactionDateFromText,
+                                                      String transactionDateToText) {
+        Pageable pageable = PageRequest.of(page, size, Sort.by("transactionDate").descending());
+        Date transactionDateFrom, transactionDateTo;
+        try {
+            transactionDateFrom = dateTimeFormat().parse(transactionDateFromText);
+            transactionDateTo = dateTimeFormat().parse(transactionDateToText);
+        } catch (ParseException e) {
+            throw new RuntimeException("failed to convert transactionDate", e);
+        }
+        List<FileTransport> fileTransports = fileTransportRepository.findAllFiltered(status,
+                sessionNumber,
+                transactionDateFrom,
+                transactionDateTo,
+                pageable);
+        List<FileTransportDto> fileTransportDtos = fileTransports.stream()
+                .map(t -> modelMapper.map(t, FileTransportDto.class))
+                .collect(Collectors.toList());
+        return new PageImpl<>(fileTransportDtos, pageable, fileTransports.size());
+    }
+
     @GetMapping("/transfers")
     public Page<TransferDto> transfers(
             @RequestParam(value = "page") Integer page,
@@ -130,8 +181,8 @@ public class OperationsDetailedApi {
                 .setEventLogLevel(EventLogLevel.INFO)
                 .setSourceModule("operations-app")
                 .setTenantId(TenantAwareHeaderFilter.tenant.get()), event -> {
-                this.context.jwt().validateHasReadPermission(TRANSACTION_RESOURCE_NAME);
-                return loadTransfers(Transfer.TransferType.TRANSFER, page, size, _payerPartyId, payerDfspId, _payeePartyId, payeeDfspId, transactionId, status, null, null, businessProcessStatus, paymentScheme, currency, amountFrom, amountTo, startFrom, startTo, acceptanceDateFrom, acceptanceDateTo, direction, sortedBy, _partyId, partyIdType, sortedOrder, endToEndIdentification, null);
+            this.context.jwt().validateHasReadPermission(TRANSACTION_RESOURCE_NAME);
+            return loadTransfers(Transfer.TransferType.TRANSFER, page, size, _payerPartyId, payerDfspId, _payeePartyId, payeeDfspId, transactionId, status, null, null, businessProcessStatus, paymentScheme, currency, amountFrom, amountTo, startFrom, startTo, acceptanceDateFrom, acceptanceDateTo, direction, sortedBy, _partyId, partyIdType, sortedOrder, endToEndIdentification, null);
         });
     }
 
@@ -167,8 +218,8 @@ public class OperationsDetailedApi {
                 .setEventLogLevel(EventLogLevel.INFO)
                 .setSourceModule("operations-app")
                 .setTenantId(TenantAwareHeaderFilter.tenant.get()), event -> {
-                this.context.jwt().validateHasReadPermission(RECALL_RESOURCE_NAME);
-                return loadTransfers(Transfer.TransferType.RECALL, page, size, _payerPartyId, payerDfspId, _payeePartyId, payeeDfspId, transactionId, status, recallStatus, recallDirection, businessProcessStatus, paymentScheme, currency, amountFrom, amountTo, startFrom, startTo, acceptanceDateFrom, acceptanceDateTo, direction, sortedBy, _partyId, partyIdType, sortedOrder, endToEndIdentification, null);
+            this.context.jwt().validateHasReadPermission(RECALL_RESOURCE_NAME);
+            return loadTransfers(Transfer.TransferType.RECALL, page, size, _payerPartyId, payerDfspId, _payeePartyId, payeeDfspId, transactionId, status, recallStatus, recallDirection, businessProcessStatus, paymentScheme, currency, amountFrom, amountTo, startFrom, startTo, acceptanceDateFrom, acceptanceDateTo, direction, sortedBy, _partyId, partyIdType, sortedOrder, endToEndIdentification, null);
         });
     }
 
@@ -197,8 +248,8 @@ public class OperationsDetailedApi {
                 .setEventLogLevel(EventLogLevel.INFO)
                 .setSourceModule("operations-app")
                 .setTenantId(TenantAwareHeaderFilter.tenant.get()), event -> {
-                this.context.jwt().validateHasReadPermission(REQUESTTOPAY_RESOURCE_NAME);
-                return loadTransfers(Transfer.TransferType.REQUEST_TO_PAY, page, size, _payerPartyId, payerDfspId, _payeePartyId, payeeDfspId, transactionId, status, null, null, null, null, currency, amountFrom, amountTo, startFrom, startTo, null, null, direction, sortedBy, null, null, sortedOrder, null, rtpDirection);
+            this.context.jwt().validateHasReadPermission(REQUESTTOPAY_RESOURCE_NAME);
+            return loadTransfers(Transfer.TransferType.REQUEST_TO_PAY, page, size, _payerPartyId, payerDfspId, _payeePartyId, payeeDfspId, transactionId, status, null, null, null, null, currency, amountFrom, amountTo, startFrom, startTo, null, null, direction, sortedBy, null, null, sortedOrder, null, rtpDirection);
         });
     }
 

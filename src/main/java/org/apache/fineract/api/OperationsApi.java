@@ -14,7 +14,6 @@ import org.apache.fineract.core.service.TenantAwareHeaderFilter;
 import org.apache.fineract.infrastructure.core.data.CommandProcessingResult;
 import org.apache.fineract.infrastructure.security.service.PlatformSecurityContext;
 import org.apache.fineract.operations.*;
-import org.apache.fineract.operations.TransferDto;
 import org.apache.fineract.operations.converter.TimestampToStringConverter;
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -69,6 +68,9 @@ public class OperationsApi {
     private TransactionRequestRepository transactionRequestRepository;
 
     @Autowired
+    private FileTransportRepository fileTransportRepository;
+
+    @Autowired
     private CamundaService camundaService;
 
     @Autowired
@@ -85,7 +87,6 @@ public class OperationsApi {
 
     @Autowired
     private ModelMapper modelMapper;
-
 
     @PostMapping("/transfer/{transactionId}/refund")
     public String refundTransfer(@RequestHeader("Platform-TenantId") String tenantId,
@@ -185,6 +186,30 @@ public class OperationsApi {
         extensionList.put(extension);
     }
 
+    @GetMapping("/fileTransport/{workflowInstanceKey}")
+    public FileTransportDetail fileTransportDetails(@PathVariable Long workflowInstanceKey) {
+        return eventService.auditedEvent(event -> event
+                .setEvent("fileTransportDetails invoked")
+                .setEventLogLevel(EventLogLevel.INFO)
+                .setSourceModule("operations-app")
+                .setPayload(Long.toString(workflowInstanceKey))
+                .setPayloadType("string")
+                .setTenantId(TenantAwareHeaderFilter.tenant.get()), event -> {
+            // TODO this.context.jwt().validateHasReadPermission(TRANSACTION_DETAILS_RESOURCE_NAME);
+            FileTransport fileTransport = fileTransportRepository.findFirstByWorkflowInstanceKey(workflowInstanceKey);
+            List<Task> tasks = taskRepository.findByWorkflowInstanceKeyOrderByTimestamp(workflowInstanceKey);
+            List<Variable> variables = variableRepository.findByWorkflowInstanceKeyOrderByName(workflowInstanceKey);
+            return new FileTransportDetail(
+                    modelMapper.map(fileTransport, FileTransportDto.class),
+                    tasks.stream().map(t -> {
+                        modelMapper.addConverter(new TimestampToStringConverter());
+                        return modelMapper.map(t, TaskDto.class);
+                    }).collect(Collectors.toList()),
+                    variables.stream().map(v -> modelMapper.map(v, VariableDto.class)).collect(Collectors.toList())
+            );
+        });
+    }
+
     @GetMapping("/transfer/{workflowInstanceKey}")
     public TransferDetail transferDetails(@PathVariable Long workflowInstanceKey) {
         return eventService.auditedEvent(event -> event
@@ -251,9 +276,9 @@ public class OperationsApi {
                 .setPayload(businessKey)
                 .setPayloadType("string")
                 .setTenantId(TenantAwareHeaderFilter.tenant.get()), event -> loadTransfers(businessKey, businessKeyType).stream()
-                        .map(transfer -> variableRepository.findByWorkflowInstanceKeyOrderByName(transfer.getWorkflowInstanceKey())
-                                .stream().map(v -> modelMapper.map(v, VariableDto.class)).collect(Collectors.toList()))
-                        .collect(Collectors.toList()));
+                .map(transfer -> variableRepository.findByWorkflowInstanceKeyOrderByName(transfer.getWorkflowInstanceKey())
+                        .stream().map(v -> modelMapper.map(v, VariableDto.class)).collect(Collectors.toList()))
+                .collect(Collectors.toList()));
     }
 
     @GetMapping("/tasks")
