@@ -14,8 +14,6 @@ import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Component;
 
 import javax.sql.DataSource;
-import java.sql.Connection;
-import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -69,10 +67,9 @@ public class TenantsService implements DisposableBean {
             logger.info("Running in migration mode, migrating tenants: {}", tenantDataSources.keySet());
             tenantDatabaseUpgradeService.migrateTenants(tenantDataSources, tenantConnectionProperties);
             logger.info("Migration finished, exiting");
-            SpringApplication.exit(springContext, () -> 0);
+            new Thread(() -> SpringApplication.exit(springContext, () -> 0)).start();
         }
     }
-
 
     public DataSource getTenantDataSource(String tenantIdentifier) {
         return tenantDataSources.get(tenantIdentifier);
