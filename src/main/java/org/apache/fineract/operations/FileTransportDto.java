@@ -17,7 +17,8 @@ public class FileTransportDto {
     private Date startedAt;
     private Date completedAt;
     private Date transactionDate;
-    private String status;
+    private FileTransport.TransportStatus status;
+    private String statusMessage;
     private String listOfBics;
     private FileTransport.TransportType transportType;
     private FileTransport.TransportDirection direction;

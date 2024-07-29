@@ -14,6 +14,14 @@ import java.util.List;
 @AllArgsConstructor
 public class FileTransport {
 
+    public enum TransportStatus {
+        COMPLETED,
+        FAILED,
+        IN_PROGRESS,
+        EXCEPTION,
+        UNKNOWN
+    }
+
     public enum TransportType {
         IG1,
         IG2
@@ -37,11 +45,18 @@ public class FileTransport {
     @Column(name = "COMPLETED_AT")
     private Date completedAt;
 
+    @Column(name = "LAST_UPDATED")
+    private Long lastUpdated;
+
     @Column(name = "TRANSACTION_DATE")
     private Date transactionDate;
 
+    @Enumerated(EnumType.STRING)
     @Column(name = "STATUS")
-    private String status;
+    private TransportStatus status;
+
+    @Column(name = "STATUS_MESSAGE")
+    private String statusMessage;
 
     @Column(name = "LIST_OF_BICS")
     private String listOfBics;

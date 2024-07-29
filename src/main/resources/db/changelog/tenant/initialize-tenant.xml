@@ -55,4 +55,5 @@
     <include file="parts/0073_add_result_status_code_to_command_source.xml" relativeToChangelogFile="true"/>
     <include file="parts/0117_set_datetime_precision.xml" relativeToChangelogFile="true"/>
     <include file="parts/0118_file_transport.xml" relativeToChangelogFile="true"/>
+    <include file="parts/0119_file_transport_status_message.xml" relativeToChangelogFile="true"/>
 </databaseChangeLog>
