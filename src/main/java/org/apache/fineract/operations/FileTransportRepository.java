@@ -16,7 +16,7 @@ public interface FileTransportRepository extends JpaRepository<FileTransport, Lo
     @Query("select t from FileTransport t where (:status is null or t.status = :status)" +
             " and (:sessionNumber is null or t.sessionNumber = :sessionNumber)" +
             " and ((:transactionDateFrom is null and :transactionDateTo is null) " +
-            " or t.transactionDate between :transactionDateFrom and :transactionDateTo)"
+            " or (t.transactionDate between :transactionDateFrom and :transactionDateTo))"
     )
     List<FileTransport> findAllFiltered(@Param("status") @Nullable String status,
                                         @Param("sessionNumber") @Nullable Integer sessionNumber,

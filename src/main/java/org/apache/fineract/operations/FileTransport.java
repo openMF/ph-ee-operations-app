@@ -40,15 +40,19 @@ public class FileTransport {
     private Long sessionNumber;
 
     @Column(name = "STARTED_AT")
+    @Temporal(TemporalType.TIMESTAMP)
     private Date startedAt;
 
     @Column(name = "COMPLETED_AT")
+    @Temporal(TemporalType.TIMESTAMP)
     private Date completedAt;
 
     @Column(name = "LAST_UPDATED")
+    @Temporal(TemporalType.TIMESTAMP)
     private Long lastUpdated;
 
     @Column(name = "TRANSACTION_DATE")
+    @Temporal(TemporalType.DATE)
     private Date transactionDate;
 
     @Enumerated(EnumType.STRING)
