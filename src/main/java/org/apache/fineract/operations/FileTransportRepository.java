@@ -19,7 +19,7 @@ public interface FileTransportRepository extends JpaRepository<FileTransport, Lo
             " or (t.transactionDate between :transactionDateFrom and :transactionDateTo))"
     )
     List<FileTransport> findAllFiltered(@Param("status") @Nullable String status,
-                                        @Param("sessionNumber") @Nullable Integer sessionNumber,
+                                        @Param("sessionNumber") @Nullable Long sessionNumber,
                                         @Param("transactionDateFrom") @Nullable Date transactionDateFrom,
                                         @Param("transactionDateTo") @Nullable Date transactionDateTo,
                                         Pageable pageable);

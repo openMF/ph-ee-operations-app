@@ -109,7 +109,7 @@ public class OperationsDetailedApi {
             @RequestParam(value = "transactionDateFrom", required = false) String transactionDateFrom,
             @RequestParam(value = "transactionDateTo", required = false) String transactionDateTo,
             @RequestParam(value = "status", required = false) String status,
-            @RequestParam(value = "sessionNumber", required = false) Integer sessionNumber) {
+            @RequestParam(value = "sessionNumber", required = false) Long sessionNumber) {
         return eventService.auditedEvent(event -> event
                 .setEvent("fileTransports list invoked")
                 .setEventLogLevel(EventLogLevel.INFO)
@@ -128,7 +128,7 @@ public class OperationsDetailedApi {
     private Page<FileTransportDto> loadFileTransports(Integer page,
                                                       Integer size,
                                                       String status,
-                                                      Integer sessionNumber,
+                                                      Long sessionNumber,
                                                       String transactionDateFromText,
                                                       String transactionDateToText) {
         Pageable pageable = PageRequest.of(page, size, Sort.by("transactionDate").descending());
