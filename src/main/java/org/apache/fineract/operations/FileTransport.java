@@ -48,7 +48,6 @@ public class FileTransport {
     private Date completedAt;
 
     @Column(name = "LAST_UPDATED")
-    @Temporal(TemporalType.TIMESTAMP)
     private Long lastUpdated;
 
     @Column(name = "TRANSACTION_DATE")
