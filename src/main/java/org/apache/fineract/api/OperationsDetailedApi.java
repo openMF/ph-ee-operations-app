@@ -134,8 +134,16 @@ public class OperationsDetailedApi {
         Pageable pageable = PageRequest.of(page, size, Sort.by("transactionDate").descending());
         Date transactionDateFrom, transactionDateTo;
         try {
-            transactionDateFrom = dateTimeFormat().parse(transactionDateFromText);
-            transactionDateTo = dateTimeFormat().parse(transactionDateToText);
+            if (StringUtils.isNotBlank(transactionDateFromText)) {
+                transactionDateFrom = dateTimeFormat().parse(transactionDateFromText);
+            } else {
+                transactionDateFrom = null;
+            }
+            if (StringUtils.isNotBlank(transactionDateToText)) {
+                transactionDateTo = dateTimeFormat().parse(transactionDateToText);
+            } else {
+                transactionDateTo = null;
+            }
         } catch (ParseException e) {
             throw new RuntimeException("failed to convert transactionDate", e);
         }
