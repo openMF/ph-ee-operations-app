@@ -7,6 +7,9 @@
         <addColumn tableName="file_transport">
             <column name="STATUS_MESSAGE" type="VARCHAR(300)"/>
         </addColumn>
+        <addColumn tableName="file_transport">
+            <column name="LAST_UPDATED" type="BIGINT"/>
+        </addColumn>
     </changeSet>
 
 </databaseChangeLog>
