@@ -147,15 +147,15 @@ public class OperationsDetailedApi {
         } catch (ParseException e) {
             throw new RuntimeException("failed to convert transactionDate", e);
         }
-        List<FileTransport> fileTransports = fileTransportRepository.findAllFiltered(status,
+        Page<FileTransport> fileTransports = fileTransportRepository.findAllFiltered(status,
                 sessionNumber,
                 transactionDateFrom,
                 transactionDateTo,
                 pageable);
-        List<FileTransportDto> fileTransportDtos = fileTransports.stream()
+        List<FileTransportDto> fileTransportDtos = fileTransports.get()
                 .map(t -> modelMapper.map(t, FileTransportDto.class))
                 .collect(Collectors.toList());
-        return new PageImpl<>(fileTransportDtos, pageable, fileTransports.size());
+        return new PageImpl<>(fileTransportDtos, fileTransports.getPageable(), fileTransports.getSize());
     }
 
     @GetMapping("/transfers")

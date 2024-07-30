@@ -1,5 +1,6 @@
 package org.apache.fineract.operations;
 
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -7,7 +8,6 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.lang.Nullable;
 
 import java.util.Date;
-import java.util.List;
 
 public interface FileTransportRepository extends JpaRepository<FileTransport, Long> {
 
@@ -18,7 +18,7 @@ public interface FileTransportRepository extends JpaRepository<FileTransport, Lo
             " and ((:transactionDateFrom is null and :transactionDateTo is null) " +
             " or (t.transactionDate between :transactionDateFrom and :transactionDateTo))"
     )
-    List<FileTransport> findAllFiltered(@Param("status") @Nullable String status,
+    Page<FileTransport> findAllFiltered(@Param("status") @Nullable String status,
                                         @Param("sessionNumber") @Nullable Long sessionNumber,
                                         @Param("transactionDateFrom") @Nullable Date transactionDateFrom,
                                         @Param("transactionDateTo") @Nullable Date transactionDateTo,
