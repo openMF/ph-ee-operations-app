@@ -9,13 +9,13 @@
                 <constraints primaryKey="true"/>
             </column>
             <column name="SESSION_NUMBER" type="INT"/>
-            <column name="STARTED_AT" type="DATETIME"/>
-            <column name="COMPLETED_AT" type="DATETIME"/>
+            <column name="STARTED_AT" type="TIMESTAMP"/>
+            <column name="COMPLETED_AT" type="TIMESTAMP"/>
             <column name="TRANSACTION_DATE" type="DATE"/>
-            <column name="STATUS" type="VARCHAR(100)"/>
+            <column name="STATUS" type="VARCHAR(20)"/>
             <column name="LIST_OF_BICS" type="VARCHAR(1000)"/>
             <column name="TRANSPORT_TYPE" type="VARCHAR(10)"/>
-            <column name="DIRECTION" type="VARCHAR(10)"/>
+            <column name="DIRECTION" type="VARCHAR(5)"/>
         </createTable>
     </changeSet>
 

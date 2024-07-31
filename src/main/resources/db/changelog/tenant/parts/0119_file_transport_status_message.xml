@@ -8,7 +8,7 @@
             <column name="STATUS_MESSAGE" type="VARCHAR(300)"/>
         </addColumn>
         <addColumn tableName="file_transport">
-            <column name="LAST_UPDATED" type="BIGINT"/>
+            <column name="LAST_UPDATED" type="TIMESTAMP"/>
         </addColumn>
     </changeSet>
 
