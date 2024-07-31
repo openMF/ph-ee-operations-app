@@ -13,7 +13,8 @@ public interface FileTransportRepository extends JpaRepository<FileTransport, Lo
 
     FileTransport findFirstByWorkflowInstanceKey(Long workflowInstanceKey);
 
-    @Query("select t from FileTransport t where (:status is null or t.status = :status)" +
+    @Query("select t from FileTransport t where :direction = t.direction" +
+            " and (:status is null or t.status = :status)" +
             " and (:sessionNumber is null or t.sessionNumber = :sessionNumber)" +
             " and ((cast(:transactionDateFrom as Date) is null and cast(:transactionDateTo as Date) is null) " +
             " or (t.transactionDate between cast(:transactionDateFrom as Date) and cast(:transactionDateTo as Date)))"
