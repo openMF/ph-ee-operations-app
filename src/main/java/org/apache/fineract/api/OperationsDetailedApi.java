@@ -147,7 +147,13 @@ public class OperationsDetailedApi {
         } catch (ParseException e) {
             throw new RuntimeException("failed to convert transactionDate", e);
         }
-        Page<FileTransport> fileTransports = fileTransportRepository.findAllFiltered(status,
+        FileTransport.TransportStatus statusEnum;
+        if (StringUtils.isNotBlank(status)) {
+            statusEnum = FileTransport.TransportStatus.valueOf(status);
+        } else {
+            statusEnum = null;
+        }
+        Page<FileTransport> fileTransports = fileTransportRepository.findAllFiltered(statusEnum,
                 sessionNumber,
                 transactionDateFrom,
                 transactionDateTo,
