@@ -18,7 +18,8 @@ public interface FileTransportRepository extends JpaRepository<FileTransport, Lo
             " and ((cast(:transactionDateFrom as Date) is null and cast(:transactionDateTo as Date) is null) " +
             " or (t.transactionDate between cast(:transactionDateFrom as Date) and cast(:transactionDateTo as Date)))"
     )
-    Page<FileTransport> findAllFiltered(@Param("status") @Nullable FileTransport.TransportStatus status,
+    Page<FileTransport> findAllFiltered(@Param("direction") FileTransport.TransportDirection direction,
+                                        @Param("status") @Nullable FileTransport.TransportStatus status,
                                         @Param("sessionNumber") @Nullable Long sessionNumber,
                                         @Param("transactionDateFrom") @Nullable Date transactionDateFrom,
                                         @Param("transactionDateTo") @Nullable Date transactionDateTo,

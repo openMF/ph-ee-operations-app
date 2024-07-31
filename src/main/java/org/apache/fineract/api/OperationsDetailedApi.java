@@ -106,10 +106,11 @@ public class OperationsDetailedApi {
     public Page<FileTransportDto> fileTransports(
             @RequestParam(value = "page") Integer page,
             @RequestParam(value = "size") Integer size,
-            @RequestParam(value = "transactionDateFrom", required = false) String transactionDateFrom,
-            @RequestParam(value = "transactionDateTo", required = false) String transactionDateTo,
+            @RequestParam(value = "direction") String direction,
             @RequestParam(value = "status", required = false) String status,
-            @RequestParam(value = "sessionNumber", required = false) Long sessionNumber) {
+            @RequestParam(value = "sessionNumber", required = false) Long sessionNumber,
+            @RequestParam(value = "transactionDateFrom", required = false) String transactionDateFrom,
+            @RequestParam(value = "transactionDateTo", required = false) String transactionDateTo) {
         return eventService.auditedEvent(event -> event
                 .setEvent("fileTransports list invoked")
                 .setEventLogLevel(EventLogLevel.INFO)
@@ -118,6 +119,7 @@ public class OperationsDetailedApi {
             // TODO this.context.jwt().validateHasReadPermission(TRANSACTION_RESOURCE_NAME);
             return loadFileTransports(page,
                     size,
+                    direction,
                     status,
                     sessionNumber,
                     transactionDateFrom,
@@ -127,6 +129,7 @@ public class OperationsDetailedApi {
 
     private Page<FileTransportDto> loadFileTransports(Integer page,
                                                       Integer size,
+                                                      String direction,
                                                       String status,
                                                       Long sessionNumber,
                                                       String transactionDateFromText,
@@ -153,7 +156,8 @@ public class OperationsDetailedApi {
         } else {
             statusEnum = null;
         }
-        Page<FileTransport> fileTransports = fileTransportRepository.findAllFiltered(statusEnum,
+        Page<FileTransport> fileTransports = fileTransportRepository.findAllFiltered(FileTransport.TransportDirection.valueOf(direction),
+                statusEnum,
                 sessionNumber,
                 transactionDateFrom,
                 transactionDateTo,
