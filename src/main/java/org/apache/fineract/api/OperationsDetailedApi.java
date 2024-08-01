@@ -134,6 +134,7 @@ public class OperationsDetailedApi {
                                                       Long sessionNumber,
                                                       String transactionDateFromText,
                                                       String transactionDateToText) {
+        logger.debug("loadFileTransports: page {} size {}", page, size);
         Pageable pageable = PageRequest.of(page, size, Sort.by("transactionDate").descending());
         Date transactionDateFrom, transactionDateTo;
         try {
@@ -156,16 +157,19 @@ public class OperationsDetailedApi {
         } else {
             statusEnum = null;
         }
+        logger.debug("fileTransportRepository find: direction {} status {} sessionNumber {} transactionDateFrom {} transactionDateTo {} pageable {}", direction, statusEnum, sessionNumber, transactionDateFrom, transactionDateTo, pageable);
         Page<FileTransport> fileTransports = fileTransportRepository.findAllFiltered(FileTransport.TransportDirection.valueOf(direction),
                 statusEnum,
                 sessionNumber,
                 transactionDateFrom,
                 transactionDateTo,
                 pageable);
-        List<FileTransportDto> fileTransportDtos = fileTransports.get()
+        List<FileTransportDto> fileTransportDtoList = fileTransports.get()
                 .map(t -> modelMapper.map(t, FileTransportDto.class))
-                .collect(Collectors.toList());
-        return new PageImpl<>(fileTransportDtos, fileTransports.getPageable(), fileTransports.getSize());
+                .toList();
+        Page<FileTransportDto> result = new PageImpl<>(fileTransportDtoList, fileTransports.getPageable(), fileTransports.getTotalElements());
+        logger.trace("loadFileTransports result: {}", result);
+        return result;
     }
 
     @GetMapping("/transfers")
