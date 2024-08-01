@@ -1,9 +1,6 @@
 package org.apache.fineract.operations;
 
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 
 import java.util.Date;
 
@@ -11,6 +8,7 @@ import java.util.Date;
 @AllArgsConstructor
 @Getter
 @Setter
+@ToString
 public class FileTransportDto {
     private Long workflowInstanceKey;
     private Long sessionNumber;

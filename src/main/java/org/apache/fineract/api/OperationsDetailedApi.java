@@ -168,7 +168,8 @@ public class OperationsDetailedApi {
                 .map(t -> modelMapper.map(t, FileTransportDto.class))
                 .toList();
         Page<FileTransportDto> result = new PageImpl<>(fileTransportDtoList, fileTransports.getPageable(), fileTransports.getTotalElements());
-        logger.trace("loadFileTransports result: {}", result);
+        logger.debug("loadFileTransports result: {}", result);
+        logger.debug("elements: {}", result.get().map(Object::toString).collect(Collectors.joining("\n")));
         return result;
     }
 
