@@ -13,14 +13,12 @@ public interface FileTransportRepository extends JpaRepository<FileTransport, Lo
 
     FileTransport findFirstByWorkflowInstanceKey(Long workflowInstanceKey);
 
-    @Query(value = "select t.* from file_transport t where t.direction = ?1" +
-            " and ((?2 is null) or (?2 is not null and t.status = ?2))" +
-            " and ((?3 is null) or (?3 is not null and t.sessionNumber = ?3))" +
-            " and (((?4 is null) or (?5 is null)) " +
-            " or (?4 is not null and ?5 is not null and t.transactionDate between ?4 and ?5))",
-            nativeQuery = true
-    )
-    Page<FileTransport> filteredQueryForUI(@Param("direction") FileTransport.TransportDirection direction,
+    @Query("select t from FileTransport t where t.direction = :direction" +
+            " and (:status is null or t.status = :status)" +
+            " and (:sessionNumber is null or t.sessionNumber = :sessionNumber)" +
+            " and ((:transactionDateFrom is null and :transactionDateTo is null) " +
+            " or (t.transactionDate between :transactionDateFrom and :transactionDateTo))"
+    )    Page<FileTransport> filteredQueryForUI(@Param("direction") FileTransport.TransportDirection direction,
                                            @Param("status") @Nullable FileTransport.TransportStatus status,
                                            @Param("sessionNumber") @Nullable Long sessionNumber,
                                            @Param("transactionDateFrom") @Nullable Date transactionDateFrom,

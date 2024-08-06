@@ -6,6 +6,7 @@ import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.Tuple;
+import jakarta.persistence.TypedQuery;
 import jakarta.persistence.criteria.*;
 import jakarta.servlet.http.HttpServletResponse;
 import org.apache.commons.lang3.StringUtils;
@@ -158,12 +159,13 @@ public class OperationsDetailedApi {
             statusEnum = null;
         }
         logger.debug("fileTransportRepository find: direction {} status {} sessionNumber {} transactionDateFrom {} transactionDateTo {} pageable {}", direction, statusEnum, sessionNumber, transactionDateFrom, transactionDateTo, pageable);
-        Page<FileTransport> fileTransports = fileTransportRepository.filteredQueryForUI(FileTransport.TransportDirection.valueOf(direction),
+        Page<FileTransport> fileTransports = filteredQueryForUI(FileTransport.TransportDirection.valueOf(direction),
                 statusEnum,
                 sessionNumber,
                 transactionDateFrom,
                 transactionDateTo,
                 pageable);
+
         List<FileTransportDto> fileTransportDtoList = fileTransports.get()
                 .map(t -> modelMapper.map(t, FileTransportDto.class))
                 .toList();
@@ -171,6 +173,56 @@ public class OperationsDetailedApi {
         logger.debug("loadFileTransports result: {}", result);
         logger.debug("elements: {}", result.get().map(Object::toString).collect(Collectors.joining("\n")));
         return result;
+    }
+
+    public Page<FileTransport> filteredQueryForUI(FileTransport.TransportDirection direction,
+                                                  FileTransport.TransportStatus status,
+                                                  Long sessionNumber,
+                                                  Date transactionDateFrom,
+                                                  Date transactionDateTo,
+                                                  Pageable pageable) {
+
+        CriteriaBuilder criteriaBuilder = entityManager.getCriteriaBuilder();
+        CriteriaQuery<FileTransport> mainQuery = criteriaBuilder.createQuery(FileTransport.class);
+        Root<FileTransport> root = mainQuery.from(FileTransport.class);
+
+        List<Predicate> predicates = new ArrayList<>();
+
+        predicates.add(criteriaBuilder.equal(root.get("direction"), direction));
+
+        if (status != null) {
+            predicates.add(criteriaBuilder.equal(root.get("status"), status));
+        }
+
+        if (sessionNumber != null) {
+            predicates.add(criteriaBuilder.equal(root.get("sessionNumber"), sessionNumber));
+        }
+
+        if (transactionDateFrom != null && transactionDateTo != null) {
+            predicates.add(criteriaBuilder.between(root.get("transactionDate"), transactionDateFrom, transactionDateTo));
+        } else if (transactionDateFrom != null || transactionDateTo != null) {
+            predicates.add(criteriaBuilder.or(
+                    criteriaBuilder.isNull(root.get("transactionDate")),
+                    criteriaBuilder.between(root.get("transactionDate"), transactionDateFrom, transactionDateTo)
+            ));
+        }
+
+        mainQuery.where(predicates.toArray(new Predicate[0]));
+
+        TypedQuery<FileTransport> query = entityManager.createQuery(mainQuery);
+
+        query.setFirstResult((int) pageable.getOffset());
+        query.setMaxResults(pageable.getPageSize());
+
+        List<FileTransport> results = query.getResultList();
+
+        CriteriaQuery<Long> countQuery = criteriaBuilder.createQuery(Long.class);
+        Root<FileTransport> countRoot = countQuery.from(FileTransport.class);
+        countQuery.select(criteriaBuilder.count(countRoot)).where(predicates.toArray(new Predicate[0]));
+
+        long total = entityManager.createQuery(countQuery).getSingleResult();
+
+        return new PageImpl<>(results, pageable, total);
     }
 
     @GetMapping("/transfers")
