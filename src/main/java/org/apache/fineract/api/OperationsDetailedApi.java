@@ -15,6 +15,7 @@ import org.apache.fineract.data.ErrorResponse;
 import org.apache.fineract.exception.WriteToCsvException;
 import org.apache.fineract.infrastructure.security.service.PlatformSecurityContext;
 import org.apache.fineract.operations.*;
+import org.apache.fineract.operations.converter.TimestampToStringConverter;
 import org.apache.fineract.utils.CsvUtility;
 import org.apache.fineract.utils.SortOrder;
 import org.modelmapper.ModelMapper;
@@ -166,6 +167,7 @@ public class OperationsDetailedApi {
                 transactionDateTo,
                 pageable);
 
+        modelMapper.addConverter(new TimestampToStringConverter());
         List<FileTransportDto> fileTransportDtoList = fileTransports.get()
                 .map(t -> modelMapper.map(t, FileTransportDto.class))
                 .toList();
