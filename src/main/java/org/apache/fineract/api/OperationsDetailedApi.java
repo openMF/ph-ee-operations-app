@@ -158,7 +158,7 @@ public class OperationsDetailedApi {
             statusEnum = null;
         }
         logger.debug("fileTransportRepository find: direction {} status {} sessionNumber {} transactionDateFrom {} transactionDateTo {} pageable {}", direction, statusEnum, sessionNumber, transactionDateFrom, transactionDateTo, pageable);
-        Page<FileTransport> fileTransports = fileTransportRepository.findAllFiltered(FileTransport.TransportDirection.valueOf(direction),
+        Page<FileTransport> fileTransports = fileTransportRepository.filteredQueryForUI(FileTransport.TransportDirection.valueOf(direction),
                 statusEnum,
                 sessionNumber,
                 transactionDateFrom,

@@ -13,16 +13,17 @@ public interface FileTransportRepository extends JpaRepository<FileTransport, Lo
 
     FileTransport findFirstByWorkflowInstanceKey(Long workflowInstanceKey);
 
-    @Query("select t from FileTransport t where t.direction = :direction" +
+    @Query(value = "select t.* from file_transport t where t.direction = :direction" +
             " and ((:status is null) or (:status is not null and t.status = :status))" +
             " and ((:sessionNumber is null) or (:sessionNumber is not null and t.sessionNumber = :sessionNumber))" +
             " and (((:transactionDateFrom is null) or (:transactionDateTo is null)) " +
-            " or (:transactionDateFrom is not null and :transactionDateTo is not null and t.transactionDate between :transactionDateFrom and :transactionDateTo))"
+            " or (:transactionDateFrom is not null and :transactionDateTo is not null and t.transactionDate between :transactionDateFrom and :transactionDateTo))",
+            nativeQuery = true
     )
-    Page<FileTransport> findAllFiltered(@Param("direction") FileTransport.TransportDirection direction,
-                                        @Param("status") @Nullable FileTransport.TransportStatus status,
-                                        @Param("sessionNumber") @Nullable Long sessionNumber,
-                                        @Param("transactionDateFrom") @Nullable Date transactionDateFrom,
-                                        @Param("transactionDateTo") @Nullable Date transactionDateTo,
-                                        Pageable pageable);
+    Page<FileTransport> filteredQueryForUI(@Param("direction") FileTransport.TransportDirection direction,
+                                           @Param("status") @Nullable FileTransport.TransportStatus status,
+                                           @Param("sessionNumber") @Nullable Long sessionNumber,
+                                           @Param("transactionDateFrom") @Nullable Date transactionDateFrom,
+                                           @Param("transactionDateTo") @Nullable Date transactionDateTo,
+                                           Pageable pageable);
 }
