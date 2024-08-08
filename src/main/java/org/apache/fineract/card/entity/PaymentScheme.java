@@ -1,4 +1,4 @@
-package org.apache.fineract.operations.card;
+package org.apache.fineract.card.entity;
 
 public enum PaymentScheme {
     CARD_AUTH,
