@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.1.xsd">
+
+    <changeSet id="1" author="fineract">
+        <createTable tableName="card_transactions">
+            <column name="workflow_instance_key" type="varchar(50)">
+                <constraints primaryKey="true"/>
+            </column>
+            <column name="business_process_status" type="varchar(20)"/>
+            <column name="transaction_group_id" type="varchar(60)"/>
+            <column name="transaction_id" type="varchar(60)"/>
+            <column name="transaction_date_time" type="timestamp"/>
+            <column name="amount" type="numeric(38,0)"/>
+            <column name="currency" type="varchar(3)"/>
+            <column name="transaction_reference" type="varchar(50)"/>
+            <column name="request_id" type="varchar(50)"/>
+            <column name="masked_pan" type="varchar(16)"/>
+            <column name="card_holder_name" type="varchar(200)"/>
+            <column name="merch_name" type="varchar(200)"/>
+            <column name="merch_country" type="varchar(200)"/>
+            <column name="instructed_amount" type="numeric(38,0)"/>
+            <column name="instructed_currency" type="varchar(3)"/>
+            <column name="transactionType" type="varchar(4)"/>
+            <column name="merch_category_code" type="varchar(4)"/>
+            <column name="fee_amount" type="numeric(38,0)"/>
+            <column name="hold_amount" type="numeric(38,0)"/>
+            <column name="token" type="varchar(8)"/>
+            <column name="card_account_id" type="varchar(50)"/>
+            <column name="request" type="text"/>
+            <column name="payment_token_wallet" type="varchar(10)"/>
+            <column name="payment_scheme" type="varchar(20)"/>
+            <column name="direction" type="varchar(3)"/>
+            <column name="iban" type="varchar(28)"/>
+        </createTable>
+    </changeSet>
+
+</databaseChangeLog>
