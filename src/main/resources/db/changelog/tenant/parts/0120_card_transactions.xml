@@ -9,6 +9,9 @@
                 <constraints primaryKey="true"/>
             </column>
             <column name="business_process_status" type="varchar(20)"/>
+            <column name="started_at" type="timestamp"/>
+            <column name="completed_at" type="timestamp"/>
+            <column name="last_updated" type="timestamp"/>
             <column name="transaction_group_id" type="varchar(60)"/>
             <column name="transaction_id" type="varchar(60)"/>
             <column name="transaction_date_time" type="timestamp"/>

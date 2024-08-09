@@ -22,6 +22,18 @@ public class CardTransaction {
     @Column(name = "workflow_instance_key")
     private String workflowInstanceKey;
 
+    @Column(name = "started_at")
+    @Temporal(TemporalType.TIMESTAMP)
+    private Date startedAt;
+
+    @Column(name = "completed_at")
+    @Temporal(TemporalType.TIMESTAMP)
+    private Date completedAt;
+
+    @Column(name = "last_updated")
+    @Temporal(TemporalType.TIMESTAMP)
+    private Date lastUpdated;
+
     @Enumerated(EnumType.STRING)
     @Column(name = "business_process_status")
     private BusinessProcessStatus businessProcessStatus;
