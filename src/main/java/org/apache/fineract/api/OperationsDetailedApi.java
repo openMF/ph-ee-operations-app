@@ -18,7 +18,6 @@ import org.apache.fineract.infrastructure.security.service.PlatformSecurityConte
 import org.apache.fineract.operations.*;
 import org.apache.fineract.utils.CsvUtility;
 import org.apache.fineract.utils.SortOrder;
-import org.modelmapper.Converter;
 import org.modelmapper.ModelMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -220,11 +219,15 @@ public class OperationsDetailedApi {
         logger.trace("total: {}", total);
 
         ModelMapper mapper = new ModelMapper();
-        mapper.addConverter((Converter<Date, String>) mappingContext -> switch (mappingContext.getMapping().getLastDestinationProperty().getName()) {
-            case "transactionDate" -> OperatorUtils.formatDate(mappingContext.getSource());
-            case "startedAt", "completedAt" -> OperatorUtils.formatDateTime(mappingContext.getSource());
-            default -> null;
-        });
+        mapper.typeMap(FileTransport.class, FileTransportDto.class)
+                .addMappings(m -> {
+                    m.using(ctx -> OperatorUtils.formatDate((Date) ctx.getSource()))
+                            .map(FileTransport::getTransactionDate, FileTransportDto::setTransactionDate);
+                    m.using(ctx -> OperatorUtils.formatDateTime((Date) ctx.getSource()))
+                            .map(FileTransport::getCompletedAt, FileTransportDto::setCompletedAt);
+                    m.using(ctx -> OperatorUtils.formatDateTime((Date) ctx.getSource()))
+                            .map(FileTransport::getStartedAt, FileTransportDto::setStartedAt);
+                });
         List<FileTransportDto> fileTransportDtoList = fileTransports.stream()
                 .map(t -> mapper.map(t, FileTransportDto.class))
                 .toList();
