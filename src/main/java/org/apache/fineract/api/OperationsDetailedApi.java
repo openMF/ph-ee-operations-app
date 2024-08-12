@@ -10,14 +10,15 @@ import jakarta.persistence.TypedQuery;
 import jakarta.persistence.criteria.*;
 import jakarta.servlet.http.HttpServletResponse;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.fineract.core.service.OperatorUtils;
 import org.apache.fineract.core.service.TenantAwareHeaderFilter;
 import org.apache.fineract.data.ErrorResponse;
 import org.apache.fineract.exception.WriteToCsvException;
 import org.apache.fineract.infrastructure.security.service.PlatformSecurityContext;
 import org.apache.fineract.operations.*;
-import org.apache.fineract.operations.converter.TimestampToStringConverter;
 import org.apache.fineract.utils.CsvUtility;
 import org.apache.fineract.utils.SortOrder;
+import org.modelmapper.Converter;
 import org.modelmapper.ModelMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -62,9 +63,6 @@ public class OperationsDetailedApi {
 
     @Autowired
     private FileTransportRepository fileTransportRepository;
-
-    @Autowired
-    private ModelMapper modelMapper;
 
     @Autowired
     private EventService eventService;
@@ -138,6 +136,7 @@ public class OperationsDetailedApi {
                                                       String transactionDateToText) {
         logger.debug("loadFileTransports: page {} size {}", page, size);
         Pageable pageable = PageRequest.of(page, size, Sort.by("transactionDate").descending());
+
         Date transactionDateFrom, transactionDateTo;
         try {
             if (StringUtils.isNotBlank(transactionDateFromText)) {
@@ -153,36 +152,34 @@ public class OperationsDetailedApi {
         } catch (ParseException e) {
             throw new RuntimeException("failed to convert transactionDate", e);
         }
+
         FileTransport.TransportStatus statusEnum;
         if (StringUtils.isNotBlank(status)) {
             statusEnum = FileTransport.TransportStatus.valueOf(status);
         } else {
             statusEnum = null;
         }
+
         logger.debug("fileTransportRepository find: direction {} status {} sessionNumber {} transactionDateFrom {} transactionDateTo {} pageable {}", direction, statusEnum, sessionNumber, transactionDateFrom, transactionDateTo, pageable);
-        Page<FileTransport> fileTransports = filteredQueryForUI(FileTransport.TransportDirection.valueOf(direction),
+        Page<FileTransportDto> fileTransports = filteredQueryForUI(FileTransport.TransportDirection.valueOf(direction),
                 statusEnum,
                 sessionNumber,
                 transactionDateFrom,
                 transactionDateTo,
                 pageable);
 
-        modelMapper.addConverter(new TimestampToStringConverter());
-        List<FileTransportDto> fileTransportDtoList = fileTransports.get()
-                .map(t -> modelMapper.map(t, FileTransportDto.class))
-                .toList();
-        Page<FileTransportDto> result = new PageImpl<>(fileTransportDtoList, fileTransports.getPageable(), fileTransports.getTotalElements());
-        logger.debug("loadFileTransports result: {}", result);
-        logger.debug("elements: {}", result.get().map(Object::toString).collect(Collectors.joining("\n")));
-        return result;
+        logger.trace("loadFileTransports result: {}", fileTransports);
+        logger.trace("elements: {}", fileTransports.get().map(Object::toString).collect(Collectors.joining("\n")));
+        return fileTransports;
     }
 
-    public Page<FileTransport> filteredQueryForUI(FileTransport.TransportDirection direction,
-                                                  FileTransport.TransportStatus status,
-                                                  Long sessionNumber,
-                                                  Date transactionDateFrom,
-                                                  Date transactionDateTo,
-                                                  Pageable pageable) {
+    public Page<FileTransportDto> filteredQueryForUI(FileTransport.TransportDirection direction,
+                                                     FileTransport.TransportStatus status,
+                                                     Long sessionNumber,
+                                                     Date transactionDateFrom,
+                                                     Date transactionDateTo,
+                                                     Pageable pageable) {
+        logger.trace("pageable:{}", pageable);
 
         CriteriaBuilder criteriaBuilder = entityManager.getCriteriaBuilder();
         CriteriaQuery<FileTransport> mainQuery = criteriaBuilder.createQuery(FileTransport.class);
@@ -212,19 +209,27 @@ public class OperationsDetailedApi {
         mainQuery.where(predicates.toArray(new Predicate[0]));
 
         TypedQuery<FileTransport> query = entityManager.createQuery(mainQuery);
-
         query.setFirstResult((int) pageable.getOffset());
         query.setMaxResults(pageable.getPageSize());
-
-        List<FileTransport> results = query.getResultList();
+        List<FileTransport> fileTransports = query.getResultList();
 
         CriteriaQuery<Long> countQuery = criteriaBuilder.createQuery(Long.class);
         Root<FileTransport> countRoot = countQuery.from(FileTransport.class);
         countQuery.select(criteriaBuilder.count(countRoot)).where(predicates.toArray(new Predicate[0]));
-
         long total = entityManager.createQuery(countQuery).getSingleResult();
+        logger.trace("total: {}", total);
 
-        return new PageImpl<>(results, pageable, total);
+        ModelMapper mapper = new ModelMapper();
+        mapper.addConverter((Converter<Date, String>) mappingContext -> switch (mappingContext.getMapping().getLastDestinationProperty().getName()) {
+            case "transactionDate" -> OperatorUtils.formatDate(mappingContext.getSource());
+            case "startedAt", "completedAt" -> OperatorUtils.formatDateTime(mappingContext.getSource());
+            default -> null;
+        });
+        List<FileTransportDto> fileTransportDtoList = fileTransports.stream()
+                .map(t -> mapper.map(t, FileTransportDto.class))
+                .toList();
+
+        return new PageImpl<>(fileTransportDtoList, pageable, total);
     }
 
     @GetMapping("/transfers")
