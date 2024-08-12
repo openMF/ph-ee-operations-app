@@ -8,6 +8,7 @@
             <column name="workflow_instance_key" type="varchar(50)">
                 <constraints primaryKey="true"/>
             </column>
+            <column name="status" type="varchar(20)"/>
             <column name="business_process_status" type="varchar(20)"/>
             <column name="started_at" type="timestamp"/>
             <column name="completed_at" type="timestamp"/>

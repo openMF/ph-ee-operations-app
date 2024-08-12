@@ -4,7 +4,7 @@ import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.apache.fineract.card.entity.BusinessProcessStatus;
+import org.apache.fineract.card.entity.CardStatus;
 import org.apache.fineract.card.entity.Direction;
 import org.apache.fineract.card.entity.PaymentScheme;
 
@@ -16,7 +16,8 @@ import java.util.Date;
 @AllArgsConstructor
 public class CardTransactionDto {
     private String workflowInstanceKey;
-    private BusinessProcessStatus businessProcessStatus;
+    private CardStatus status;
+    private String businessProcessStatus;
     private String transactionGroupId;
     private String transactionId;
     private Date transactionDateTime;

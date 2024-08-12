@@ -34,9 +34,12 @@ public class CardTransaction {
     @Temporal(TemporalType.TIMESTAMP)
     private Date lastUpdated;
 
-    @Enumerated(EnumType.STRING)
     @Column(name = "business_process_status")
-    private BusinessProcessStatus businessProcessStatus;
+    private String businessProcessStatus;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "status")
+    private CardStatus status;
 
     @Column(name = "transaction_group_id")
     private String transactionGroupId;
