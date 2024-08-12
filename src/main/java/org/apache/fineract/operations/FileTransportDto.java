@@ -12,9 +12,9 @@ import java.util.Date;
 public class FileTransportDto {
     private Long workflowInstanceKey;
     private Long sessionNumber;
-    private Date startedAt;
-    private Date completedAt;
-    private Date transactionDate;
+    private String startedAt;
+    private String completedAt;
+    private String transactionDate;
     private FileTransport.TransportStatus status;
     private String statusMessage;
     private String listOfBics;
