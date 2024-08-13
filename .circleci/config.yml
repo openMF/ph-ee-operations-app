@@ -43,9 +43,9 @@ jobs:
 
             # Push the Docker image to Docker Hub
             docker login -u "$DOCKERHUB_USERNAME" -p "$DOCKERHUB_PASSWORD"
-            docker images
-            
-            docker rmi ph-ee-operations-app:phee-684
+            TOKEN=$(curl -s -H "Content-Type: application/json" -X POST -d '{"username": "$DOCKERHUB_USERNAME", "password": "$DOCKERHUB_PASSWORD"}' https://hub.docker.com/v2/users/login/ | jq -r .token)
+            curl -s -H "Authorization: JWT ${TOKEN}" -X DELETE https://hub.docker.com/v2/repositories/openmf/ph-ee-operations-app/tags/phee-684/
+
             #docker push "openmf/ph-ee-operations-app:$IMAGE_TAG"
             
 
