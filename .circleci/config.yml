@@ -35,11 +35,6 @@ jobs:
             # Set environment variables
             IMAGE_TAG=$CIRCLE_TAG
 
-            # Check if the Docker image with the same tag already exists in Docker Hub
-            if curl -s -f -u "$DOCKERHUB_USERNAME":"$DOCKERHUB_PASSWORD" "https://hub.docker.com/v2/repositories/openmf/ph-ee-operations-app/tags/$IMAGE_TAG" > /dev/null; then
-              echo "Skipping the build and push as the tag $IMAGE_TAG already exists in Docker Hub."
-              exit 0
-            fi
 
             # Build and tag the Docker image
             ./gradlew clean
