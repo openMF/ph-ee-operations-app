@@ -68,6 +68,9 @@ public class OperationsDetailedApi {
 
     @Autowired
     private EntityManager entityManager;
+    
+    @Autowired
+    private ModelMapper modelMapper;
 
     @GetMapping("/businessProcessStatus")
     public List<String> transfers(
@@ -131,26 +134,10 @@ public class OperationsDetailedApi {
                                                       String direction,
                                                       String status,
                                                       Long sessionNumber,
-                                                      String transactionDateFromText,
-                                                      String transactionDateToText) {
+                                                      String transactionDateFrom,
+                                                      String transactionDateTo) {
         logger.debug("loadFileTransports: page {} size {}", page, size);
         Pageable pageable = PageRequest.of(page, size, Sort.by("transactionDate").descending());
-
-        Date transactionDateFrom, transactionDateTo;
-        try {
-            if (StringUtils.isNotBlank(transactionDateFromText)) {
-                transactionDateFrom = dateTimeFormat().parse(transactionDateFromText);
-            } else {
-                transactionDateFrom = null;
-            }
-            if (StringUtils.isNotBlank(transactionDateToText)) {
-                transactionDateTo = dateTimeFormat().parse(transactionDateToText);
-            } else {
-                transactionDateTo = null;
-            }
-        } catch (ParseException e) {
-            throw new RuntimeException("failed to convert transactionDate", e);
-        }
 
         FileTransport.TransportStatus statusEnum;
         if (StringUtils.isNotBlank(status)) {
@@ -159,80 +146,74 @@ public class OperationsDetailedApi {
             statusEnum = null;
         }
 
-        logger.debug("fileTransportRepository find: direction {} status {} sessionNumber {} transactionDateFrom {} transactionDateTo {} pageable {}", direction, statusEnum, sessionNumber, transactionDateFrom, transactionDateTo, pageable);
-        Page<FileTransportDto> fileTransports = filteredQueryForUI(FileTransport.TransportDirection.valueOf(direction),
+        Page<FileTransport> fileTransports = filteredQueryForUI(FileTransport.TransportDirection.valueOf(direction),
                 statusEnum,
                 sessionNumber,
                 transactionDateFrom,
                 transactionDateTo,
                 pageable);
 
-        logger.trace("loadFileTransports result: {}", fileTransports);
-        logger.trace("elements: {}", fileTransports.get().map(Object::toString).collect(Collectors.joining("\n")));
-        return fileTransports;
+        List<FileTransportDto> fileTransportDtoList = fileTransports.get()
+                .map(t -> modelMapper.map(t, FileTransportDto.class))
+                .toList();
+        Page<FileTransportDto> result = new PageImpl<>(fileTransportDtoList, fileTransports.getPageable(), fileTransports.getTotalElements());
+        return result;
     }
 
-    public Page<FileTransportDto> filteredQueryForUI(FileTransport.TransportDirection direction,
-                                                     FileTransport.TransportStatus status,
-                                                     Long sessionNumber,
-                                                     Date transactionDateFrom,
-                                                     Date transactionDateTo,
-                                                     Pageable pageable) {
-        logger.trace("pageable:{}", pageable);
+    public Page<FileTransport> filteredQueryForUI(FileTransport.TransportDirection direction,
+                                                  FileTransport.TransportStatus status,
+                                                  Long sessionNumber,
+                                                  String transactionDateFrom,
+                                                  String transactionDateTo,
+                                                  Pageable pageable) {
+        List<Specification<FileTransport>> specs = new ArrayList<>();
 
-        CriteriaBuilder criteriaBuilder = entityManager.getCriteriaBuilder();
-        CriteriaQuery<FileTransport> mainQuery = criteriaBuilder.createQuery(FileTransport.class);
-        Root<FileTransport> root = mainQuery.from(FileTransport.class);
-
-        List<Predicate> predicates = new ArrayList<>();
-
-        predicates.add(criteriaBuilder.equal(root.get("direction"), direction));
+        specs.add(FileTransportSpecs.match(FileTransport_.direction, direction));
 
         if (status != null) {
-            predicates.add(criteriaBuilder.equal(root.get("status"), status));
+            specs.add(FileTransportSpecs.match(FileTransport_.status, status));
         }
 
         if (sessionNumber != null) {
-            predicates.add(criteriaBuilder.equal(root.get("sessionNumber"), sessionNumber));
+            specs.add(FileTransportSpecs.match(FileTransport_.sessionNumber, sessionNumber));
         }
 
-        if (transactionDateFrom != null && transactionDateTo != null) {
-            predicates.add(criteriaBuilder.between(root.get("transactionDate"), transactionDateFrom, transactionDateTo));
-        } else if (transactionDateFrom != null || transactionDateTo != null) {
-            predicates.add(criteriaBuilder.or(
-                    criteriaBuilder.isNull(root.get("transactionDate")),
-                    criteriaBuilder.between(root.get("transactionDate"), transactionDateFrom, transactionDateTo)
-            ));
+        try {
+            if (transactionDateFrom != null && transactionDateTo != null) {
+                specs.add(FileTransportSpecs.betweenDay(FileTransport_.transactionDate, dateFormat().parse(transactionDateFrom), dateFormat().parse(transactionDateTo)));
+            } else if (transactionDateFrom != null) {
+                specs.add(FileTransportSpecs.laterDay(FileTransport_.transactionDate, dateFormat().parse(transactionDateFrom)));
+            } else if (transactionDateTo != null) {
+                specs.add(FileTransportSpecs.earlierDay(FileTransport_.transactionDate, dateFormat().parse(transactionDateTo)));
+            }
+        } catch (Exception e) {
+            logger.warn("failed to parse dates {} / {}", transactionDateFrom, transactionDateTo);
         }
 
-        mainQuery.where(predicates.toArray(new Predicate[0]));
+        Specification<FileTransport> combinedSpec = Specification.where(null);
 
-        TypedQuery<FileTransport> query = entityManager.createQuery(mainQuery);
-        query.setFirstResult((int) pageable.getOffset());
-        query.setMaxResults(pageable.getPageSize());
-        List<FileTransport> fileTransports = query.getResultList();
+        for (Specification<FileTransport> spec : specs) {
+            combinedSpec = combinedSpec.and(spec);
+        }
 
-        CriteriaQuery<Long> countQuery = criteriaBuilder.createQuery(Long.class);
-        Root<FileTransport> countRoot = countQuery.from(FileTransport.class);
-        countQuery.select(criteriaBuilder.count(countRoot)).where(predicates.toArray(new Predicate[0]));
-        long total = entityManager.createQuery(countQuery).getSingleResult();
-        logger.trace("total: {}", total);
+        CriteriaBuilder cb = entityManager.getCriteriaBuilder();
+        CriteriaQuery<FileTransport> cq = cb.createQuery(FileTransport.class);
+        Root<FileTransport> root = cq.from(FileTransport.class);
 
-        ModelMapper mapper = new ModelMapper();
-        mapper.typeMap(FileTransport.class, FileTransportDto.class)
-                .addMappings(m -> {
-                    m.using(ctx -> OperatorUtils.formatDate((Date) ctx.getSource()))
-                            .map(FileTransport::getTransactionDate, FileTransportDto::setTransactionDate);
-                    m.using(ctx -> OperatorUtils.formatDateTime((Date) ctx.getSource()))
-                            .map(FileTransport::getCompletedAt, FileTransportDto::setCompletedAt);
-                    m.using(ctx -> OperatorUtils.formatDateTime((Date) ctx.getSource()))
-                            .map(FileTransport::getStartedAt, FileTransportDto::setStartedAt);
-                });
-        List<FileTransportDto> fileTransportDtoList = fileTransports.stream()
-                .map(t -> mapper.map(t, FileTransportDto.class))
-                .toList();
+        cq.select(root)
+                .where(combinedSpec.toPredicate(root, cq, cb))
+                .orderBy(cb.desc(root.get(FileTransport_.transactionDate)));
 
-        return new PageImpl<>(fileTransportDtoList, pageable, total);
+        List<FileTransport> resultList = entityManager.createQuery(cq)
+                .setFirstResult(pageable.getPageNumber() * pageable.getPageSize())
+                .setMaxResults(pageable.getPageSize())
+                .getResultList();
+
+        CriteriaQuery<Long> cqCount = cb.createQuery(Long.class);
+        Root<FileTransport> countRoot = cqCount.from(FileTransport.class);
+        Long count = entityManager.createQuery(cqCount.select(cb.count(countRoot)).where(combinedSpec.toPredicate(countRoot, cqCount, cb))).getSingleResult();
+
+        return new PageImpl<>(resultList, pageable, count.intValue());
     }
 
     @GetMapping("/transfers")
