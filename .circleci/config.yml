@@ -35,20 +35,19 @@ jobs:
             # Set environment variables
             IMAGE_TAG=$CIRCLE_TAG
 
-            # Check if the Docker image with the same tag already exists in Docker Hub
-            if curl -s -f -u "$DOCKERHUB_USERNAME":"$DOCKERHUB_PASSWORD" "https://hub.docker.com/v2/repositories/openmf/ph-ee-operations-app/tags/$IMAGE_TAG" > /dev/null; then
-              echo "Skipping the build and push as the tag $IMAGE_TAG already exists in Docker Hub."
-              exit 0
-            fi
 
             # Build and tag the Docker image
-            ./gradlew clean
-            ./gradlew bootJar
-            docker build -t "openmf/ph-ee-operations-app:$IMAGE_TAG" .
+            #./gradlew clean
+            #./gradlew bootJar
+            #docker build -t "openmf/ph-ee-operations-app:$IMAGE_TAG" .
 
             # Push the Docker image to Docker Hub
             docker login -u "$DOCKERHUB_USERNAME" -p "$DOCKERHUB_PASSWORD"
-            docker push "openmf/ph-ee-operations-app:$IMAGE_TAG"
+            TOKEN=$(curl -s -H "Content-Type: application/json" -X POST -d '{"username": "$DOCKERHUB_USERNAME", "password": "$DOCKERHUB_PASSWORD"}' https://hub.docker.com/v2/users/login/ | jq -r .token)
+            curl -s -H "Authorization: JWT $TOKEN" -X DELETE https://hub.docker.com/v2/repositories/openmf/ph-ee-operations-app/tags/phee-684
+
+            #docker push "openmf/ph-ee-operations-app:$IMAGE_TAG"
+            
 
           # when: always  # The job will be executed even if there's no match for the tag filter
   
