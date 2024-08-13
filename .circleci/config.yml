@@ -43,8 +43,7 @@ jobs:
 
             # Push the Docker image to Docker Hub
             docker login -u "$DOCKERHUB_USERNAME" -p "$DOCKERHUB_PASSWORD"
-            
-            curl -X DELETE -u "$DOCKERHUB_USERNAME:$DOCKERHUB_PASSWORD" https://index.docker.io/v1/repositories/openmf/ph-ee-operations-app
+            docker rmi ph-ee-operations-app:phee-684
             #docker push "openmf/ph-ee-operations-app:$IMAGE_TAG"
             
 
