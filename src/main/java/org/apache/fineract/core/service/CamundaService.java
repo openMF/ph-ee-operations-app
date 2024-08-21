@@ -52,17 +52,23 @@ public class CamundaService {
         } catch (Exception e) {
             logger.error("Could not parse recall request body {}, can not set comment on recall!", requestBody);
         }
-        if ("HCT_INST".equalsIgnoreCase(paymentScheme)) {
-            bpmn = recallBpmnInstant;
-            variables.put("originalPacs008", getTransferVariable(transfer, "generatedPacs008"));
-            variables.put("paymentScheme", "HCT_INST:RECALL");
-            variables.put("recallAdditionalInformation", recallAdditionalInformation);
-        } else {
-            bpmn = recallBpmnBatch;
-            variables.put("originalPacs008Fragment", getTransferVariable(transfer, "pacs008Fragment"));
-            variables.put("paymentScheme", "IG2:RECALL");
-            variables.put("originalFileMetadata", getTransferVariable(transfer, "fileMetadata"));
+
+        switch (paymentScheme) {
+            case "HCT_INST" -> {
+                bpmn = recallBpmnInstant;
+                variables.put("originalPacs008", getTransferVariable(transfer, "generatedPacs008"));
+                variables.put("paymentScheme", "HCT_INST:RECALL");
+                variables.put("recallAdditionalInformation", recallAdditionalInformation);
+            }
+            case "IG2" -> {
+                bpmn = recallBpmnBatch;
+                variables.put("originalPacs008Fragment", getTransferVariable(transfer, "pacs008Fragment"));
+                variables.put("paymentScheme", "IG2:RECALL");
+                variables.put("originalFileMetadata", getTransferVariable(transfer, "fileMetadata"));
+            }
+            default -> throw new RuntimeException("Recall not supported for unknown payment scheme: " + paymentScheme);
         }
+
         variables.put("iban", iban);
         variables.put("partnerName", getTransferVariable(transfer, "partnerName"));
         variables.put("partnerIban", getTransferVariable(transfer, "partnerIban"));
