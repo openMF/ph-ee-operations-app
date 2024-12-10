@@ -141,15 +141,15 @@ public class BatchApi {
     }
 
     @GetMapping("/batch")
-    public ResponseEntity<Object> batchDetails(@RequestParam(value = "batchId", required = false) String batchId,
+    public <T>ResponseEntity<T> batchDetails(@RequestParam(value = "batchId", required = false) String batchId,
                                                @RequestParam(value = "requestId", required = false) String requestId) {
         Batch batch = batchRepository.findByBatchId(batchId);
 
         if (batch == null) {
             String errorMessage = "Batch corresponding to batchId: " + batchId + " does not exist.";
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(errorMessage);
+            return (ResponseEntity<T>) ResponseEntity.status(HttpStatus.NOT_FOUND).body(errorMessage);
         }
-        return ResponseEntity.ok(generateBatchSummaryResponse(batch));
+        return (ResponseEntity<T>) ResponseEntity.ok((batchService.getBatchAndSubBatchSummary(batchId, requestId)));
     }
 
     @GetMapping("/batch/{batchId}")
