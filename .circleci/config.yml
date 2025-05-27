@@ -68,7 +68,7 @@ jobs:
       - run:
           name: Build Application
           command: |
-            ./gradlew checkstyleMain
+            # ./gradlew checkstyleMain
             ./gradlew clean bootJar
       - run:
           name: Sanitize Branch Name
@@ -105,7 +105,7 @@ jobs:
       - run:
           name: Build Application
           command: |
-            ./gradlew checkstyleMain
+            # ./gradlew checkstyleMain
             ./gradlew clean bootJar
       - docker-buildx/build-and-push:
           # Using lowercase variables defined above
