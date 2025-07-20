@@ -21,7 +21,7 @@ import java.util.*;
 
 @Slf4j
 @Service
-public class BatchServiceImpl implements BatchService{
+public class BatchServiceImpl implements BatchService {
     
     @Autowired
     private BatchRepository batchRepository;
@@ -31,26 +31,23 @@ public class BatchServiceImpl implements BatchService{
     private static long subBatchCount;
     private static Set<String> payeeFspSet;
 
-
     @Override
     public BatchAndSubBatchSummaryResponse getBatchAndSubBatchSummary(String batchId, String clientCorrelationId) {
-
         List<Batch> batchAndSubBatches = batchRepository.findAllByBatchId(batchId);
 
-        if(CollectionUtils.isEmpty(batchAndSubBatches)){
+        if (CollectionUtils.isEmpty(batchAndSubBatches)) {
             return null;
         }
 
         BatchAndSubBatchSummaryResponse response = new BatchAndSubBatchSummaryResponse();
-        subBatchCount=0;
-        subBatchAmount=0;
+        subBatchCount = 0;
+        subBatchAmount = 0;
         Long totalSubBatch = 0L;
 
-        for(Batch batch : batchAndSubBatches){
-            if(StringUtils.isEmpty(batch.getSubBatchId())){
+        for (Batch batch : batchAndSubBatches) {
+            if (StringUtils.isEmpty(batch.getSubBatchId())) {
                 updateResponseWithBatchInfo(batch, response);
-            }
-            else{
+            } else {
                 SubBatchSummary subBatchSummary = updateResponseWithSubBatchInfo(batch, response);
                 totalSubBatch++;
                 response.getSubBatchSummaryList().add(subBatchSummary);
@@ -66,67 +63,51 @@ public class BatchServiceImpl implements BatchService{
     @Override
     public PaymentBatchDetail getPaymentBathDetail(String batchId, String clientCorrelationId, int offset, int limit, String orderBy, String sortBy) {
         List<Batch> batchAndSubBatches = batchRepository.findAllByBatchId(batchId);
-        //List<Batch> subBatchList = batchRepository.findAllSubBatchId(batchId);
-        //Batch batch = batchRepository.findByBatchId(batchId);
         if (CollectionUtils.isEmpty(batchAndSubBatches)) {
             return null;
         }
-        List<Instruction> allInstructions =  new ArrayList<>();
+        List<Instruction> allInstructions = new ArrayList<>();
         PaymentBatchDetail response = new PaymentBatchDetail();
         subBatchCount = 0;
         subBatchAmount = 0;
         List<SubBatchSummary> subBatchSummaryList = new ArrayList<>();
         if (batchAndSubBatches.size() == 1) {
-            //Batch batch = batchAndSubBatches.get(0);
             updatePaymentDetailBatchInfo(batchAndSubBatches.get(0), response);
-            int pageNumber = (offset / limit) ;
-            Page<Transfer> transferList =  transferRepository.findAllByBatchId(batchId, new PageRequest(pageNumber, limit));
-            List<Instruction>  instructionList = generateInstructionList(transferList.getContent(),orderBy,sortBy);
+            int pageNumber = (offset / limit);
+            PageRequest pager = PageRequest.of(pageNumber, limit, Sort.by(Sort.Direction.fromString(sortBy != null ? sortBy : "DESC"), orderBy != null ? orderBy : "startedAt"));
+            Page<Transfer> transferList = transferRepository.findAllByBatchId(batchId, pager);
+            List<Instruction> instructionList = generateInstructionList(transferList.getContent(), orderBy, sortBy);
             response.setInstructionList(instructionList);
             response.setTotalInstruction(batchAndSubBatches.get(0).getTotalTransactions());
             return response;
         }
         Long totalInstruction = 0L;
-        for(Batch batch : batchAndSubBatches) {
+        for (Batch batch : batchAndSubBatches) {
             if (StringUtils.isEmpty(batch.getSubBatchId())) {
                 updatePaymentDetailBatchInfo(batch, response);
             } else {
                 payeeFspSet = new HashSet<>();
                 int pageNumber = (offset / limit);
-                Page<Transfer> transferList =  transferRepository.findAllByBatchId(batch.getSubBatchId(), new PageRequest(pageNumber, limit));
+                PageRequest pager = PageRequest.of(pageNumber, limit, Sort.by(Sort.Direction.fromString(sortBy != null ? sortBy : "DESC"), orderBy != null ? orderBy : "startedAt"));
+                Page<Transfer> transferList = transferRepository.findAllByBatchId(batch.getSubBatchId(), pager);
 
                 log.info(transferList.toString());
-                List<Instruction>  instructionList = generateInstructionList(transferList.getContent(),orderBy,sortBy);
+                List<Instruction> instructionList = generateInstructionList(transferList.getContent(), orderBy, sortBy);
                 allInstructions.addAll(instructionList);
 
                 SubBatchSummary subBatch = updateSubBatchPaymentDetail(batch, response);
                 Long subBatchCount = transferRepository.countAllByBatchId(batch.getSubBatchId());
                 totalInstruction += subBatchCount;
                 subBatchSummaryList.add(subBatch);
-
             }
         }
-/*        updatePaymentDetailBatchInfo(batch, response);
-        for(Batch subBatches : subBatchList) {
-            payeeFspSet = new HashSet<>();
-            int pageNumber = (offset / limit);
-            Page<Transfer> transferList =  transferRepository.findAllByBatchId(batch.getSubBatchId(), new PageRequest(pageNumber, limit));
-            log.info(subBatches.getBatchId());
-            log.info(transferList.toString());
-            List<Instruction>  instructionList = generateInstructionList(transferList.getContent(),orderBy,sortBy);
-            allInstructions.addAll(instructionList);
-
-            SubBatchSummary subBatch = updateSubBatchPaymentDetail(batch, response);
-            Long subBatchCount = transferRepository.countAllByBatchId(batch.getSubBatchId());
-            totalInstruction += subBatchCount;
-            subBatchSummaryList.add(subBatch);
-        }*/
         response.setInstructionList(allInstructions);
         response.setTotalInstruction(subBatchCount);
         response.setSubBatchList(subBatchSummaryList);
         return response;
     }
-    public List<Instruction> generateInstructionList(List<Transfer> transferList, String orderBy, String sortBy){
+
+    public List<Instruction> generateInstructionList(List<Transfer> transferList, String orderBy, String sortBy) {
         List<Instruction> instructionList = new ArrayList<>();
 
         for (Transfer transfer : transferList) {
@@ -150,19 +131,24 @@ public class BatchServiceImpl implements BatchService{
         Boolean validOrderBy = true;
 
         if ("instructionId".equals(orderBy)) {
-            comparator = Comparator.comparing(Instruction::getPayerFsp);
+            comparator = Comparator.comparing(Instruction::getInstructionId);
         } else if ("payeeFunctionalId".equals(orderBy)) {
             comparator = Comparator.comparing(Instruction::getPayeeFunctionalId);
         } else if ("subBatchId".equals(orderBy)) {
+            comparator = Comparator.comparing(Instruction::getSubBatchId);
+        } else if ("amount".equals(orderBy)) {
             comparator = Comparator.comparing(Instruction::getAmount);
         } else {
-            validOrderBy=false;
+            validOrderBy = false;
         }
 
-        if ("desc".equalsIgnoreCase(sortBy)  && validOrderBy && comparator != null) {
+        if ("desc".equalsIgnoreCase(sortBy) && validOrderBy && comparator != null) {
             comparator = comparator.reversed();
         }
-        return  instructionList;
+        if (comparator != null) {
+            instructionList.sort(comparator);
+        }
+        return instructionList;
     }
 
     @Override
@@ -175,17 +161,16 @@ public class BatchServiceImpl implements BatchService{
         subBatch.setBatchId(batchId);
 
         Long totalInstructionCount = transferRepository.countAllByBatchId(subBatchId);
-        //List<Transfer> transferList = transferRepository.findAllByBatchId(subBatchId);
-        int pageNumber = (offset / limit) ;
-        List<Transfer> transferList =  transferRepository.findAllByBatchId(subBatchId);
-
+        int pageNumber = (offset / limit);
+        PageRequest pager = PageRequest.of(pageNumber, limit, Sort.by(Sort.Direction.fromString(sortBy != null ? sortBy : "DESC"), orderBy != null ? orderBy : "startedAt"));
+        Page<Transfer> transferList = transferRepository.findAllByBatchId(subBatchId, pager);
 
         List<Instruction> instructionList = new ArrayList<>();
 
-        for (Transfer transfer : transferList) {
+        for (Transfer transfer : transferList.getContent()) {
             Instruction instruction = new Instruction();
             instruction.setInstructionId(transfer.getTransactionId());
-            instruction.setPayeeFunctionalId(transfer.getPayeePartyId() != null ? transfer.getPayerPartyId() : null);
+            instruction.setPayeeFunctionalId(transfer.getPayeePartyId() != null ? transfer.getPayeePartyId() : null);
             instruction.setPayerFsp(transfer.getPayerDfspId() != null ? transfer.getPayerDfspId() : null);
             instruction.setAmount(transfer.getAmount() != null ? transfer.getAmount() : null);
             instruction.setStatus(transfer.getStatus() != null ? transfer.getStatus() : null);
@@ -198,17 +183,22 @@ public class BatchServiceImpl implements BatchService{
         Boolean validOrderBy = true;
 
         if ("instructionId".equals(orderBy)) {
-            comparator = Comparator.comparing(Instruction::getPayerFsp);
+            comparator = Comparator.comparing(Instruction::getInstructionId);
         } else if ("payeeFunctionalId".equals(orderBy)) {
             comparator = Comparator.comparing(Instruction::getPayeeFunctionalId);
         } else if ("subBatchId".equals(orderBy)) {
+            comparator = Comparator.comparing(Instruction::getSubBatchId);
+        } else if ("amount".equals(orderBy)) {
             comparator = Comparator.comparing(Instruction::getAmount);
         } else {
-            validOrderBy=false;
+            validOrderBy = false;
         }
 
-        if ("desc".equalsIgnoreCase(sortBy)  && validOrderBy && comparator != null) {
+        if ("desc".equalsIgnoreCase(sortBy) && validOrderBy && comparator != null) {
             comparator = comparator.reversed();
+        }
+        if (comparator != null) {
+            instructionList.sort(comparator);
         }
 
         subBatch.setInstructionList(instructionList);
@@ -218,7 +208,7 @@ public class BatchServiceImpl implements BatchService{
         return subBatch;
     }
 
-    private void updatePaymentDetailBatchInfo( Batch batch, PaymentBatchDetail response){
+    private void updatePaymentDetailBatchInfo(Batch batch, PaymentBatchDetail response) {
         log.info("Inside batch");
         response.setBatchId(batch.getBatchId());
         response.setPayerFsp(batch.getPayerFsp());
@@ -226,16 +216,17 @@ public class BatchServiceImpl implements BatchService{
         response.setReportGeneratedAt(LocalDateTime.now().toString());
         response.setClientCorrelationId(batch.getCorrelationId());
     }
-    private SubBatchSummary updateSubBatchPaymentDetail(Batch batch, PaymentBatchDetail response){
+
+    private SubBatchSummary updateSubBatchPaymentDetail(Batch batch, PaymentBatchDetail response) {
         SubBatchSummary subBatch = new SubBatchSummary();
         subBatch.setSubBatchId(batch.getSubBatchId());
         subBatch.setPayerFsp(batch.getPayerFsp());
         List<Transfer> transferList = transferRepository.findAllByBatchId(batch.getSubBatchId());
-        if(!transferList.isEmpty()) {
+        if (!transferList.isEmpty()) {
             subBatch.setBudgetAccount(transferList.get(0).getPayerPartyId() != null ? transferList.get(0).getPayerPartyId() : null);
         }
-        subBatch.setTotalAmount(batch.getTotalAmount()!=null? BigDecimal.valueOf(batch.getTotalAmount()): BigDecimal.valueOf(0));
-        subBatch.setTotal(batch.getTotalTransactions()!=null ? batch.getTotalTransactions(): 0 );
+        subBatch.setTotalAmount(batch.getTotalAmount() != null ? BigDecimal.valueOf(batch.getTotalAmount()) : BigDecimal.valueOf(0));
+        subBatch.setTotal(batch.getTotalTransactions() != null ? batch.getTotalTransactions() : 0);
         subBatch.setPayeeFspSet(payeeFspSet);
         return subBatch;
     }
@@ -283,19 +274,19 @@ public class BatchServiceImpl implements BatchService{
             subBatchSummary.setPayerFsp(batch.getPayerFsp());
             subBatchAmount += batch.getApprovedAmount() != null ? batch.getApprovedAmount() : 0;
             subBatchCount += batch.getApprovedCount() != null ? batch.getApprovedCount() : 0;
-            List<Transfer> transferList =  transferRepository.findAllByBatchId(batch.getSubBatchId());
+            List<Transfer> transferList = transferRepository.findAllByBatchId(batch.getSubBatchId());
             Set<String> payeeFspSet = new HashSet<>();
             for (Transfer transfer : transferList) {
                 payeeFspSet.add(transfer.getPayeeDfspId());
             }
             subBatchSummary.setPayeeFspSet(payeeFspSet);
 
-
             return subBatchSummary;
         } else {
-            return null; // Return null if batch is null
+            return null;
         }
     }
+
     private void updateResponseWithBatchInfo(Batch batch, BatchAndSubBatchSummaryResponse response) {
         double batchFailedPercent = 0;
         double batchSuccessPercent = 0;
@@ -315,11 +306,11 @@ public class BatchServiceImpl implements BatchService{
             response.setTotal(batch.getTotalTransactions() != null ? batch.getTotalTransactions() : 0);
             response.setTotalAmount(BigDecimal.valueOf(batch.getTotalAmount() != null ? batch.getTotalAmount() : 0));
             response.setOngoing(batch.getOngoing() != null ? batch.getOngoing() : 0);
-            response.setPendingAmount(BigDecimal.valueOf(batch.getOngoingAmount() != null ? batch.getOngoingAmount() :0));
+            response.setPendingAmount(BigDecimal.valueOf(batch.getOngoingAmount() != null ? batch.getOngoingAmount() : 0));
             response.setSuccessful(batch.getCompleted() != null ? batch.getCompleted() : 0);
-            response.setSuccessfulAmount(BigDecimal.valueOf(batch.getCompletedAmount() !=null ? batch.getCompletedAmount(): 0));
+            response.setSuccessfulAmount(BigDecimal.valueOf(batch.getCompletedAmount() != null ? batch.getCompletedAmount() : 0));
             response.setFailed(batch.getFailed() != null ? batch.getFailed() : 0);
-            response.setFailedAmount(BigDecimal.valueOf(batch.getFailedAmount()!= null ? batch.getFailedAmount() : 0));
+            response.setFailedAmount(BigDecimal.valueOf(batch.getFailedAmount() != null ? batch.getFailedAmount() : 0));
             response.setFile(batch.getResult_file());
             response.setNotes(batch.getNote());
 
@@ -330,12 +321,10 @@ public class BatchServiceImpl implements BatchService{
             response.setSuccessPercentage(decimalFormat.format(batchSuccessPercent));
             response.setFailedPercentage(decimalFormat.format(batchFailedPercent));
             response.setApprovedTransactionCount(batch.getApprovedCount() != null ? batch.getApprovedCount() : 0);
-            response.setApprovedAmount(batch.getApprovedAmount()!= null ? batch.getApprovedAmount() : 0);
-            response.setPayerFsp(batch.getPayerFsp()!= null ? batch.getPayerFsp(): null);
+            response.setApprovedAmount(batch.getApprovedAmount() != null ? batch.getApprovedAmount() : 0);
+            response.setPayerFsp(batch.getPayerFsp() != null ? batch.getPayerFsp() : null);
             response.setGeneratedAt(LocalDateTime.now().toString());
             response.setTotalInstructionCount(transferRepository.countAllByBatchId(batch.getBatchId()));
-
-
         }
     }
 }

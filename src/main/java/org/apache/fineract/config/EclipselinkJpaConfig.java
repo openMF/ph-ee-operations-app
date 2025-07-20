@@ -7,7 +7,6 @@ import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.domain.EntityScan;
 import org.springframework.boot.autoconfigure.orm.jpa.JpaBaseConfiguration;
 import org.springframework.boot.autoconfigure.orm.jpa.JpaProperties;
-import org.springframework.boot.autoconfigure.transaction.TransactionManagerCustomizers;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 import org.springframework.instrument.classloading.InstrumentationLoadTimeWeaver;
@@ -28,8 +27,10 @@ public class EclipselinkJpaConfig extends JpaBaseConfiguration {
 
     private Logger logger = LoggerFactory.getLogger(this.getClass());
 
-    public EclipselinkJpaConfig(DataSource routingDataSource, JpaProperties properties, ObjectProvider<JtaTransactionManager> jtaTransactionManager, ObjectProvider<TransactionManagerCustomizers> transactionManagerCustomizers) {
-        super(routingDataSource, properties, jtaTransactionManager, transactionManagerCustomizers);
+    // Updated constructor to match JpaBaseConfiguration in Spring Boot 2.2
+    public EclipselinkJpaConfig(DataSource routingDataSource, JpaProperties properties, 
+                               ObjectProvider<JtaTransactionManager> jtaTransactionManager) {
+        super(routingDataSource, properties, jtaTransactionManager);
     }
 
     @Override

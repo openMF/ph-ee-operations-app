@@ -5,18 +5,13 @@ plugins {
     id 'java'
     id 'maven-publish'
     id 'eclipse'
-    id 'org.springframework.boot' version '2.1.9.RELEASE'
+    id 'org.springframework.boot' version '2.7.18'
 }
 apply plugin: "io.spring.dependency-management"
 
-// Explicitly set the main class to avoid ASM version issues with JDK 17
+// Main class configuration
 bootJar {
-    mainClassName = 'ServerApplication'
-}
-
-// Alternative syntax for newer Gradle versions
-springBoot {
-    mainClassName = 'ServerApplication'
+    mainClass = 'org.apache.fineract.ServerApplication'
 }
 
 repositories {
@@ -34,35 +29,61 @@ repositories {
 }
 
 ext {
-    springBootVersion = '2.1.9.RELEASE'
+    springBootVersion = '2.7.18'
 }
 
 dependencies {
-    implementation 'org.springframework.security:spring-security-jwt:1.1.0.RELEASE'
+    // Keep existing security dependencies with minor version bumps
+    implementation 'org.springframework.security:spring-security-jwt:1.1.1.RELEASE'
     implementation 'org.springframework.boot:spring-boot-starter-web'
     implementation 'org.springframework.boot:spring-boot-starter-cache'
+
+    // Reverted: No longer excluding Hibernate. Spring Boot 2.7.x should handle
+    // EclipseLink 2.x as the JPA provider when it's on the classpath.
     implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+
     implementation 'org.springframework.security:spring-security-crypto'
-    implementation 'org.springframework.security.oauth:spring-security-oauth2:2.4.1.RELEASE'
-    implementation 'org.json:json:20190722'
-    implementation 'org.eclipse.persistence:org.eclipse.persistence.jpa:2.7.6'
-    implementation 'org.hibernate:hibernate-jpamodelgen:5.4.17.Final'
-    annotationProcessor 'org.hibernate:hibernate-jpamodelgen:5.4.17.Final'
-    implementation 'joda-time:joda-time:2.10.6'
-    implementation 'org.apache.commons:commons-lang3:3.3.2'
-    implementation 'com.zaxxer:HikariCP:3.4.5'
-    implementation 'mysql:mysql-connector-java:8.0.20'
+    implementation 'org.springframework.security.oauth:spring-security-oauth2:2.5.2.RELEASE'
+    
+    // Minor JSON version update
+    implementation 'org.json:json:20220924'
+    
+    // IMPORTANT: Switched to EclipseLink 2.7.10 for javax.persistence compatibility
+    implementation 'org.eclipse.persistence:org.eclipse.persistence.jpa:2.7.10'
+    
+    // REMOVED: jakarta.persistence-api is not needed for EclipseLink 2.x
+    // This was explicitly added for EclipseLink 3.x (Jakarta EE)
+    
+    // REMOVED: org.hibernate:hibernate-jpamodelgen
+    // This was likely pulling in conflicting javax.persistence dependencies.
+    // If you need metamodel generation for EclipseLink, you'll need to use an EclipseLink-specific solution.
+    
+    // Conservative dependency updates
+    implementation 'joda-time:joda-time:2.12.2'
+    implementation 'org.apache.commons:commons-lang3:3.12.0'
+    implementation 'com.zaxxer:HikariCP:5.0.1'
+    implementation 'mysql:mysql-connector-java:8.0.33'
+    
+    // IMPORTANT: Keep Flyway 2.x to avoid migration issues
+    // Note: Flyway 2.x is very old. Spring Boot 2.7.x typically uses Flyway 8.x/9.x.
+    // This might be a source of future issues, but not directly related to the current error.
     implementation 'com.googlecode.flyway:flyway-core:2.1.1'
-    implementation 'net.sf.ehcache:ehcache:2.10.6'
-    testImplementation 'junit:junit:4.11'
+    
+    implementation 'net.sf.ehcache:ehcache:2.10.9.2'
+    testImplementation 'junit:junit:4.13.2'
     implementation 'net.sf.supercsv:super-csv:2.4.0'
-    implementation 'com.amazonaws:aws-java-sdk:1.11.486'
-    implementation 'com.azure:azure-storage-blob:12.12.0'
-    implementation 'commons-io:commons-io:2.4'
+    
+    // Minor AWS SDK update
+    implementation 'com.amazonaws:aws-java-sdk:1.12.400'
+    implementation 'com.azure:azure-storage-blob:12.20.0'
+    implementation 'commons-io:commons-io:2.11.0'
+    
     compileOnly 'org.projectlombok:lombok:1.18.24'
     annotationProcessor 'org.projectlombok:lombok:1.18.24'
-    implementation "org.springdoc:springdoc-openapi-ui:1.6.11"
-    // implementation 'org.mifos:ph-ee-connector-common:1.4.1-SNAPSHOT'
+    
+    // Update OpenAPI to compatible version
+    implementation "org.springdoc:springdoc-openapi-ui:1.6.14"
+    
     implementation 'org.mifos:ph-ee-connector-common:1.4.1-gazelle'
     implementation "org.springframework.boot:spring-boot-starter:$springBootVersion"
     implementation "org.springframework.boot:spring-boot-starter-web:$springBootVersion"
@@ -74,12 +95,12 @@ version = 'gazelle-1.1.0'
 sourceCompatibility = '17'
 targetCompatibility = '17'
 
-java {
-    toolchain {
-        languageVersion = JavaLanguageVersion.of(17)
-        vendor = JvmVendorSpec.ADOPTIUM // or ORACLE, AMAZON, etc.
-    }
-}
+// java {
+//     toolchain {
+//         languageVersion = JavaLanguageVersion.of(17)
+//         vendor = JvmVendorSpec.ADOPTIUM
+//     }
+// }
 
 sourceSets {
     generated {
@@ -102,7 +123,6 @@ tasks.withType(JavaCompile) {
     options.annotationProcessorGeneratedSourcesDirectory = file("src/generated/java")
     options.release = 17
     options.compilerArgs.addAll([
-        '-parameters',
-        '--enable-preview' // Remove this if you don't need preview features
+        '-parameters'
     ])
 }
