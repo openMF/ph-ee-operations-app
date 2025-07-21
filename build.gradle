@@ -11,12 +11,23 @@ apply plugin: "io.spring.dependency-management"
 
 // Explicitly set the main class to avoid ASM version issues with JDK 17
 bootJar {
-    mainClassName = 'ServerApplication'
+    mainClassName = 'org.apache.fineract.ServerApplication'
 }
 
 // Alternative syntax for newer Gradle versions
 springBoot {
-    mainClassName = 'ServerApplication'
+    mainClassName = 'org.apache.fineract.ServerApplication'
+}
+
+// Make sure we're building a proper Spring Boot JAR
+bootJar {
+    enabled = true
+    archiveClassifier = '' // This ensures bootJar replaces the default jar
+}
+
+// Disable the default jar task to avoid confusion
+jar {
+    enabled = false
 }
 
 repositories {
@@ -71,12 +82,12 @@ dependencies {
 
 group = 'org.apache.fineract'
 version = 'gazelle-1.1.0'
-sourceCompatibility = '17'
-targetCompatibility = '17'
+sourceCompatibility = '11'
+targetCompatibility = '11'
 
 java {
     toolchain {
-        languageVersion = JavaLanguageVersion.of(17)
+        languageVersion = JavaLanguageVersion.of(11)
         vendor = JvmVendorSpec.ADOPTIUM // or ORACLE, AMAZON, etc.
     }
 }
@@ -100,7 +111,7 @@ publishing {
 tasks.withType(JavaCompile) {
     options.encoding = 'UTF-8'
     options.annotationProcessorGeneratedSourcesDirectory = file("src/generated/java")
-    options.release = 17
+    options.release = 11
     options.compilerArgs.addAll([
         '-parameters',
         '--enable-preview' // Remove this if you don't need preview features
