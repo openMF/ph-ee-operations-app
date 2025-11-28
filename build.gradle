@@ -85,12 +85,12 @@ version = 'gazelle-1.1.0'
 sourceCompatibility = '11'
 targetCompatibility = '11'
 
-java {
-    toolchain {
-        languageVersion = JavaLanguageVersion.of(11)
-        vendor = JvmVendorSpec.ADOPTIUM // or ORACLE, AMAZON, etc.
-    }
-}
+// java {
+//     toolchain {
+//         languageVersion = JavaLanguageVersion.of(11)
+//         vendor = JvmVendorSpec.ADOPTIUM // or ORACLE, AMAZON, etc.
+//     }
+// }
 
 sourceSets {
     generated {
@@ -113,7 +113,6 @@ tasks.withType(JavaCompile) {
     options.annotationProcessorGeneratedSourcesDirectory = file("src/generated/java")
     options.release = 11
     options.compilerArgs.addAll([
-        '-parameters',
-        '--enable-preview' // Remove this if you don't need preview features
+        '-parameters'
     ])
 }
