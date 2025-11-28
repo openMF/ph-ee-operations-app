@@ -67,6 +67,8 @@ logging:
 cloud:
   aws:
     enabled: true
+    minio-public-host: "http://minio.sandbox.mifos.io"
+    s3BaseUrl: "https://s3.ap-south-1.amazonaws.com"
     credentials:
       access-key: ${AWS_ACCESS_KEY:AKIAX32JM37TZOJ5AKFB}
       secret-key: ${AWS_SECRET_KEY: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}

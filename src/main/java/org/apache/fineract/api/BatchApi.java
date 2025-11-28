@@ -185,13 +185,18 @@ public class BatchApi {
         }
 
         Page<Transfer> transfers;
+        List<Batch> batchAndSubBatches = batchRepository.findAllByBatchId(batchId);
 
         if (status.equalsIgnoreCase(TransferStatus.COMPLETED.toString()) ||
                 status.equalsIgnoreCase(TransferStatus.IN_PROGRESS.toString()) ||
                 status.equalsIgnoreCase(TransferStatus.FAILED.toString())) {
             transfers = transferRepository.findAllByBatchIdAndStatus(batchId, status.toUpperCase(), new PageRequest(pageNo, pageSize));
         } else {
-            transfers = transferRepository.findAllByBatchId(batchId, new PageRequest(pageNo, pageSize));
+            if(batchAndSubBatches.size()>1){
+                transfers = transferRepository.findAllByBatchIdMatchSubBatchId(batchId, new PageRequest(pageNo, pageSize));
+            } else {
+                transfers = transferRepository.findAllByBatchId(batchId, new PageRequest(pageNo, pageSize));
+            }
         }
 
         return transfers;
@@ -275,6 +280,14 @@ public class BatchApi {
         batch.setCompletedAmount(totalCompletedAmount);
         batch.setOngoingAmount(totalOngoingAmount);
         batch.setFailedAmount(totalFailedAmount);
+        batch.setCompletedAt(new Date());
+        if(completed.equals(totalTransfers)){
+            batch.setStatus(BatchStatus.COMPLETED);
+        } else if(ongoing > 0){
+            batch.setStatus(BatchStatus.IN_PROGRESS);
+        } else if(failed>0){
+            batch.setStatus(BatchStatus.FAILED);
+        }
         batchRepository.save(batch);
     }
     private BatchDTO getBatchSummary(Batch batch,String modes) {

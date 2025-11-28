@@ -9,6 +9,8 @@ import org.eclipse.persistence.annotations.Index;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.EnumType;
+import javax.persistence.Enumerated;
 import javax.persistence.Table;
 import java.util.Date;
 
@@ -95,6 +97,9 @@ public class Batch extends AbstractPersistableCustom<Long> {
 
     @Column(name = "APPROVED_COUNT")
     private Long approvedCount;
+
+    @Enumerated(EnumType.STRING)
+    private BatchStatus status;
 
     public Batch(Long workflowInstanceKey) {
         this.workflowInstanceKey = workflowInstanceKey;

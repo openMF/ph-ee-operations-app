@@ -224,7 +224,19 @@ public class BatchServiceImpl implements BatchService{
         response.setPayerFsp(batch.getPayerFsp());
         response.setTotalBatchAmount(batch.getTotalAmount());
         response.setReportGeneratedAt(LocalDateTime.now().toString());
+        response.setStartedAt(batch.getStartedAt());
+        response.setCompletedAt(batch.getCompletedAt());
+        response.setRegisteringInstitutionId(batch.getRegisteringInstitutionId());
+        response.setStatus(String.valueOf(batch.getStatus()));
         response.setClientCorrelationId(batch.getCorrelationId());
+        response.setFailed(batch.getFailed());
+        response.setOngoing(batch.getOngoing());
+        response.setSuccessful(batch.getCompleted());
+        response.setTotal(batch.getTotalTransactions());
+        response.setTotalAmount(BigDecimal.valueOf(batch.getTotalAmount()));
+        response.setSuccessfulAmount(BigDecimal.valueOf(batch.getCompletedAmount()));
+        response.setFailedAmount(BigDecimal.valueOf(batch.getFailedAmount()));
+        response.setPendingAmount(BigDecimal.valueOf(batch.getOngoingAmount()));
     }
     private SubBatchSummary updateSubBatchPaymentDetail(Batch batch, PaymentBatchDetail response){
         SubBatchSummary subBatch = new SubBatchSummary();
@@ -289,6 +301,9 @@ public class BatchServiceImpl implements BatchService{
                 payeeFspSet.add(transfer.getPayeeDfspId());
             }
             subBatchSummary.setPayeeFspSet(payeeFspSet);
+            subBatchSummary.setStartedAt(batch.getStartedAt());
+            subBatchSummary.setCompletedAt(batch.getCompletedAt());
+            subBatchSummary.setStatus(String.valueOf(batch.getStatus()));
 
 
             return subBatchSummary;
@@ -334,6 +349,10 @@ public class BatchServiceImpl implements BatchService{
             response.setPayerFsp(batch.getPayerFsp()!= null ? batch.getPayerFsp(): null);
             response.setGeneratedAt(LocalDateTime.now().toString());
             response.setTotalInstructionCount(transferRepository.countAllByBatchId(batch.getBatchId()));
+            response.setStartedAt(batch.getStartedAt());
+            response.setCompletedAt(batch.getCompletedAt());
+            response.setRegisteringInstitutionId(batch.getRegisteringInstitutionId());
+            response.setStatus(String.valueOf(batch.getStatus()));
 
 
         }

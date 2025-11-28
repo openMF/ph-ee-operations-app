@@ -94,6 +94,15 @@ jobs:
       - checkout
       - setup_remote_docker:
           version: 20.10.24
+<<<<<<< HEAD
+=======
+      - kubernetes/install-kubectl
+      - checkout
+      - aws-eks/update-kubeconfig-with-authenticator:
+          cluster-name: "sit"
+          aws-region: "$REGION"
+      # Build the Docker image
+>>>>>>> v1.20.2
       - run:
           name: Set Lowercase Docker Image Vars
           command: |
