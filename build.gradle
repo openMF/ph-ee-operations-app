@@ -80,8 +80,10 @@ dependencies {
     implementation "org.springframework.boot:spring-boot-starter-actuator:$springBootVersion"
 }
 
+// is the group correct or should be org.mifos ?? 
 group = 'org.apache.fineract'
-version = 'gazelle-1.1.0'
+version = '2.0.0-SNAPSHOT'
+description = 'ph-ee-connector-mock-payment-schema'
 sourceCompatibility = '11'
 targetCompatibility = '11'
 
