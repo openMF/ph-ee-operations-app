@@ -334,11 +334,9 @@ public class BatchApi {
         BigDecimal ongoingAmount = BigDecimal.ZERO;
         BigDecimal failedAmount = BigDecimal.ZERO;
         List<Transfer> transfers = null;
-        if(batch.getSubBatchId()!=null){
-            transfers = transferRepository.findAllByBatchId(batch.getSubBatchId());
-        }else{
-            transfers = transferRepository.findAllByBatchId(batch.getBatchId());
-        }
+        // Always query by batch_id (not sub_batch_id) since transfers.BATCH_ID contains the main batch ID
+        // Sub-batches are tracked in batches.SUB_BATCH_ID, not in transfers.BATCH_ID
+        transfers = transferRepository.findAllByBatchId(batch.getBatchId());
 
             for (Transfer transfer : transfers) {
                 Optional<Variable> variable = variableRepository.findByWorkflowInstanceKeyAndVariableName("paymentMode",
@@ -470,9 +468,9 @@ public class BatchApi {
                 oneLine.append(CSV_SEPARATOR);
                 oneLine.append(transfer.getErrorInformation());
                 oneLine.append(CSV_SEPARATOR);
-                oneLine.append(transfer.getStartedAt().toString());
+                oneLine.append(transfer.getStartedAt() != null ? transfer.getStartedAt().toString() : "");
                 oneLine.append(CSV_SEPARATOR);
-                oneLine.append(transfer.getCompletedAt().toString());
+                oneLine.append(transfer.getCompletedAt() != null ? transfer.getCompletedAt().toString() : "");
                 oneLine.append(CSV_SEPARATOR);
                 bw.write(oneLine.toString());
                 bw.newLine();
