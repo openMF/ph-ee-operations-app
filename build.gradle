@@ -82,7 +82,7 @@ dependencies {
 
 // is the group correct or should be org.mifos ?? 
 group = 'org.apache.fineract'
-version = '2.0.0-SNAPSHOT'
+version = '2.0.0.mifos-SNAPSHOT'
 description = 'ph-ee-connector-mock-payment-schema'
 sourceCompatibility = '11'
 targetCompatibility = '11'

@@ -334,9 +334,11 @@ public class BatchApi {
         BigDecimal ongoingAmount = BigDecimal.ZERO;
         BigDecimal failedAmount = BigDecimal.ZERO;
         List<Transfer> transfers = null;
-        // Always query by batch_id (not sub_batch_id) since transfers.BATCH_ID contains the main batch ID
-        // Sub-batches are tracked in batches.SUB_BATCH_ID, not in transfers.BATCH_ID
-        transfers = transferRepository.findAllByBatchId(batch.getBatchId());
+        if(batch.getSubBatchId()!=null){
+            transfers = transferRepository.findAllByBatchId(batch.getSubBatchId());
+        }else{
+            transfers = transferRepository.findAllByBatchId(batch.getBatchId());
+        }
 
             for (Transfer transfer : transfers) {
                 Optional<Variable> variable = variableRepository.findByWorkflowInstanceKeyAndVariableName("paymentMode",
