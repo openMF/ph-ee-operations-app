@@ -336,6 +336,11 @@ public class BatchApi {
         List<Transfer> transfers = null;
         if(batch.getSubBatchId()!=null){
             transfers = transferRepository.findAllByBatchId(batch.getSubBatchId());
+            if (transfers.isEmpty()) {
+                // Closedloop path: transfers are stored under the parent batchId, not the sub-batch ID.
+                // Fall back to parent batchId so sub-batch totals are correctly counted.
+                transfers = transferRepository.findAllByBatchId(batch.getBatchId());
+            }
         }else{
             transfers = transferRepository.findAllByBatchId(batch.getBatchId());
         }
