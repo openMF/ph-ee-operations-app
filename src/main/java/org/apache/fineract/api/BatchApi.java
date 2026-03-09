@@ -316,7 +316,7 @@ public class BatchApi {
             response.setStatus("COMPLETED");
         } else if (batch.getOngoing() != 0 && batch.getCompletedAt() == null) {
             response.setStatus("Pending");
-        } else if (batch.getFailed().longValue() == batch.getFailed().longValue()) {
+        } else if (batch.getFailed() != null && batch.getFailed() > 0) {
             response.setStatus("Failed");
         } else {
             response.setStatus("UNKNOWN");
