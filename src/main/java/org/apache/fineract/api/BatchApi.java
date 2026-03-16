@@ -316,7 +316,7 @@ public class BatchApi {
             response.setStatus("COMPLETED");
         } else if (batch.getOngoing() != 0 && batch.getCompletedAt() == null) {
             response.setStatus("Pending");
-        } else if (batch.getFailed().longValue() == batch.getFailed().longValue()) {
+        } else if (batch.getFailed() != null && batch.getFailed() > 0) {
             response.setStatus("Failed");
         } else {
             response.setStatus("UNKNOWN");
@@ -336,6 +336,11 @@ public class BatchApi {
         List<Transfer> transfers = null;
         if(batch.getSubBatchId()!=null){
             transfers = transferRepository.findAllByBatchId(batch.getSubBatchId());
+            if (transfers.isEmpty()) {
+                // Closedloop path: transfers are stored under the parent batchId, not the sub-batch ID.
+                // Fall back to parent batchId so sub-batch totals are correctly counted.
+                transfers = transferRepository.findAllByBatchId(batch.getBatchId());
+            }
         }else{
             transfers = transferRepository.findAllByBatchId(batch.getBatchId());
         }
@@ -470,9 +475,9 @@ public class BatchApi {
                 oneLine.append(CSV_SEPARATOR);
                 oneLine.append(transfer.getErrorInformation());
                 oneLine.append(CSV_SEPARATOR);
-                oneLine.append(transfer.getStartedAt().toString());
+                oneLine.append(transfer.getStartedAt() != null ? transfer.getStartedAt().toString() : "");
                 oneLine.append(CSV_SEPARATOR);
-                oneLine.append(transfer.getCompletedAt().toString());
+                oneLine.append(transfer.getCompletedAt() != null ? transfer.getCompletedAt().toString() : "");
                 oneLine.append(CSV_SEPARATOR);
                 bw.write(oneLine.toString());
                 bw.newLine();
