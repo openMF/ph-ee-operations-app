@@ -13,8 +13,13 @@ public interface BatchRepository extends JpaRepository<Batch, Long>, JpaSpecific
 
     Batch findByWorkflowInstanceKey(Long workflowInstanceKey);
 
-    @Query("SELECT bt FROM Batch bt WHERE bt.batchId = :batchId and bt.subBatchId is null")
-    Batch findByBatchId(String batchId);
+    @Query("SELECT bt FROM Batch bt WHERE bt.batchId = :batchId and bt.subBatchId is null ORDER BY bt.id DESC")
+    List<Batch> findParentsByBatchId(String batchId);
+
+    default Batch findByBatchId(String batchId) {
+        List<Batch> results = findParentsByBatchId(batchId);
+        return results.isEmpty() ? null : results.get(0);
+    }
     @Query("SELECT bt FROM Batch bt WHERE bt.batchId = :batchId and bt.subBatchId is not null")
     List<Batch> findAllSubBatchId(String batchId);
 
