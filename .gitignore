@@ -1,12 +1,36 @@
+target/
+src/generated/
+HELP.md
+!.mvn/wrapper/maven-wrapper.jar
+!**/src/main/**/target/
+!**/src/test/**/target/
+bin/**/*.class
+.gradle
+build/
+!gradle/wrapper/gradle-wrapper.jar
+### STS ###
+.apt_generated
 .classpath
+.factorypath
 .project
 .settings
-*.log
-.idea
-target/
-*.iml
-.gradle
-build
-bin
-src/generated
+.springBeans
+.sts4-cache
+
 .DS_Store
+### IntelliJ IDEA ###
+.idea
+*.iws
+*.iml
+*.ipr
+
+### NetBeans ###
+/nbproject/private/
+/nbbuild/
+/dist/
+/nbdist/
+/.nb-gradle/
+build/
+
+### VS Code ###
+.vscode/
